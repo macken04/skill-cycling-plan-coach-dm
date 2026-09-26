@@ -46,6 +46,7 @@ This file is the single source of truth for who a plan is for. Each user owns th
 | `strengthDefault` | string | `strength+core`, `core`, or `none`. |
 | `riderTypeOverride` | string or null | Force a rider type (`sprinter`, `allrounder`, `diesel`) instead of deriving it. Null means derive from the power curve. |
 | `workoutFormat` | string | Workout file format: always `"zwo"` (Zwift XML). Stored after the athlete confirms during intake. |
+| `supabaseAthleteId` | string (uuid) or null | The Supabase Auth user id this athlete is linked to for the web UI (`web/`, task B3), once they've signed in there at least once. `null` until linked — the coach still plans/delivers files locally with no Supabase sync when this is unset. See `docs/infra.md` for the one-time linking procedure and `SKILL.md`'s "Sync to Supabase" step for what happens once it's set. |
 
 ## How age and gender influence the plan
 
