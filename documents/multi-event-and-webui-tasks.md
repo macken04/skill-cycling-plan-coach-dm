@@ -247,7 +247,7 @@ infra required. Ships as a `SKILL.md` version bump.
     phase is "live" versus a future outline.
   - Depends on: A9.
 
-- [ ] **A13. SKILL.md workflow: season skeleton generation + replanning**
+- [x] **A13. SKILL.md workflow: season skeleton generation + replanning**
   - Edit `SKILL.md`: add a step (alongside the existing config-resolution
     step) that generates `season-plan.json` the first time an athlete has
     `targetEvent`/`eventDate` set and none exists yet (using A9-A12); the

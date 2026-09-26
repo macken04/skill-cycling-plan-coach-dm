@@ -13,7 +13,7 @@ One file per week, named `YYYY-Wnn-plan.md`. Everything the athlete reads is in 
 **FTP:** <N> W · **Rider type:** <type> · **Target W/kg:** <N> *(omit if not set)*
 **Last week:** <one-sentence Strava/activity summary>
 **Readiness:** <score N / level> · HRV <status> · Sleep <score>/100 · ACWR <N> · Status: <training_status> · Recovery window: <N> h *(omit entire line if no Garmin data)*
-**Event countdown:** <N> days to <event display name> · Phase: <phase> *(omit entire line if `targetEvent` is unset; drop "· Phase: <phase>" if the phase isn't computed yet — countdown-only until the season-macrocycle wiring lands)*
+**Event countdown:** <N> days to <event display name> · Phase: <phase> *(omit entire line if `targetEvent` is unset; drop "· Phase: <phase>" only when `eventDate` is unset too, since a season skeleton needs both — see `SKILL.md`'s season-skeleton resolution step)*
 ```
 
 ### 2. Schedule table
@@ -183,7 +183,7 @@ event-specific archetypes (e.g. loaded-bike climbing) swapped in per
 **Focus:** Build back-to-back long-day volume; keep gut-training the on-bike carb rate.
 **FTP:** 245 W · **Rider type:** Puncheur, overridden toward durability/fat-max endurance · **Target W/kg:** 3.7
 **Last week:** 4 rides, 288 km, 8.5 h, 741 m elevation, 2 hard days — good load, no extra fatigue.
-**Event countdown:** 90 days to Badlands Ultra *(no "· Phase" segment yet — phase is populated once the season-macrocycle wiring, A13, lands)*
+**Event countdown:** 90 days to Badlands Ultra · Phase: Build
 
 ## Fueling
 - **Daily carb targets:** Rest 3-4 g/kg · Endurance 5-6 g/kg · Structured/key 6-7 g/kg · Long 7-8 g/kg.
