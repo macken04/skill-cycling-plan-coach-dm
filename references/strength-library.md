@@ -44,6 +44,34 @@ this table is unused; the default rule stands.
 | `failed_too_hard` | Regress to the load/rep scheme this exercise used one occurrence back (or, if there is no prior occurrence, apply the new-lifter first-block scheme above: bodyweight/light load, higher reps) at the next occurrence. State the adjustment and why in the next plan's last-week summary. |
 | `skipped` (this session skipped twice or more in a row) | Treat as a missed-training signal: re-ramp at reduced load for the next 1-2 sessions (same reduced-load re-ramp described above for a `returning` or low-frequency lifter) before returning to the previously-working load. |
 
+## Season strength periodization (when a season skeleton exists)
+
+Only applies once `season-plan.json` exists (per
+`references/macrocycle-model.md`). Without a season skeleton, use the tables
+and progression rules above exactly as today, with no phase-based variation.
+
+Per `documents/season-macrocycle-prd.md` FR4, strength periodizes across the
+season phase on top of everything above — the exercise tables, the
+new-lifter/returning-lifter ramp, `strengthCurrentLifts` anchoring, and the
+logged-outcome rules all still apply. This section only changes the
+volume/load emphasis for the phase currently active, not which exercises are
+chosen or how load progresses within a session:
+
+| Season phase | Strength phase | Sets × reps template | Frequency | Emphasis |
+|---|---|---|---|---|
+| Base | General-prep | 3-4 x 10-12, moderate load (RPE 6-7) | Up to twice weekly, per `strengthDefault`/weekly intake | Movement quality and work capacity — the new/returning-lifter ramp above already prescribes something similar, so the two compose rather than conflict: a new lifter's first-block scheme is this phase's starting point, not a separate track |
+| Deload (either block) | Maintenance-only | Bodyweight/core only, or skip entirely | At most once, light | A reset, not a training block, per `macrocycle-model.md` — never schedule max-strength or power work inside a deload regardless of which master phases it sits between |
+| Build | Max-strength | 4 x 5 heavy compounds, the default prescriptions in the tables above | Twice weekly if tolerated | The season's actual strength adaptation; progress load per the logged-outcome rules table above |
+| Refine, until the culminating B2 rehearsal | Power/maintenance transition | 2-3 x 5 at the load already reached, or add light explosive work (e.g. jump squats) | Once weekly | Maintain strength without adding fatigue ahead of B2's rehearsal |
+| Refine, B2 onward through taper | Maintenance/taper | 1-2 x 5 at held load; drop entirely in the final taper week | Once weekly, tapering to none | Preserve strength into race day without adding load-driven fatigue |
+
+**Worked example (Badlands Ultra):** Build (13 weeks, per
+`badlands-ultra.md`'s instantiation) runs the max-strength phase throughout,
+including through C2 and B1. Refine opens straight into the
+power/maintenance transition, since B2 lands only ~15% into Refine (per
+`trial-events.md`) and legs need to be fresh for that rehearsal, not mid
+max-strength block.
+
 ## Building a session
 
 - Full strength session: 2-3 strength lifts + 2 core moves.

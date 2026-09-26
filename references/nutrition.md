@@ -142,6 +142,53 @@ and risks GI distress at high intake rates.
   in training so race day isn't the first test of tolerance and any sleep
   impact.
 
+## Season-level fueling ramp (when a season skeleton exists)
+
+Only applies once `season-plan.json` exists (`targetEvent`/`eventDate` both
+set, per `references/macrocycle-model.md`). Without a season skeleton, use
+the generic "start a build phase at 60-70 g/h and gut-train upward" guidance
+from the table above with no fixed schedule.
+
+Per `documents/season-macrocycle-prd.md` FR4, the on-bike carb target for
+the week's longest/key session doesn't jump straight to the race-day rate —
+it ramps across the season, with each rung of the trial-event ladder
+(`references/trial-events.md`) rehearsing whatever rate the ramp calls for
+on its date, not necessarily the full race target yet.
+
+**Inputs:**
+
+- `baselineGh` = 60 g/h — the bottom of the Long ride row's on-bike range
+  above, and the season's gut-training starting point.
+- `raceTargetGh` = the top of the resolved event file's own fueling-delta
+  on-bike range (e.g. Badlands' 90-120 g/h → 120), read from its "Fueling
+  delta" section. If `targetEvent` is free text with no fueling delta of its
+  own, fall back to this file's own top-of-range figure for the relevant day
+  type (120 g/h for a long ride).
+
+**Checkpoint targets**, rounded to the nearest 5 g/h:
+
+| Checkpoint | Target g/h |
+|---|---|
+| Base start (skeleton `startDate`) | `baselineGh` |
+| C1 (Base) | `baselineGh` — still building duration/distance tolerance, not rate |
+| C2 (Build) | `baselineGh + round(0.5 × (raceTargetGh − baselineGh))` |
+| B1 (Build) | `baselineGh + round(0.75 × (raceTargetGh − baselineGh))` |
+| B2 and onward through Refine | `raceTargetGh`, held — race day must never be the first test of the full rate |
+
+Between any two consecutive checkpoints, step the target evenly week to week
+rather than jumping at the checkpoint date itself, so the week right after
+C2 isn't a discontinuous leap toward B1's rate.
+
+**Worked example (Badlands Ultra, validates the formula):** `baselineGh` =
+60, `raceTargetGh` = 120 (top of 90-120). C1 = 60 g/h. C2 = 60 +
+round(0.5 × 60) = 90 g/h. B1 = 60 + round(0.75 × 60) = 105 g/h. B2 onward =
+120 g/h — matches `badlands-ultra.md`'s own "gut training toward the top of
+the 90-120 g/h range... progressively" note exactly.
+
+State the week's current target explicitly in the plan's Fueling section
+(`plan-format.md`) whenever a season skeleton exists, rather than leaving it
+at the generic table's range.
+
 ## Interpreting a logged fueling signal
 
 A trial-event or race log that reports "GI distress" or "bonked / ran out of
