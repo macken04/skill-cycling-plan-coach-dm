@@ -156,10 +156,14 @@ This sequencing gets a working (if plain) log-and-view loop fast in steps 1–3,
 then layers the deeper coaching intelligence on top once the plumbing exists,
 rather than building the rich content first and re-plumbing it later.
 
-## Open decisions for next session
+## Open decisions — resolved
 
-- Confirm Supabase + Vercel as the hosting choice (vs. self-hosting a DB/API).
-- Create the Supabase/Vercel projects and hand over credentials so schema and
-  env-var wiring can be done against real infrastructure.
-- Confirm single-athlete scope for v1 vs. designing further for multiple
-  athletes/coaches now.
+- **Hosting:** Supabase + Vercel, as drafted above (not self-hosting a DB/API).
+- **Athlete scope:** single-athlete for v1; schema stays keyed by `athlete_id`
+  for future-proofing per the schema section above, but v1 logic/auth assumes
+  one athlete.
+- **Supabase/Vercel provisioning:** kept as an explicit, trackable task rather
+  than assumed pre-existing.
+
+See `multi-event-and-webui-tasks.md` for the full task breakdown that
+implements this plan, sequenced and with test criteria per task.
