@@ -35,7 +35,7 @@ Start a returning archetype at the step the athlete last completed, then advance
 
 ### Logged-outcome rules (override the default advance-by-one-step rule)
 
-Once an athlete logs a session's outcome (web UI, per `documents/multi-event-and-webui-tasks.md` B3/B8), its status overrides the default "advance by one step" rule above for that archetype's next scheduled occurrence. These rules apply equally to the standard archetypes above and to the event-driven overlay archetypes' progression table further down this file. Until logged data exists (no `workout_logs` table yet — see B2/B8), this table is unused; the default rule stands.
+Once an athlete logs a session's outcome (web UI, per `documents/multi-event-and-webui-tasks.md` B3/B8), its status overrides the default "advance by one step" rule above for that archetype's next scheduled occurrence. These rules apply equally to the standard archetypes above and to the event-driven overlay archetypes' progression table further down this file. `SKILL.md` Step 1 reads back recent `workout_logs` each run when `supabaseAthleteId` is set (per B8) and applies this table; when an archetype's last occurrence has no logged status (or `supabaseAthleteId` is `null`), the plain default rule stands.
 
 | Logged status | Adjustment at the archetype's next scheduled occurrence |
 |---|---|

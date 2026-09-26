@@ -33,8 +33,10 @@ Once an athlete logs a strength session's outcome (web UI, per
 `documents/multi-event-and-webui-tasks.md` B5/B8), its status overrides the
 default "progress by load on the compounds" rule above for that exercise's
 next occurrence. Same status vocabulary as `workout-library.md`'s bike-session
-rules. Until logged data exists (no `strength_logs` table yet — see B2/B8),
-this table is unused; the default rule stands.
+rules. `SKILL.md` Step 1 reads back recent `strength_logs` each run when
+`supabaseAthleteId` is set (per B8) and applies this table; when an
+exercise's last occurrence has no logged status (or `supabaseAthleteId` is
+`null`), the plain default rule stands.
 
 | Logged status | Adjustment at the next occurrence of that exercise |
 |---|---|

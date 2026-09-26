@@ -8,6 +8,7 @@ import {
   DAY_ORDER,
   SESSION_STATUSES,
   SESSION_STATUS_LABELS,
+  type CoachNote,
   type Event,
   type Plan,
   type SessionStatus,
@@ -19,6 +20,93 @@ function daysUntil(dateStr: string): number {
   const today = new Date(new Date().toISOString().slice(0, 10));
   const target = new Date(dateStr);
   return Math.round((target.getTime() - today.getTime()) / 86_400_000);
+}
+
+// B7 event countdown view.
+function EventCountdownCard({
+  event,
+  plan,
+}: {
+  event: Event;
+  plan: Plan | null;
+}) {
+  const days = daysUntil(event.event_date);
+  const name = event.event_name ?? event.event_key ?? "your event";
+
+  return (
+    <div
+      style={{
+        border: "1px solid #ddd",
+        borderRadius: 8,
+        padding: "1rem",
+        marginBottom: "1.5rem",
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        flexWrap: "wrap",
+        gap: "0.5rem",
+      }}
+    >
+      <div>
+        <div style={{ fontSize: "1.5rem", fontWeight: 700, lineHeight: 1 }}>
+          {days >= 0 ? days : 0}
+          <span style={{ fontSize: "0.9rem", fontWeight: 400, color: "#777" }}>
+            {" "}
+            days to go
+          </span>
+        </div>
+        <div style={{ fontSize: "0.9rem", color: "#555" }}>{name}</div>
+      </div>
+      {plan?.phase && (
+        <span
+          style={{
+            padding: "0.3rem 0.6rem",
+            borderRadius: 999,
+            background: "#eef2ff",
+            color: "#3730a3",
+            fontSize: "0.8rem",
+            fontWeight: 600,
+          }}
+        >
+          {plan.phase[0].toUpperCase()}
+          {plan.phase.slice(1)}
+          {plan.deload ? " · Deload" : ""}
+        </span>
+      )}
+    </div>
+  );
+}
+
+// B7 taper/race-week view. Windows are this session's explicit reading of
+// macrocycle-model.md's "Refine's final block is race week itself" (no
+// stored sub-phase field exists to read instead): the final 7 days before
+// and including eventDate are "race week"; the 7 days before that are
+// "taper". Both are absent from the DOM outside their window.
+function TaperBanner({ event }: { event: Event }) {
+  const days = daysUntil(event.event_date);
+  if (days < 0 || days > 13) return null;
+
+  const isRaceWeek = days <= 6;
+  const name = event.event_name ?? event.event_key ?? "your event";
+
+  return (
+    <div
+      style={{
+        border: `1px solid ${isRaceWeek ? "#d03b3b" : "#fab219"}`,
+        background: isRaceWeek ? "#fdecec" : "#fff8e6",
+        borderRadius: 8,
+        padding: "0.75rem 1rem",
+        marginBottom: "1rem",
+        fontSize: "0.9rem",
+      }}
+    >
+      <strong>{isRaceWeek ? "Race week" : "Taper"}</strong> — {days} day
+      {days === 1 ? "" : "s"} to {name}.{" "}
+      {isRaceWeek
+        ? "Final rest and fueling prep — this is not a training week."
+        : "Reduce volume and back-to-back load while keeping one shorter sharpening session."}
+    </div>
+  );
 }
 
 type LoadState = "loading" | "no-session" | "no-plan" | "ready" | "error";
@@ -34,6 +122,7 @@ export default function PlanPage() {
     Record<string, WorkoutLog>
   >({});
   const [savingWorkoutId, setSavingWorkoutId] = useState<string | null>(null);
+  const [coachNotes, setCoachNotes] = useState<CoachNote[]>([]);
 
   const loadPlan = useCallback(async (athleteId: string) => {
     const today = new Date().toISOString().slice(0, 10);
@@ -97,6 +186,14 @@ export default function PlanPage() {
         setLatestLogByWorkout(latest);
       }
     }
+
+    const { data: noteRows } = await supabase
+      .from("coach_notes")
+      .select("*")
+      .eq("athlete_id", athleteId)
+      .order("created_at", { ascending: false })
+      .limit(10);
+    setCoachNotes(noteRows ?? []);
 
     setLoadState("ready");
   }, []);
@@ -205,21 +302,14 @@ export default function PlanPage() {
         <nav style={{ display: "flex", gap: "1rem", alignItems: "baseline" }}>
           <Link href="/nutrition">Nutrition log</Link>
           <Link href="/strength">Strength log</Link>
+          <Link href="/compliance">Compliance</Link>
           <button onClick={signOut}>Sign out</button>
         </nav>
       </header>
 
-      {event && (
-        <p style={{ marginBottom: "0.25rem", fontWeight: 600 }}>
-          {daysUntil(event.event_date)} days to{" "}
-          {event.event_name ?? event.event_key ?? "your event"}
-          {plan?.phase
-            ? ` · Phase: ${plan.phase[0].toUpperCase()}${plan.phase.slice(1)}${
-                plan.deload ? " (deload)" : ""
-              }`
-            : ""}
-        </p>
-      )}
+      {event && <TaperBanner event={event} />}
+
+      {event && <EventCountdownCard event={event} plan={plan} />}
 
       {plan && (
         <p style={{ marginBottom: "1.5rem", color: "#555" }}>
@@ -242,7 +332,39 @@ export default function PlanPage() {
         ))}
         {workouts.length === 0 && <p>No workouts scheduled this week.</p>}
       </div>
+
+      {coachNotes.length > 0 && (
+        <section style={{ marginTop: "2rem" }}>
+          <h2 style={{ fontSize: "1.1rem", marginBottom: "0.75rem" }}>
+            Coach notes
+          </h2>
+          <div style={{ display: "grid", gap: "0.5rem" }}>
+            {coachNotes.map((note) => (
+              <CoachNoteCard key={note.id} note={note} />
+            ))}
+          </div>
+        </section>
+      )}
     </main>
+  );
+}
+
+function CoachNoteCard({ note }: { note: CoachNote }) {
+  return (
+    <div
+      style={{
+        border: "1px solid #ddd",
+        borderRadius: 8,
+        padding: "0.75rem 1rem",
+        background: "#fafafa",
+      }}
+    >
+      <div style={{ fontSize: "0.75rem", color: "#777", marginBottom: "0.25rem" }}>
+        {note.workout_log_id ? "Bike session" : "Strength session"} ·{" "}
+        {new Date(note.created_at).toLocaleDateString()}
+      </div>
+      <p style={{ margin: 0 }}>{note.note}</p>
+    </div>
   );
 }
 
