@@ -4,7 +4,7 @@ description: Plan a cyclist's training week as a standalone coaching package wit
 metadata:
   author: Elio Struyf <elio@struyfconsulting.be>
   license: MIT
-  version: 3.1.0
+  version: 3.1.1
 ---
 
 # Cycling plan coach
@@ -135,7 +135,7 @@ Save everything to `/mnt/user-data/outputs/` and present it. If that path is una
 
 Per task **B3** (`documents/multi-event-and-webui-tasks.md`): the web UI (`web/`) reads this week's workouts and lets the athlete log completions there. The skill is the only writer of `plans`/`workouts` — the web UI only ever reads them and writes `workout_logs`/`nutrition_logs`/`strength_logs`.
 
-**Skip this step entirely** when `athlete.json`'s `supabaseAthleteId` is `null` (not yet linked) — deliver the local files exactly as in Step 6 and say nothing about Supabase.
+**When `supabaseAthleteId` is `null`** (not yet linked): skip the upserts below entirely and deliver the local files exactly as in Step 6 — but don't stay silent about Supabase. State briefly, in one line, that a web dashboard exists for logging completions and viewing this plan online, and how to link it: sign in once at the deployed web app (`docs/infra.md` has the URL) with the email this plan is for. If the athlete says they've already signed in (this run or a prior one), and this session has the Supabase MCP connector attached to this project, look up their `auth.users` id by email now (`select id from auth.users where email = '<their email>'`) and set it as `athlete.json`'s `supabaseAthleteId` directly, rather than deferring linking to some future session — then this same run's Step 7 upserts apply immediately. If this session has no Supabase access, say plainly that linking needs a session that does, so the athlete knows to raise it again rather than assuming it happened silently.
 
 **When `supabaseAthleteId` is set**, after producing this run's files, upsert this week's data into Supabase (project `gurxzxcdxxxezwyatwlf`, per `docs/infra.md`) as the last thing this run does:
 
@@ -148,7 +148,7 @@ Per task **B3** (`documents/multi-event-and-webui-tasks.md`): the web UI (`web/`
 7. In a Claude Code session with the Supabase MCP connector attached to this project, run the upserts via `execute_sql` (it authenticates with its own project-scoped token, independent of any local env var — the same approach that unblocked B2's schema work). Outside that context (a hypothetical standalone deployment of this skill), the equivalent is a `curl` `POST`/`PATCH` to `{SUPABASE_URL}/rest/v1/...` with `Prefer: resolution=merge-duplicates` and the `SUPABASE_SERVICE_ROLE_KEY` (bypasses RLS) in the `apikey`/`Authorization` headers — see `docs/infra.md` for why that key isn't needed for the MCP path.
 8. State in one line that this week's plan was also synced to the web UI (or, on failure, say so plainly and continue — a sync failure never blocks delivering the local files).
 
-**Linking an athlete to the web UI (one-time, per athlete):** `supabaseAthleteId` starts `null`. Once the athlete has signed in at least once at the deployed web app (magic link, creates their `auth.users` row), find their Supabase Auth user id — in an MCP-attached session, `select id from auth.users where email = '<their email>'` — and set it as `athlete.json`'s `supabaseAthleteId`. Until they've done that, there's nothing to link and this step stays skipped.
+**Linking an athlete to the web UI (one-time, per athlete):** `supabaseAthleteId` starts `null`. Once the athlete has signed in at least once at the deployed web app (magic link, creates their `auth.users` row), find their Supabase Auth user id — in an MCP-attached session, `select id from auth.users where email = '<their email>'` — and set it as `athlete.json`'s `supabaseAthleteId`. Until they've done that, there's nothing to link. This is exactly what the "When `supabaseAthleteId` is `null`" paragraph above tells the athlete how to do, rather than only being documented here for whoever happens to read `SKILL.md` — the athlete should never be left to discover the web dashboard exists on their own.
 
 ## Quality checks before delivering
 
@@ -160,7 +160,7 @@ Per task **B3** (`documents/multi-event-and-webui-tasks.md`): the web UI (`web/`
 6. Every workout file passes the validation checklist in its format reference (`references/zwo-format.md` for ZWO) and is rendered inline as a labeled fenced code block.
 7. All human-readable text is in the config language and units, honoring `styleNotes`. State the week id, focus, detected rider type, last week in one line, and which files you created.
 8. When `targetEvent`/`eventDate` are both set, `season-plan.json`'s `currentPhaseId` was recomputed against today's date (not trusted stale), the stated phase in Step 4's summary line matches it, and `season-plan.md` was written/updated to match — regenerated or replanned this run if it didn't already exist or a divergence was reported.
-9. When `supabaseAthleteId` is set, this week's `plans`/`workouts` rows were upserted (Step 7) and that was stated in one line; when it's `null`, nothing Supabase-related was attempted or mentioned.
+9. When `supabaseAthleteId` is set, this week's `plans`/`workouts` rows were upserted (Step 7) and that was stated in one line; when it's `null`, no upsert was attempted, but the athlete was told in one line how to link a web dashboard account (and linking was attempted on the spot if they said they'd already signed in and this session has Supabase access) — never silently skipped without mention.
 10. When `supabaseAthleteId` is set, recent `nutrition_logs` were read back (Step 1) and any missed-target/hydration pattern is reflected in this run's fueling guidance rather than silently dropped.
 11. When `supabaseAthleteId` and `targetEvent`/`eventDate` are all set, the `events` row for this athlete (Step 7) matches the current `targetEvent`/`eventDate` exactly — deleted and reinserted this run, never left stale from a prior event.
 12. When `supabaseAthleteId` is set, recent `workout_logs`/`strength_logs` were read back (Step 1) and interpreted via `workout-library.md`'s/`strength-library.md`'s logged-outcome tables; any resulting progression-step or load/rep adjustment was both applied (Step 3/Step 5) and stated explicitly in this run's last-week summary; and a `coach_notes` row was written (Step 7) for each interpreted log that didn't already have one.
