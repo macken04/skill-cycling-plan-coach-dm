@@ -309,7 +309,7 @@ infra required. Ships as a `SKILL.md` version bump.
 Requires external infra. Sequenced exactly as the plan's phased delivery so
 each phase closes a working loop before the next adds scope.
 
-- [ ] **B1. Provision infra**
+- [x] **B1. Provision infra**
   - Manual (user): create a Supabase project; record the project URL, anon
     key, and service-role key. Create a Vercel project (can stay empty for
     now, just linked to this repo or a new one for the frontend).
@@ -317,10 +317,22 @@ each phase closes a working loop before the next adds scope.
     as an environment variable in the Claude Code environment; document the
     required env var names (e.g. in a new `docs/infra.md` or this repo's
     README) so future sessions know what to expect.
+  - **Shipped via the Supabase/Vercel MCP connectors** rather than manual
+    dashboard clicks: Supabase project `cycling-plan-coach`
+    (`gurxzxcdxxxezwyatwlf`, `eu-west-1`) and Vercel project
+    `cycling-plan-coach` (linked to this repo) both created; URL, anon/
+    publishable key, and required env var names documented in
+    `docs/infra.md`. The service-role key itself isn't exposed by the
+    Supabase connector (by design) — `docs/infra.md` documents how to pull
+    it from the dashboard and add it to the Claude Code environment.
   - **Test:** `curl` the Supabase REST endpoint (`GET {SUPABASE_URL}/rest/v1/`
     with the `apikey`/service-role header) from the Claude Code environment
     and confirm a 200/expected response — proves the env var and network
     path both work.
+  - **Partially verified:** network path + API confirmed reachable this
+    session with the anon key (401 "only service_role can be used here" —
+    expected, proves connectivity). The full 200-with-service-role-key test
+    is pending the key being added to the environment per `docs/infra.md`.
   - Depends on: none (blocked on user action).
 
 - [ ] **B2. Schema + RLS policies**
