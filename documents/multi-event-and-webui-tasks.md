@@ -438,16 +438,42 @@ each phase closes a working loop before the next adds scope.
     build on a linked account) can run.
   - Depends on: B2.
 
-- [ ] **B4. Nutrition logging UI**
-  - Add a daily entry form + history view to the frontend, writing to
-    `nutrition_logs`, including the hit/missed-target + hydration flag
-    (FR3).
-  - Update the skill's Step 1 (data pull) to read recent `nutrition_logs`
-    back in and factor them into fueling notes.
-  - **Test:** log 3 days of nutrition via the UI, including at least one
-    missed-target day; run the skill's weekly planning flow and confirm the
-    generated plan's summary references the logged data (e.g. mentions
-    average carb intake or a hydration gap).
+- [x] **B4. Nutrition logging UI**
+  - **Shipped:** `web/app/nutrition/page.tsx` — a daily entry form (date,
+    carbs, calories, hit/missed carb target, hydration note, body weight,
+    free notes) plus a history view (most recent 30 days), writing to
+    `nutrition_logs` via an upsert keyed on the table's existing
+    `(athlete_id, log_date)` unique constraint — logging the same day twice
+    edits that day's row rather than erroring or duplicating. Nav links
+    added between `/plan` and `/nutrition`. `lib/types.ts` gained
+    `NutritionLog`/`CarbTargetStatus` types mirroring the migration.
+  - Updated `SKILL.md` Step 1: when `supabaseAthleteId` is set, reads back
+    the last 7-14 days of `nutrition_logs` (same `execute_sql`-via-MCP
+    approach as Step 7) and folds the `carb_target_status` split and any
+    hydration/notes text into this run's fueling guidance, calling out a
+    repeated `missed`/hydration pattern explicitly rather than absorbing it
+    silently. Added as quality-check 10.
+  - **Test — same shape of partial as B3, for the same reason:** the
+    literal test (log 3 days via the UI, then run the skill and check the
+    plan references it) needs a real signed-in, linked athlete, which is
+    still blocked on David's one-time linking step from B3
+    (`docs/infra.md`'s "Linking bootstrap") — not something this session can
+    complete without inbox/browser access to a real magic-link sign-in.
+    Instead verified the exact DB-layer behavior the UI and skill depend on,
+    using the same `set_config('request.jwt.claims', ...)`-simulated-auth
+    technique as B2/B3 (two dummy athletes, cleaned up after): athlete A's
+    upsert of the same `log_date` twice (hit → missed, with a hydration
+    note) updates one row rather than duplicating it; three distinct days
+    land as three rows, one of them `missed`, matching the test's "3 days,
+    at least one missed" shape; athlete B sees `0` of athlete A's rows and a
+    write attempt against athlete A's row is rejected `42501`; an invalid
+    `carb_target_status` value is rejected by the check constraint. `npm
+    run build`/`npm run lint` pass in `web/`; `/nutrition` and `/plan` were
+    smoke-tested unauthenticated against a local dev server (both return
+    200 and render the client-side loading/sign-in state, same pattern as
+    B3). **Still open, same blocker as B3:** once David completes the
+    linking bootstrap, the full round-trip (real UI entry → skill reads it
+    back → plan summary reflects it) should be re-run for real.
   - Depends on: B3.
 
 - [ ] **B5. S&C logging UI**

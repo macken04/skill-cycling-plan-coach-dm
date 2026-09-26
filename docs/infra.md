@@ -149,7 +149,21 @@ Auth user id, and that id doesn't exist until he's signed in at the web app
 at least once (there's no admin API call available here — no service-role
 key — to create it ahead of time). So:
 
-1. David visits the deployed `web/` app (Vercel preview/production URL,
+0. **One-time Supabase Auth config fix, found when this was actually tried:**
+   the project's Auth **Site URL** was still the default `localhost:3000`
+   (nothing in B1-B3 had set it, since no real email round-trip had been
+   tested before). A magic-link email always resolves to the Site URL
+   unless the requested redirect is in the **Redirect URLs** allow-list, so
+   the link David received pointed at `localhost` instead of the deployed
+   app. Not fixable via the Supabase MCP connector (Auth config isn't a
+   Postgres table `execute_sql` can reach) — fix once in the dashboard:
+   [Auth → URL Configuration](https://supabase.com/dashboard/project/gurxzxcdxxxezwyatwlf/auth/url-configuration)
+   for the `cycling-plan-coach` project — set **Site URL** to
+   `https://cycling-plan-coach.vercel.app` and add
+   `https://cycling-plan-coach.vercel.app/**` to **Redirect URLs**. Any
+   magic-link email sent *before* this fix still points at `localhost` and
+   won't work even after saving — request a fresh one.
+1. David visits the deployed `web/` app (`https://cycling-plan-coach.vercel.app`,
    logged into the right Vercel account per the SSO note above) and signs
    in with his email via the magic link.
 2. In a Claude Code session with the Supabase MCP connector attached, look
@@ -178,10 +192,33 @@ first. `npm run build` and `npm run lint` both pass clean in `web/`, and
 the unauthenticated `/login` and `/plan` routes were smoke-tested against
 a local dev server.
 
-## Next steps (B4/B5/B8)
+## Nutrition logging UI (B4 — done)
 
-Nutrition and S&C logging UIs (B4/B5) and reading logged signals back into
-the coaching flow (B8) build on this loop. B6 (folding Milestone A's
-season-macrocycle content into the DB layer) and B9 (persisting
-`season-plan.json` itself) still wait on Milestone A being finished per the
-tasks file's suggested execution order.
+Shipped in `web/app/nutrition/page.tsx`: a daily entry form + history view
+writing to `nutrition_logs`, upserting on the table's existing
+`(athlete_id, log_date)` unique constraint (re-logging a day edits it, no
+duplicates). `SKILL.md` Step 1 now reads the last 7-14 days of
+`nutrition_logs` back (same `execute_sql`-via-MCP path as Step 7's writes)
+when `supabaseAthleteId` is set, and folds the hit/missed split and any
+hydration/notes text into that run's fueling guidance.
+
+**Verified this session** (dummy athletes, same pattern as B2/B3, cleaned up
+afterward): the upsert path correctly updates-in-place rather than
+duplicating a re-logged day; RLS scoping holds for `nutrition_logs` the same
+way it does for `plans`/`workout_logs` (a second authenticated athlete sees
+zero of the first's rows and a cross-athlete write is rejected `42501`); the
+`carb_target_status` check constraint rejects an invalid value. `npm run
+build`/`npm run lint` pass in `web/`.
+
+**Not yet verified end-to-end with a real browser session** — same blocker
+as B3: needs the linking bootstrap above (David signed in once,
+`supabaseAthleteId` set) before a real UI entry can be read back by a real
+skill run and checked against the resulting plan summary.
+
+## Next steps (B5/B8)
+
+The S&C logging UI (B5) and reading logged signals back into the coaching
+flow (B8) build on this loop. B6 (folding Milestone A's season-macrocycle
+content into the DB layer) and B9 (persisting `season-plan.json` itself)
+still wait on Milestone A being finished per the tasks file's suggested
+execution order.
