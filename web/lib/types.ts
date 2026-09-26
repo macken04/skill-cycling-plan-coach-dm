@@ -34,6 +34,15 @@ export interface Plan {
   rendered_markdown: string;
 }
 
+export interface Event {
+  id: string;
+  athlete_id: string;
+  event_key: string | null;
+  event_name: string | null;
+  event_date: string;
+  notes: string;
+}
+
 export interface Workout {
   id: string;
   plan_id: string;
