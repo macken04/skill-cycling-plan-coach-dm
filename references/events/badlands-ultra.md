@@ -142,14 +142,15 @@ final week primarily as glycogen/rest preparation, not fitness-building.
 ## Fueling delta
 
 This section adds the Badlands-specific delta on top of the shared fueling
-model in `references/nutrition.md`. **Note:** `nutrition.md` does not exist
-in this repo yet — it's scoped as a separate task; once it lands, this
-section should reference its daily carb periodization and race-day fueling
-principles directly rather than restating them.
+model in `references/nutrition.md` (long-ride daily carb periodization,
+on-bike g/h targets, hydration/electrolyte guidance, and race-day fueling
+principles) — read that file first; only the Badlands-specific emphasis is
+repeated here.
 
-- **Gut training toward 90–120 g/h carbohydrate** on long training rides
-  during build/peak, progressively, since the race requires sustained high
-  carb intake for many consecutive hours across multiple days.
+- **Gut training toward the top of `nutrition.md`'s long-ride on-bike range
+  (90–120 g/h)** on long training rides during build/peak, progressively,
+  since the race requires sustained high carb intake for many consecutive
+  hours across multiple days.
 - **Desert heat electrolyte load** — sodium/electrolyte intake should be
   trained and tuned for heat exposure (Tabernas/Gorafe/Cabo de Gata
   conditions), not just carbohydrate.
