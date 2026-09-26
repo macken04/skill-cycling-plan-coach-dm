@@ -8,6 +8,8 @@ Every question below is tagged with how to ask it:
 - **[value]** — a concrete number or short fact (age, weight, FTP, a date). Free text is fine because there's nothing to categorize.
 - **[narrative]** — an open invitation for a longer, personal answer. Tell the athlete a few sentences are welcome and useful. Do not offer a pick-list here; the value is in what the athlete chooses to describe.
 
+Ask one question per turn regardless of tag: ask it, wait for the athlete's answer, then ask the next. Never bundle multiple questions — even several **[value]** ones back to back, like age/weight/FTP/target W/kg — into a single message the athlete has to parse and answer all at once. This applies uniformly across choice, value, and narrative questions.
+
 ## 1. Language and units
 
 1. **[choice]** Language for your plans? Options: English, Nederlands, Francais, Deutsch, Espanol, Italiano, or name another.
