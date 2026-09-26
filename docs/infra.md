@@ -4,6 +4,14 @@ Provisioned per `documents/multi-event-and-webui-tasks.md` task **B1**. This
 records what exists and what future sessions (or the deployed skill/web UI)
 need as environment variables. No schema exists yet — that's B2.
 
+> **⚠️ Action needed from David:** `SUPABASE_SERVICE_ROLE_KEY` is not yet set.
+> Grab it from the Supabase dashboard (Project Settings → API,
+> `cycling-plan-coach` project) and add it as an environment variable in
+> this Claude Code environment's settings, then start a new session. See
+> the Supabase section below for the exact steps. Until this is done, B1's
+> test isn't fully passing and **B2 (schema + RLS)** can't be verified
+> end-to-end.
+
 ## Supabase
 
 - **Project:** `cycling-plan-coach` (org: `davidmacken@gmail.com's Org`)

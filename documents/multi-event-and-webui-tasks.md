@@ -336,6 +336,10 @@ each phase closes a working loop before the next adds scope.
   - Depends on: none (blocked on user action).
 
 - [ ] **B2. Schema + RLS policies**
+  - **⚠️ Blocked on `SUPABASE_SERVICE_ROLE_KEY` being added to the Claude Code
+    environment** (see `docs/infra.md`) — applying migrations and verifying
+    RLS is actually enforced both need it. Check `docs/infra.md`'s callout
+    at the start of a session before picking this up.
   - Write a SQL migration (e.g. `db/schema.sql` or a Supabase migrations
     folder) creating the seven tables from the plan: `athletes`, `events`,
     `plans`, `workouts`, `workout_logs`, `nutrition_logs`, `strength_logs`,
