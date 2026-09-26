@@ -235,7 +235,7 @@ infra required. Ships as a `SKILL.md` version bump.
     "Limiters this event trains for" section.
   - Depends on: A9, A10.
 
-- [ ] **A12. `season-plan-format.md`**
+- [x] **A12. `season-plan-format.md`**
   - Create `references/season-plan-format.md` (parallel to
     `plan-format.md`): the rendered/human-readable format for the season
     skeleton — phase table, deload markers, trial-event ladder with
