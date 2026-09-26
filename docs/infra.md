@@ -9,8 +9,10 @@ need as environment variables. No schema exists yet — that's B2.
 > `cycling-plan-coach` project) and add it as an environment variable in
 > this Claude Code environment's settings, then start a new session. See
 > the Supabase section below for the exact steps. Until this is done, B1's
-> test isn't fully passing and **B2 (schema + RLS)** can't be verified
-> end-to-end.
+> full end-to-end test (a 200 using the service-role key) isn't passing,
+> and **B3**'s skill-side writes (which need the service-role key to bypass
+> RLS from the coaching side) can't be built. **B2 turned out not to need
+> it** — see below.
 
 ## Supabase
 
@@ -57,8 +59,62 @@ environment.
 No environment variables needed on Vercel yet — those get added once B3's
 frontend exists and needs `SUPABASE_URL`/`SUPABASE_ANON_KEY` client-side.
 
-## Next steps (B2)
+## Schema + RLS (B2 — done)
 
-Write the SQL migration (schema + RLS) per B2's spec, apply it via the
-Supabase MCP connector's migration tools, and confirm RLS is actually
-enforced (not just declared) before building anything on top of it.
+Migration: `supabase/migrations/20260926171317_initial_schema.sql`, applied
+via the Supabase MCP connector's `apply_migration` tool. Creates the seven
+tables from the plan doc plus `coach_notes` (FR5); `athletes` columns are
+reconciled against `references/athlete-config.md`'s current ~30-field table,
+not the plan doc's original sketch (see the migration's header comment).
+`workout_logs`/`strength_logs` get the FR3 five-way `session_status` enum;
+`nutrition_logs` gets its own `carb_target_status` ('hit'/'missed') +
+`hydration_note` instead of reusing that vocabulary.
+
+**On the service-role key:** the B1 blocker callout above assumed applying
+migrations and verifying RLS both needed `SUPABASE_SERVICE_ROLE_KEY` as a
+local env var. That turned out to be wrong — `apply_migration`/`execute_sql`
+authenticate via the Supabase MCP connector's own project-scoped access
+token, independent of that env var, and RLS enforcement can be verified from
+outside using the already-known, publicly-safe `SUPABASE_ANON_KEY` (no
+service-role key needed to prove the *anon* role is denied). So B2 shipped
+without waiting on it.
+
+**RLS design:** every table has `athlete_id` (or `id` on `athletes` itself)
+and one `for all using (auth.uid() = athlete_id)` policy — the standard
+Supabase per-user pattern. No Supabase Auth login flow exists yet (that's
+part of B3's frontend work), so today `auth.uid()` never matches anything
+for an anon/unauthenticated request — reads return an empty set and writes
+are rejected with a `42501` RLS violation, which is the correct state for
+infra with no frontend yet. The service-role key (once added) bypasses RLS
+entirely for the skill's own server-side writes, per the design above.
+
+**Verified this session** (`gurxzxcdxxxezwyatwlf`, all via MCP + the anon
+key, no service-role key needed):
+- All 8 tables created, RLS enabled on all 8, zero rows left behind.
+- `get_advisors(type: security)` returns zero lint findings.
+- All five `session_status` values insert cleanly on `workout_logs`; an
+  invalid value (`'not_a_real_status'`) is rejected by the enum type.
+- The `coach_notes` "exactly one of workout_log_id/strength_log_id" check
+  constraint rejects a row with both (or neither) set.
+- With two dummy athlete rows and populated child rows present server-side,
+  an unauthenticated REST call with the anon key to `GET /athletes` and
+  `GET /workout_logs` both return `200 []` (not just filtered — zero
+  visibility), and an unauthenticated `POST /nutrition_logs` returns
+  `401` / `42501 row violates row-level security policy`.
+- **Not yet verified:** two different *authenticated* users seeing only
+  their own rows (the literal B2 test scenario) — that needs a real
+  Supabase Auth session per athlete, which doesn't exist until B3 wires up
+  login. The zero-visibility-for-anon test above is the strongest check
+  available before then, and confirms the policies are live and scoped to
+  `auth.uid() = athlete_id` rather than merely declared with no effect.
+
+## Next steps (B3)
+
+Core loop: the skill posts a generated plan + workouts to the API (service-
+role key, bypasses RLS) and a bare-bones Next.js page lists the current
+week with a five-way status picker that writes to `workout_logs`. The
+frontend will need a real (if minimal) Supabase Auth login — email/password
+or magic link — for `auth.uid() = athlete_id` to resolve to anything; that
+wasn't needed for B2's schema/RLS work but is now B3's prerequisite for the
+anon-key-authenticated path (the skill's own writes can proceed with the
+service-role key regardless).
