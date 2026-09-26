@@ -27,6 +27,23 @@ Generic exercise bank. Translate exercise names, load cues, and rest cues into t
 | Dead bug | 3 x 10 / side | low back to the floor | 45 s |
 | Bird dog | 3 x 10 / side | slow, no hip wobble | 45 s |
 
+## Logged-outcome rules (override the default load progression above)
+
+Once an athlete logs a strength session's outcome (web UI, per
+`documents/multi-event-and-webui-tasks.md` B5/B8), its status overrides the
+default "progress by load on the compounds" rule above for that exercise's
+next occurrence. Same status vocabulary as `workout-library.md`'s bike-session
+rules. Until logged data exists (no `strength_logs` table yet — see B2/B8),
+this table is unused; the default rule stands.
+
+| Logged status | Adjustment at the next occurrence of that exercise |
+|---|---|
+| `completed_as_planned` | Progress by load, per the default rule above. |
+| `completed_easier_than_planned` | Apply the next load increment now, at this occurrence, rather than waiting a full cycle — one increment ahead of the default cadence. |
+| `completed_harder_than_planned` | Hold at the same load; do not add load next time. |
+| `failed_too_hard` | Regress to the load/rep scheme this exercise used one occurrence back (or, if there is no prior occurrence, apply the new-lifter first-block scheme above: bodyweight/light load, higher reps) at the next occurrence. State the adjustment and why in the next plan's last-week summary. |
+| `skipped` (this session skipped twice or more in a row) | Treat as a missed-training signal: re-ramp at reduced load for the next 1-2 sessions (same reduced-load re-ramp described above for a `returning` or low-frequency lifter) before returning to the previously-working load. |
+
 ## Building a session
 
 - Full strength session: 2-3 strength lifts + 2 core moves.

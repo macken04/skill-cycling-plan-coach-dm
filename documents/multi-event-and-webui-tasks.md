@@ -165,7 +165,7 @@ infra required. Ships as a `SKILL.md` version bump.
     existing example plan in the same file.
   - Depends on: A2, A5.
 
-- [ ] **A8. Interpretation rules for logged signals**
+- [x] **A8. Interpretation rules for logged signals**
   - Per the agentic-coach PRD (FR4): write the rule table mapping each FR3
     status to a concrete adjustment, into whichever reference file already
     governs that archetype's progression:
