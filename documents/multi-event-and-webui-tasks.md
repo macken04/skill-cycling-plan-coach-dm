@@ -278,7 +278,7 @@ infra required. Ships as a `SKILL.md` version bump.
     and nearest trial event that week falls under.
   - Depends on: A2, A9, A11.
 
-- [ ] **A15. Interpretation rules for trial-event outcomes**
+- [x] **A15. Interpretation rules for trial-event outcomes**
   - Per PRD FR8: extend A8's rule table with trial-event-specific signals
     (e.g. a B-event logged with fueling distress adjusts the fueling ramp
     from A14 or slows the ladder; a comfortably-completed B-event can pull
@@ -291,7 +291,7 @@ infra required. Ships as a `SKILL.md` version bump.
     as A8's test).
   - Depends on: A8, A10, A14.
 
-- [ ] **A16. Version bump, changelog, description updates**
+- [x] **A16. Version bump, changelog, description updates**
   - Bump `package.json` version (breaking config shape → major bump, e.g.
     `2.2.0` → `3.0.0`).
   - Add a `CHANGELOG.md` entry at the top describing multi-event + nutrition

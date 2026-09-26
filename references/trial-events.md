@@ -163,3 +163,29 @@ This reproduces the PRD's stated example (C: ~150-200 km → ~250-300 km;
 B: an elevation/terrain-mix event culminating in an overnight rehearsal)
 directly from the generic method above and this event's own limiter list —
 confirming the method generalizes rather than hard-coding Badlands' numbers.
+
+## 7. Interpreting a logged outcome (A15)
+
+Once a rung is logged (its `season-plan.json` entry gets `status: logged`
+and an `outcome` object, per `macrocycle-model.md`'s A15 schema), its
+`completionStatus` overrides the default placement/sizing that §2-§4 would
+otherwise give the *next* rung — the logged rung's own dates/spec are never
+rewritten, only what comes after. This is the same style of rule as A8's
+workout-outcome table (`workout-library.md`), applied to trial events
+instead of weekly sessions. Per `documents/agentic-coach-prd.md` FR4/FR8,
+these adjustments are stated explicitly in the next plan's summary, not
+left implicit.
+
+| Logged `completionStatus` | Adjustment to the next scheduled rung |
+|---|---|
+| `completed_comfortably` | Pull the next rung's `targetDate` forward: recompute §4's formula as if "now" were the date this rung was logged, but never earlier than that logged date itself, never past the next rung's phase boundary, and never skipping a rung entirely. State the new date in the plan's summary. |
+| `completed_as_planned` | No change — the next rung keeps the `targetDate` and `spec` §2-§4 already produced for it. |
+| `completed_with_difficulty` | Hold the next rung's fidelity/distance/elevation at this rung's own `spec` level instead of stepping up the default increment (e.g. a C2 logged `completed_with_difficulty` means B1 reuses C2's `spec` values rather than advancing to B1's normal higher-fidelity target). `targetDate` is unchanged. If this is the second consecutive rung logged `completed_with_difficulty` or worse, this counts as "a trial event that went badly and reveals a limiter needs more work" (`season-macrocycle-prd.md` FR7) — flag it as a replan trigger for A13 rather than only adjusting the one rung. |
+| `dnf_stopped_early` | Same hold as `completed_with_difficulty`, and **always** flag the A13 replan trigger in the same plan message — a DNF is never absorbed silently, even on the first occurrence. |
+| `skipped` | No difficulty adjustment on its own (same principle as A8's single-skip rule) — reschedule this rung's exact `spec` at the next available slot before the following rung's `targetDate`, rather than dropping straight to the next rung's higher fidelity. Two consecutive `skipped` rungs escalate to the same replan trigger as `dnf_stopped_early`. |
+
+`fuelingSignal` on the same outcome is interpreted separately, per
+`nutrition.md`'s "Interpreting a logged fueling signal" section — a rung can
+trigger both tables at once (e.g. `completed_as_planned` +
+`gi_distress`: the next rung's difficulty is unchanged, but the fueling ramp
+still holds per the fueling table).

@@ -146,6 +146,30 @@ future-proofing reason `athlete-config.md` already keys on it.
 }
 ```
 
+### `outcome` object shape (A15)
+
+Populated on the triggering `trialEvents[]` entry once the athlete reports
+the rung's result (chat or, once B3/B8 ship, the web UI). Both fields are
+independent signals — a rung can be `completionStatus: completed_as_planned`
+and still carry `fuelingSignal: gi_distress`, since finishing the distance
+and fueling cleanly are different things:
+
+```json
+{
+  "completionStatus": "completed_comfortably | completed_as_planned | completed_with_difficulty | dnf_stopped_early | skipped",
+  "fuelingSignal": "on_target | gi_distress | bonked_underfueled | not_applicable",
+  "notes": "free text, optional"
+}
+```
+
+`completionStatus` and `fuelingSignal` are interpreted by separate rule
+tables, since they drive different adjustments: `references/trial-events.md`
+§7 for `completionStatus` (ladder difficulty/timing), and
+`references/nutrition.md`'s "Interpreting a logged fueling signal" section
+for `fuelingSignal` (the season-level fueling ramp). `fuelingSignal` is
+`not_applicable` (never omitted) when the rung has no meaningful fueling
+component (e.g. a short technical-only C-event).
+
 `phases` always has exactly 5 entries in the fixed order above. `deload` is
 `true` only for `deload-1`/`deload-2`; it is redundant with the `id` but
 kept as its own field per the PRD's explicit requirement (FR3) and because
