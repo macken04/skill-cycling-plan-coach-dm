@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.0] - 2026-09-26
+
+### Added
+
+- **Web UI core loop** (`web/`, task B3): a bare-bones Next.js app with Supabase Auth magic-link sign-in and a `/plan` page listing the current week's workouts, each with the five-way status picker (`completed_as_planned`/`completed_easier_than_planned`/`completed_harder_than_planned`/`failed_too_hard`/`skipped`) writing to `workout_logs`. Deployed via the `cycling-plan-coach` Vercel project.
+- **`SKILL.md` "Sync to Supabase" step**: after producing the weekly plan/workout files, the skill upserts them into Supabase's `plans`/`workouts` tables for the web UI to read — gated on a new `athlete.json` field, `supabaseAthleteId` (`references/athlete-config.md`), which stays `null` (and this step stays fully skipped, no behavior change) until the athlete has linked their account by signing in at the web app once.
+
+### Changed
+
+- **Minor version bump** (`3.0.0` → `3.1.0`): additive and backwards-compatible — an unlinked athlete (`supabaseAthleteId: null`, the default) sees no change in behavior.
+
 ## [3.0.0] - 2026-09-26
 
 ### Added

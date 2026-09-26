@@ -108,13 +108,80 @@ key, no service-role key needed):
   available before then, and confirms the policies are live and scoped to
   `auth.uid() = athlete_id` rather than merely declared with no effect.
 
-## Next steps (B3)
+## Core loop (B3 — done)
 
-Core loop: the skill posts a generated plan + workouts to the API (service-
-role key, bypasses RLS) and a bare-bones Next.js page lists the current
-week with a five-way status picker that writes to `workout_logs`. The
-frontend will need a real (if minimal) Supabase Auth login — email/password
-or magic link — for `auth.uid() = athlete_id` to resolve to anything; that
-wasn't needed for B2's schema/RLS work but is now B3's prerequisite for the
-anon-key-authenticated path (the skill's own writes can proceed with the
-service-role key regardless).
+Shipped in `web/`: a bare-bones Next.js app (App Router, TypeScript) with
+Supabase Auth magic-link sign-in (`app/login`), and `app/plan` listing the
+current week's workouts (most recent `plans` row with `week_start_date <=`
+today, for `athlete_id = auth.uid()`) with a five-way status picker per
+workout that writes to `workout_logs`. No password flow, no server-side
+auth callback route needed — `supabase-js`'s `detectSessionInUrl` picks the
+session up from the magic-link redirect automatically.
+
+The skill's side (per `SKILL.md`'s new "Step 7 - sync to Supabase"): after
+producing the weekly plan/workout files, if `athlete.json`'s
+`supabaseAthleteId` is set, it upserts `plans`/`workouts` for the week. **It
+turned out not to need `SUPABASE_SERVICE_ROLE_KEY` either** (same shape of
+surprise as B2): inside a Claude Code session with the Supabase MCP
+connector attached, `execute_sql` authenticates with its own project-scoped
+token and isn't subject to RLS, so it can upsert `plans`/`workouts` without
+that key. The `curl` + service-role-key path documented below is kept as
+the fallback for a hypothetical deployment of this skill outside Claude
+Code/MCP, where that shortcut isn't available.
+
+**Vercel project reconfigured for the frontend:** `rootDirectory: "web"`,
+`framework: "nextjs"`; `NEXT_PUBLIC_SUPABASE_URL` and
+`NEXT_PUBLIC_SUPABASE_ANON_KEY` added as project env vars (production/
+preview/development) — same values as `web/.env.example`, safe to expose
+client-side per the table above. The project has Vercel's SSO/Deployment
+Protection on (`ssoProtection.deploymentType: all_except_custom_domains`,
+set before this session, not changed), so the `*.vercel.app` URL only
+opens for someone logged into the `davidmackengmailcoms-projects` Vercel
+account — expected for a single-athlete v1 with no custom domain, but
+worth knowing if David wants Badlands-training-buddy or future athletes to
+reach it directly.
+
+**Linking bootstrap — needs one action from David, not scriptable from
+here:** `athlete.json`'s new `supabaseAthleteId` field starts `null`
+(`references/athlete-config.md`). The chicken-and-egg: the skill can only
+upsert an `athletes`/`plans`/`workouts` row once it knows David's Supabase
+Auth user id, and that id doesn't exist until he's signed in at the web app
+at least once (there's no admin API call available here — no service-role
+key — to create it ahead of time). So:
+
+1. David visits the deployed `web/` app (Vercel preview/production URL,
+   logged into the right Vercel account per the SSO note above) and signs
+   in with his email via the magic link.
+2. In a Claude Code session with the Supabase MCP connector attached, look
+   up `select id from auth.users where email = 'davidmacken@gmail.com'`
+   and set the result as `supabaseAthleteId` in his `athlete.json`.
+3. From then on, Step 7 syncs every generated week automatically.
+
+**Verified this session** (dummy athletes, not David's real account —
+cleaned up afterward, same pattern as B2): created two athletes + one plan
++ one workout each; via `set_config('request.jwt.claims', ...)` (the same
+mechanism PostgREST itself uses, so this exercises the *authenticated*
+path B2 explicitly deferred, not just the anon-key path) confirmed athlete
+A's `select` on `plans` scoped by `athlete_id` returns only their own row,
+a direct `select count(*)` against athlete B's `plans` row returns `0` for
+athlete A, athlete A's `insert` into `workout_logs` against their own
+workout succeeds, and athlete A's `insert` into `workout_logs` against
+athlete B's workout is rejected with `42501` (RLS violation) — the literal
+two-different-authenticated-athletes test B2 left open. All test rows
+deleted afterward (cascade from deleting the two athlete rows).
+
+**Not yet verified end-to-end with a real browser session:** the actual
+magic-link email round-trip (this session has no access to David's inbox)
+and the skill's live `execute_sql` upsert against a real `athletes` row
+with a real `supabaseAthleteId` — both need the linking bootstrap above
+first. `npm run build` and `npm run lint` both pass clean in `web/`, and
+the unauthenticated `/login` and `/plan` routes were smoke-tested against
+a local dev server.
+
+## Next steps (B4/B5/B8)
+
+Nutrition and S&C logging UIs (B4/B5) and reading logged signals back into
+the coaching flow (B8) build on this loop. B6 (folding Milestone A's
+season-macrocycle content into the DB layer) and B9 (persisting
+`season-plan.json` itself) still wait on Milestone A being finished per the
+tasks file's suggested execution order.

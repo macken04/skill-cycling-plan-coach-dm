@@ -389,7 +389,7 @@ each phase closes a working loop before the next adds scope.
     verification writeup.
   - Depends on: B1.
 
-- [ ] **B3. Core loop, minimal**
+- [x] **B3. Core loop, minimal**
   - Update the skill so it posts a generated plan + its workouts to the API
     (via `curl` + service key) instead of, or alongside, local files.
   - Build a bare-bones Next.js page on Vercel listing the current week's
@@ -400,11 +400,42 @@ each phase closes a working loop before the next adds scope.
     no rules-evaluation endpoint is required here — the status just needs to
     be captured and stored so B8 can read it back. (A submit-time inline
     response is deferred to B7.)
-  - **Test (end-to-end):** run the skill to generate a week; query
-    `plans`/`workouts` via `curl` and confirm the rows exist and match the
-    generated content. Load the frontend page, log one workout with each of
-    the five statuses in turn, and confirm each produces a `workout_logs`
-    row with the correct `workout_id` and `status` value.
+  - **Shipped:** `web/` — a bare-bones Next.js (App Router/TypeScript) app
+    with Supabase Auth magic-link sign-in and a `/plan` page listing the
+    current week's workouts with the five-way status picker, writing to
+    `workout_logs`. Vercel project reconfigured (`rootDirectory: "web"`,
+    `framework: "nextjs"`, `NEXT_PUBLIC_SUPABASE_URL`/
+    `NEXT_PUBLIC_SUPABASE_ANON_KEY` set) and deploying from this repo.
+  - **The skill's posting side turned out not to need `curl` + the
+    service-role key**, same shape of surprise as B2: `SKILL.md`'s new
+    "Step 7 - sync to Supabase" upserts `plans`/`workouts` via the Supabase
+    MCP connector's `execute_sql` (its own project-scoped token, not
+    subject to RLS) when running inside Claude Code; the `curl` +
+    service-role-key path is documented in `docs/infra.md` as the fallback
+    for a hypothetical non-MCP deployment. Gated on a new
+    `athlete.json` field, `supabaseAthleteId` (`references/athlete-config.md`)
+    — `null` until the athlete has signed in at the web app at least once,
+    in which case Step 7 is skipped entirely and nothing changes from
+    local-files-only behavior.
+  - **Test — partially done, one step needs David:** the end-to-end test as
+    written needs a real signed-in athlete, which needs a real magic-link
+    email round-trip this session can't complete (no inbox access). Instead
+    verified the exact RLS-scoped queries/writes the frontend and skill use
+    against two dummy athletes, simulating each one's authenticated session
+    via `set_config('request.jwt.claims', ...)` (the same mechanism
+    PostgREST itself uses) — the literal two-different-authenticated-
+    athletes scoping test B2 explicitly deferred: athlete A's `select` on
+    `plans` returns only their own row, a direct count against athlete B's
+    row returns 0, athlete A's `insert` into `workout_logs` on their own
+    workout succeeds, and the same insert against athlete B's workout is
+    rejected with `42501`. All test rows cleaned up afterward. `npm run
+    build`/`npm run lint` pass in `web/`; `/login` and `/plan` were smoke-
+    tested unauthenticated against a local dev server. **Still open:**
+    David needs to visit the deployed web app once and sign in via magic
+    link, then the resulting Supabase Auth user id needs setting as his
+    `supabaseAthleteId` — see `docs/infra.md`'s "Linking bootstrap" — before
+    the fully real version of this test (and B4/B5/B8's tests, which all
+    build on a linked account) can run.
   - Depends on: B2.
 
 - [ ] **B4. Nutrition logging UI**

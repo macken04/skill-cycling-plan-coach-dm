@@ -4,7 +4,7 @@ description: Plan a cyclist's training week as a standalone coaching package wit
 metadata:
   author: Elio Struyf <elio@struyfconsulting.be>
   license: MIT
-  version: 3.0.0
+  version: 3.1.0
 ---
 
 # Cycling plan coach
@@ -37,6 +37,8 @@ None of the self-reported fields above are fixed at onboarding: if the athlete m
 If `targetEvent` is set and matches an id in `references/events/README.md`, resolve its reference file for course/limiter context; if it doesn't match any registry id, treat it as free text and fall back to generic ultra-endurance heuristics rather than failing to resolve. It overrides session priorities (Step 2) and adds event-specific archetypes (Step 5) regardless of whether a season skeleton exists. When `eventDate` is also set, resolve the season skeleton next (below) before continuing into the main workflow — once it exists, it replaces the generic rolling periodization block in Step 4 with the Base/Deload/Build/Deload/Refine season-macrocycle model.
 
 If `age` is missing from an existing config, ask for it before continuing — it is required to set recovery windows. If `gender` is missing, ask for it or accept a skip; note that it defaults to gender-neutral W/kg benchmarks when absent.
+
+Also note `supabaseAthleteId` (nullable): when set, Step 7 below syncs this run's plan/workouts to Supabase for the web UI (`web/`, task B3); when `null`, nothing changes from local-files-only behavior. See "Linking an athlete to the web UI" under Step 7.
 
 ## Resolve the season skeleton (when `targetEvent` and `eventDate` are both set)
 
@@ -125,6 +127,22 @@ Save everything to `/mnt/user-data/outputs/` and present it. If that path is una
 3. When there is a full gym session, add a dedicated markdown file (e.g. `2026-W26-strength.md`) with sets, reps, rest, and coaching cues in the config language. Reference it from the main plan.
 4. When a `season-plan.json` was generated or replanned this run, also save/update `season-plan.md` (per `references/season-plan-format.md`) alongside the weekly files, pointing its current-phase section at this run's weekly plan file.
 
+### Step 7 - sync to Supabase (when linked)
+
+Per task **B3** (`documents/multi-event-and-webui-tasks.md`): the web UI (`web/`) reads this week's workouts and lets the athlete log completions there. The skill is the only writer of `plans`/`workouts` — the web UI only ever reads them and writes `workout_logs`/`nutrition_logs`/`strength_logs`.
+
+**Skip this step entirely** when `athlete.json`'s `supabaseAthleteId` is `null` (not yet linked) — deliver the local files exactly as in Step 6 and say nothing about Supabase.
+
+**When `supabaseAthleteId` is set**, after producing this run's files, upsert this week's data into Supabase (project `gurxzxcdxxxezwyatwlf`, per `docs/infra.md`) as the last thing this run does:
+
+1. Upsert the `athletes` row (`id` = `supabaseAthleteId`) from the current `athlete.json`, translating each `camelCase` field to its `snake_case` column per `supabase/migrations/20260926171317_initial_schema.sql`.
+2. Upsert the `plans` row for this run (`athlete_id`, `week_start_date`, `phase`, `deload`, `focus`, `ftp_used`, `rider_type`, `rendered_markdown` — the full plan markdown from Step 6). `(athlete_id, week_start_date)` is unique, so this is a true upsert: replanning the same week overwrites it, never appends a duplicate.
+3. Delete any existing `workouts` rows for that `plan_id` and re-insert one row per structured bike session built in Step 5 (`day`, `archetype`, `target` as JSON, `zwo_content`), so a replan can't leave stale sessions behind.
+4. In a Claude Code session with the Supabase MCP connector attached to this project, run the upserts via `execute_sql` (it authenticates with its own project-scoped token, independent of any local env var — the same approach that unblocked B2's schema work). Outside that context (a hypothetical standalone deployment of this skill), the equivalent is a `curl` `POST`/`PATCH` to `{SUPABASE_URL}/rest/v1/...` with `Prefer: resolution=merge-duplicates` and the `SUPABASE_SERVICE_ROLE_KEY` (bypasses RLS) in the `apikey`/`Authorization` headers — see `docs/infra.md` for why that key isn't needed for the MCP path.
+5. State in one line that this week's plan was also synced to the web UI (or, on failure, say so plainly and continue — a sync failure never blocks delivering the local files).
+
+**Linking an athlete to the web UI (one-time, per athlete):** `supabaseAthleteId` starts `null`. Once the athlete has signed in at least once at the deployed web app (magic link, creates their `auth.users` row), find their Supabase Auth user id — in an MCP-attached session, `select id from auth.users where email = '<their email>'` — and set it as `athlete.json`'s `supabaseAthleteId`. Until they've done that, there's nothing to link and this step stays skipped.
+
 ## Quality checks before delivering
 
 1. A weekly markdown plan file exists and includes all required sections (week id, goal, focus, FTP used, rider type, last-week summary, day-by-day schedule table, structured session detail blocks).
@@ -135,3 +153,4 @@ Save everything to `/mnt/user-data/outputs/` and present it. If that path is una
 6. Every workout file passes the validation checklist in its format reference (`references/zwo-format.md` for ZWO) and is rendered inline as a labeled fenced code block.
 7. All human-readable text is in the config language and units, honoring `styleNotes`. State the week id, focus, detected rider type, last week in one line, and which files you created.
 8. When `targetEvent`/`eventDate` are both set, `season-plan.json`'s `currentPhaseId` was recomputed against today's date (not trusted stale), the stated phase in Step 4's summary line matches it, and `season-plan.md` was written/updated to match — regenerated or replanned this run if it didn't already exist or a divergence was reported.
+9. When `supabaseAthleteId` is set, this week's `plans`/`workouts` rows were upserted (Step 7) and that was stated in one line; when it's `null`, nothing Supabase-related was attempted or mentioned.
