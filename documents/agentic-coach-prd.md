@@ -4,223 +4,199 @@ Status: draft, for review. Written to check the existing planning docs
 (`multi-event-and-webui-plan.md`, `multi-event-and-webui-tasks.md`) against a
 broader brief — turn this into an **agentic coach that supports wider
 events** — and to reset the roadmap so implementation tracks that brief
-instead of drifting toward a single hardcoded race.
+instead of drifting off it.
 
 Nothing has been built against the existing plan yet (no `references/events/`
 directory, no DB, no frontend exist in this repo as of this review), so this
 is a course-correction before Milestone A starts, not a rewrite of shipped
 work.
 
+**Revision note:** an earlier draft of this PRD misread "agentic" as
+*autonomous* — a background job that watches data on a timer and acts without
+being asked. That's explicitly not the brief. The athlete always initiates:
+either by asking the coach something in chat, or by entering data into the
+web UI (a completed workout, a failed one, a strength session, a nutrition
+entry). "Agentic" means the coach *interprets* whatever the athlete gives it
+and works out what adjustment it implies — it does not mean the system runs
+on its own between those inputs. This revision corrects that.
+
 ## 1. The brief
 
-Two words carry the weight, and the existing docs under-deliver on both:
-
-- **Wider events** — plural, general. The coach should handle the *range* of
-  events a cyclist trains for (gran fondos, road races/crits, stage races,
-  time trials, ultra-endurance/gravel, indoor century/sportive, "no event,
-  just fitness"), not one named race with a registry format that happens to
-  support more later.
-- **Agentic** — the coach should act with some autonomy between chat turns:
-  notice things (a missed session, a readiness crash, an approaching taper
-  window) and say something or adjust the plan, not only compute a new week
-  when the athlete opens a chat and types "plan my week."
+- **Wider events** — the event registry/file-per-event architecture already
+  in `multi-event-and-webui-plan.md` is the right shape. Badlands Ultra as
+  the one event built out is fine; nothing here requires adding more events
+  now. The only ask is that the architecture not paint itself into a corner
+  where adding event #2 later means restructuring rather than adding a file.
+- **Agentic** — the coach should be more than a form-filler for logged data.
+  Every athlete-initiated input — a chat message, or a data entry in the web
+  UI — should be read for what it implies about the plan, and reflected back
+  as a concrete adjustment (soften an archetype, don't progress it, flag it
+  in next week's summary), not just recorded and displayed.
 
 ## 2. Gap analysis: existing plan vs. the brief
 
-### 2.1 Event breadth — designed for one event, not a range
+### 2.1 Event breadth — no gap, no action needed
 
-`multi-event-and-webui-plan.md` and Milestone A of the tasks doc are
-architecturally fine (a registry + one file per event is extensible) but the
-**scope of work only instantiates one event**: A1 is "Event registry +
-Badlands Ultra event file," and every other Milestone A task is written
-around content that exists to support that single race. Nothing in Milestone
-A defines:
+The registry pattern (`references/events/README.md` + one file per event) in
+the existing plan already generalizes fine: a second event is a new file
+plus a registry line, nothing structural. **No change requested here** —
+noting only so the roadmap below doesn't reintroduce scope that isn't
+wanted.
 
-- An **event-type taxonomy** (e.g. `ultra-endurance`, `gran-fondo`,
-  `road-race-crit`, `stage-race`, `time-trial`, `indoor-sportive`) that
-  event-specific files plug into, so a new event is mostly *data*
-  (distance, terrain, format rules) against a shared periodization/session
-  template for its type — not a bespoke prose file written from scratch
-  each time.
-- A **second and third event** to prove the registry actually generalizes.
-  One instance never exercises the "registry" claim; it just hardcodes
-  Badlands with extra indirection.
-- What happens for the athlete whose event has **no file and no type
-  match** — today's fallback is "generic ultra-endurance heuristics" (A4),
-  which is wrong for a crit racer or gran fondo rider with no ultra file.
+### 2.2 Agentic behavior — the real gap: input goes in, nothing comes back out
 
-Net effect: if Milestone A ships as currently scoped, the skill goes from
-"no event concept" to "one event, hardcoded," which reads as narrower than
-the brief, not broader.
+The existing docs get the *shape* of athlete-initiated interaction right —
+everything is either a chat session or a web UI action, never a timer. What's
+missing is the **interpretation step** on the web UI side:
 
-### 2.2 Agentic behavior — not designed at all
+- Milestone B's schema (`workout_logs`, `nutrition_logs`, `strength_logs`)
+  captures status/notes as free fields, but nothing in the plan defines what
+  the coach *does* with a log that says "failed, too hard" versus one that
+  says "completed as planned." Right now that log would just sit in the
+  table until the athlete's next chat, and even then `SKILL.md` only has
+  "factor last week's load into the new week" (Step 3) — true for TSS/volume,
+  but there's no defined rule for a qualitative failure/difficulty signal.
+- Strength/S&C logging (B5) is scoped as "mark complete, sets/reps/load" with
+  no notion of "attempted but failed" and what that should trigger (regress
+  the load next time, flag a technique/recovery concern, etc.).
+- There's no shared place these interpretations land. A `coach_notes`-style
+  object (or equivalent field on the log rows themselves) is needed so the
+  athlete sees "next Thursday's session will be scaled back because Tuesday's
+  was logged as too hard" — otherwise the interpretation, even if the coach
+  makes it during the next planning chat, is invisible until then.
 
-Nothing in either existing doc gives the coach any autonomy. The entire
-system, including the planned web UI, is pull-only:
-
-- The skill only ever runs when the athlete opens Claude Code and asks for a
-  plan. There is no notion of the coach noticing anything between those
-  asks.
-- Milestone B's web app is explicitly scoped as "viewing plans and logging
-  data" — logging is one-directional (athlete → DB). Nothing reads the
-  logs back out proactively; the skill only reads them back in "at the next
-  planning session" (B4), i.e. still pull, still gated on the athlete
-  asking.
-- No trigger design exists for the events that should plausibly cause
-  unsolicited coach action: a missed key session, three days of no
-  logged nutrition, a readiness/ACWR flag while the athlete hasn't opened a
-  chat, entering a taper window, an event date arriving.
-
-This is the larger gap of the two — Milestone B builds real infrastructure
-(Supabase, a web app) but nothing in it is agentic; it's a logging form.
-
-### 2.3 Scope creep risk in the other direction
-
-Milestone B's phasing (`B1`→`B7`) is sound *as a data/UI plan* but it was
-sequenced before the event-breadth or agentic questions were settled, so it
-locks in a schema (`events`, `plans`, `workouts`, `workout_logs`,
-`nutrition_logs`, `strength_logs`) and a UI scope (view + log) that don't
-have anywhere for agentic behavior or event-type generality to attach later
-without another schema change. Better to settle sections 3–4 below before
-`B2` (schema) is executed.
+This is a **data-model and rule gap**, not an infrastructure gap — it doesn't
+need a scheduler, a new service, or a notification channel. It needs (a)
+structured signal fields on the log tables instead of free text alone, (b)
+defined interpretation rules per signal, and (c) somewhere those
+interpretations surface back to the athlete.
 
 ## 3. Revised functional requirements
 
-### 3.1 Event taxonomy (replaces Milestone A's single-event scope)
+### 3.1 Event architecture — carry forward as-is
 
-- **FR1.** `references/events/README.md` defines event **types**, not just a
-  flat list of named events. Each type carries: default periodization shape
-  (e.g. countdown base/build/peak/taper vs. rolling), default limiter
-  priorities, default session-archetype set, and a fueling delta template.
-- **FR2.** A named event (e.g. `badlands-ultra`) is a short file that sets
-  type = `ultra-endurance` and overrides only what's race-specific (course,
-  cutoffs, gear/logistics, event-specific fueling numbers). It does **not**
-  redefine periodization or session selection from scratch.
-- **FR3.** Ship at least **three** named events spanning **at least two
-  different types** in the same milestone (e.g. `badlands-ultra`
-  [ultra-endurance], one gran fondo or century [endurance/mass-participation],
-  one road race or crit [short-format/high-intensity]) — proof that the
-  taxonomy generalizes, not just that Badlands has a home.
-- **FR4.** Unmatched events fall back to the closest **type** (asked or
-  inferred from format description at onboarding: multi-day/self-supported →
-  ultra-endurance; single timed effort → time-trial; mass start/short/sprint
-  finishes → road-race-crit; etc.), not a single hardcoded "generic ultra"
-  fallback.
-- **FR5.** "No specific event" remains a first-class path with the existing
-  rolling periodization — this is not deprecated by the taxonomy work.
+- **FR1.** Keep Milestone A exactly as scoped in the existing tasks doc:
+  registry + Badlands Ultra as the one event. No additional events required
+  by this PRD.
+- **FR2.** No structural change requested to the event file format. (If a
+  second event is added later, confirm at that time whether shared
+  periodization/session defaults should be factored out — not a now-decision.)
 
-### 3.2 Agentic behaviors (new — not in either existing doc)
+### 3.2 Input interpretation (replaces the autonomous-trigger design)
 
-- **FR6. Trigger-based re-engagement.** Define concrete triggers that should
-  cause the coach to act without the athlete asking:
-  - Readiness/ACWR threshold breach (already computed in Step 1 today, just
-    never acted on outside an active chat).
-  - A key session logged as skipped/missed two weeks running.
-  - No nutrition/workout log entries for N days during a build/peak phase.
-  - Entering the taper window before a set `eventDate`.
-  - `eventDate` passing (post-event debrief / next-block prompt).
-- **FR7. Delivery mechanism for autonomous output.** Decide and document how
-  a trigger becomes something the athlete sees without opening a chat —
-  options in order of buildability: (a) a scheduled job (cron/Supabase Edge
-  Function, or a Claude Code trigger if running in an environment that
-  supports one) that evaluates triggers against logged data and writes a
-  "coach note" row the web UI surfaces on next open; (b) same, but pushed
-  via email; (c) a chat-initiated check only, i.e. explicitly descoped for
-  v1. This PRD recommends **(a)** as the v1 target — it needs no new
-  channel (no email/SMS integration) and fits the Supabase architecture
-  already chosen.
-- **FR8. Coach notes as a first-class object.** Add a `coach_notes` table
-  (or equivalent) distinct from `plans` — timestamped, trigger-tagged,
-  human-readable — so the web UI has something to show between planning
-  sessions and the skill can read prior notes back in as context.
-- **FR9. Bounded autonomy.** Agentic actions are limited to *flagging and
-  recommending* (soften next week, prioritize a missing session type,
-  suggest logging) — not silently rewriting a plan the athlete hasn't seen.
-  Any plan regeneration still happens in a chat-driven planning session per
-  the existing "why this needs new infrastructure" reasoning in the plan
-  doc; keep that boundary, just add the notice layer on top of it.
+- **FR3. Structured signal fields on logs.** `workout_logs` and
+  `strength_logs` carry, alongside free-text notes, an explicit status the
+  web UI collects at log time: e.g. `completed_as_planned` /
+  `completed_easier_than_planned` / `completed_harder_than_planned` /
+  `failed_too_hard` / `skipped`. `nutrition_logs` similarly flags a plain
+  signal (e.g. hit/missed carb target, hydration note) rather than relying
+  on the coach to infer it from free text alone.
+- **FR4. Defined interpretation rules per signal.** For each status above,
+  document the concrete adjustment it implies, reusing existing
+  `training-model.md`/`workout-library.md` concepts:
+  - `failed_too_hard` on a given archetype → do not advance that archetype's
+    progression step next time it's scheduled; consider substituting an
+    easier variant; mention the adjustment and why in the next plan's
+    last-week summary.
+  - `completed_easier_than_planned` → eligible to advance the progression
+    step a bit faster than the default rotation would.
+  - `skipped` (repeated on the same archetype) → treat as a missed-session
+    signal already partially covered by "factor last week's load," but make
+    the rule explicit rather than left to judgment.
+  - A logged strength session marked failed/too-hard → regress load/reps
+    next occurrence per `strength-library.md`'s existing progression
+    pattern, same principle as the bike-session rule.
+- **FR5. Interpretations surface back to the athlete.** Add a field (or a
+  lightweight `coach_notes` table keyed to the triggering log row) so an
+  interpretation is visible in the web UI as soon as it's produced — the
+  athlete who logs "Tuesday's session was too hard" should be able to see,
+  without waiting for their next planning chat, that the coach registered it
+  and what it means for the next occurrence of that session.
+- **FR6. Everything stays athlete-triggered.** Interpretation runs either (a)
+  synchronously when the athlete submits a log via the web UI (a normal
+  request/response, not a background job — the athlete's own submit action
+  is the trigger), or (b) at the start of the next chat planning session when
+  `SKILL.md` Step 1 reads recent logs back in, exactly as already planned.
+  **No scheduled job, cron, or timer-based process is introduced.** This
+  replaces the earlier draft's "trigger-based re-engagement" / scheduled
+  evaluator design, which is explicitly out of scope.
 
-### 3.3 Data + web UI (carries Milestone B forward with one addition)
+### 3.3 Data + web UI — Milestone B carries forward with the FR3–FR5 additions
 
-- **FR10.** Everything in Milestone B (`B1`–`B7`) stands as scoped, with one
-  schema addition: `coach_notes` (FR8) alongside the existing seven tables,
-  added at `B2` rather than bolted on later.
-- **FR11.** The frontend's "view" surface (currently just plans + logs) also
-  surfaces open `coach_notes` — this is the only UI change needed to expose
-  agentic output; no new UI paradigm required.
+- **FR7.** Milestone B (`B1`–`B7`) stands as scoped, with `workout_logs` /
+  `strength_logs` / `nutrition_logs` gaining the structured status fields
+  (FR3) at `B2` (schema), and the log-submission UI (`B3`–`B5`) gaining the
+  status picker plus an inline "here's what that means" response (FR5) built
+  from the FR4 rule table.
+- **FR8.** `SKILL.md` Step 1 (data pull) gains an explicit sub-step reading
+  these structured signals back in, applying the FR4 rules, and stating any
+  resulting adjustment in the plan's last-week summary line — not left
+  implicit in "factor last week's load."
 
 ## 4. Non-goals (explicit, to stop scope drift)
 
+- **No autonomous/scheduled behavior.** Nothing in this system runs on a
+  timer or independent of an athlete action. Every adjustment traces back to
+  either a chat message or a web UI submission the athlete made.
 - **Not multi-sport.** "Wider events" means a wider range of *cycling*
-  events (road, gravel, ultra, indoor, TT). Running/triathlon/other sports
-  are out of scope unless the athlete's brief says otherwise — flag this as
-  an assumption to confirm (see §6).
-- **Not multi-athlete/coach-of-coaches.** Single-athlete v1 stands, per the
-  existing plan's resolved decision. The `athlete_id`-keyed schema still
-  future-proofs this; it's just not being built now.
-- **Not full autonomy.** The coach never regenerates or overwrites a plan
-  without a chat session; agentic behavior is limited to noticing and
-  surfacing (FR9).
-- **Not a new communication channel.** No email/SMS/push integration in v1
-  (FR7 option (a) only) unless the athlete explicitly asks for one later.
+  events. Out of scope unless stated otherwise.
+- **Not multi-athlete.** Single-athlete v1 stands, per the existing plan's
+  resolved decision.
+- **Not a notification channel.** No email/SMS/push. Interpretations surface
+  in the web UI (on submission) or in the next chat plan — both already
+  places the athlete is looking because they just acted.
+- **No additional events required now** — Badlands Ultra alone is sufficient
+  scope for Milestone A.
 
 ## 5. Revised roadmap
 
-Renumbers/reorders the existing tasks doc rather than replacing it —
-`multi-event-and-webui-tasks.md`'s task bodies (test criteria, dependencies)
-are still valid content; the change is **sequence and added scope**, folded
-in as follows:
+Keeps the existing tasks doc's numbering and content; the only changes are
+additions inside Milestone B, not a new milestone or a resequencing:
 
-1. **Milestone A′ — event taxonomy** (was: Milestone A)
-   - A1′: `references/events/README.md` as a **type taxonomy** (FR1), not
-     just a flat registry.
-   - A1a–A1c: three named event files across ≥2 types (FR3), each a thin
-     override of its type (FR2) — Badlands Ultra is one of these three, not
-     the only one.
-   - A2–A8 as already scoped (nutrition module, config fields, onboarding,
-     `SKILL.md` workflow, new archetypes, plan format, version bump) —
-     unchanged, but A4 (onboarding fallback) and A5 (event resolution)
-     updated to resolve by **type** first (FR4).
-2. **Milestone B′ — data + web UI + agentic notes** (was: Milestone B)
-   - B1–B7 unchanged, **except** B2's schema also creates `coach_notes`
-     (FR10), and B7's "polish" scope includes surfacing open notes (FR11).
-3. **Milestone C — agentic trigger loop** (new)
-   - C1: Define the trigger list (FR6) and their evaluation logic as a
-     spec (reuse existing readiness/ACWR logic from `SKILL.md` Step 1 —
-     don't reimplement it, extract it so both the chat flow and the
-     scheduled job call the same logic).
-   - C2: Build the scheduled evaluator (FR7 option (a)) that reads
-     `workout_logs`/`nutrition_logs`/`events` and writes `coach_notes`.
-   - C3: Surface `coach_notes` in the frontend (ties to B7/FR11) and have
-     the skill read recent open notes back in at the next planning session.
-   - Depends on: Milestone B′ (needs the data layer to evaluate against).
+1. **Milestone A — unchanged.** Ship exactly as scoped in
+   `multi-event-and-webui-tasks.md` (A1–A8, Badlands Ultra only).
+2. **Milestone B — unchanged, with FR3/FR5/FR7 folded into existing tasks:**
+   - `B2` (schema): add the structured status fields (FR3) to
+     `workout_logs`/`strength_logs`/`nutrition_logs`, and either a
+     `coach_notes` column/table for FR5's surfaced interpretation.
+   - `B3`–`B5` (logging UIs): add the status picker at log time and display
+     the resulting interpretation inline after submit (FR5/FR6a).
+   - `B6` (fold in Milestone A): unaffected by this PRD.
+   - `B7` (polish): include a compliance view driven by the FR3 status
+     history (e.g. how often sessions land as-planned vs. too-hard), which
+     is a natural extension of the "compliance/trend charts" already scoped.
+3. **New, small task — interpretation rules (fits inside Milestone A or as
+   `A9`):** write the FR4 rule table into `training-model.md` /
+   `workout-library.md` / `strength-library.md` (whichever governs each
+   archetype's progression already) so `SKILL.md` Step 1 has a concrete rule
+   to apply per logged status, per FR8. This is documentation, not
+   infrastructure, and has no dependency on Milestone B shipping first — it
+   can be written as soon as the status vocabulary (FR3) is agreed, and just
+   sits unused by the chat flow until logged data exists to read.
 
-Milestone A′ can still ship standalone as a skill release, same as today.
-Milestone C is new work, not a reshuffling of existing tasks — size it
-separately when picked up.
+## 6. Open questions
 
-## 6. Open questions (need the athlete/product owner's call)
-
-1. **Multi-sport?** Confirmed out of scope per §4 unless told otherwise —
-   flagging because "agentic coach" read alone could imply broader scope
-   than "wider cycling events."
-2. **Notification channel for agentic notes (FR7)** — is in-app-on-next-open
-   sufficient for v1, or does day-to-day usefulness require a push (email at
-   minimum) so a taper warning doesn't sit unread until the athlete happens
-   to open the web app?
-3. **Which second/third events (FR3)** — name two concrete events (a fondo
-   and a road race/crit are suggested placeholders above) so A1a–A1c isn't
-   blocked on invented examples the way A1's Badlands file already flags
-   real course data as a dependency.
+1. **Immediate vs. next-session interpretation (FR6)** — should logging a
+   failed workout in the web UI produce an inline response right away
+   (needs a small server-side function evaluating FR4's rules at submit
+   time), or is it acceptable for the athlete to only see the adjustment
+   reflected the next time they ask the coach to plan? Affects whether `B3`
+   needs a rules-evaluation endpoint or just a data write.
+2. **Status vocabulary (FR3)** — is the four-way split (`completed_as_planned`
+   / `completed_easier_than_planned` / `completed_harder_than_planned` /
+   `failed_too_hard` / `skipped`) the right granularity, or would a simpler
+   binary (completed/failed) plus free text be preferred? Affects the UI
+   picker and the FR4 rule table size.
+3. **Multi-sport** — confirmed out of scope per §4 unless told otherwise.
 
 ## 7. Success metrics
 
-- Adding a **fourth** named event after Milestone A′ ships takes editing one
-  short file (course/format/fueling deltas) with no changes to
-  `SKILL.md`, `training-model.md`, or `workout-library.md` — proves the
-  taxonomy, not just the registry, generalizes.
-- At least one agentic trigger (FR6) fires correctly against a seeded test
-  dataset without any chat session running, and produces a `coach_notes` row
-  the frontend displays before the athlete's next planning chat.
-- No plan is ever generated or overwritten outside a chat session (FR9
-  regression check — the autonomy boundary holds).
+- A workout logged through the web UI as `failed_too_hard` results in that
+  archetype not progressing at its next scheduled occurrence, and the next
+  plan's summary states the adjustment and why — traceable entirely to the
+  athlete's own log entry, with no background process involved.
+- A strength session logged as failed results in a load/rep regression next
+  occurrence, per the same rule pattern.
+- No code path in the system runs except in direct response to a chat
+  message or a web UI request — verified by inspection (no cron, no
+  scheduled function) as part of Milestone B review.
