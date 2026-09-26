@@ -335,13 +335,19 @@ each phase closes a working loop before the next adds scope.
     is pending the key being added to the environment per `docs/infra.md`.
   - Depends on: none (blocked on user action).
 
-- [ ] **B2. Schema + RLS policies**
-  - **⚠️ Blocked on `SUPABASE_SERVICE_ROLE_KEY` being added to the Claude Code
-    environment** (see `docs/infra.md`) — applying migrations and verifying
-    RLS is actually enforced both need it. Check `docs/infra.md`'s callout
-    at the start of a session before picking this up.
-  - Write a SQL migration (e.g. `db/schema.sql` or a Supabase migrations
-    folder) creating the seven tables from the plan: `athletes`, `events`,
+- [x] **B2. Schema + RLS policies**
+  - **Turned out not to be blocked on `SUPABASE_SERVICE_ROLE_KEY`**, despite
+    the earlier callout in `docs/infra.md`: `apply_migration`/`execute_sql`
+    authenticate via the Supabase MCP connector's own project-scoped token
+    (independent of that env var), and RLS enforcement was verified from
+    outside using the already-known, safe `SUPABASE_ANON_KEY` instead. See
+    `docs/infra.md`'s "Schema + RLS (B2 — done)" section for the full
+    writeup and what's still deferred to B3 (a real per-athlete auth
+    session — needed for the literal two-authenticated-users RLS test,
+    not for confirming policies are live).
+  - Wrote the SQL migration
+    (`supabase/migrations/20260926171317_initial_schema.sql`) creating the
+    seven tables from the plan: `athletes`, `events`,
     `plans`, `workouts`, `workout_logs`, `nutrition_logs`, `strength_logs`,
     with the columns listed in the plan doc's schema table.
   - **`athletes` columns must be reconciled against the current
@@ -367,14 +373,20 @@ each phase closes a working loop before the next adds scope.
   - Per FR5: add a `coach_notes` table (or column on the log rows) keyed to
     the triggering log row, to hold the surfaced interpretation text so it's
     visible in the web UI without waiting for the next chat.
-  - Add RLS policies scoped by `athlete_id` (kept even in single-athlete v1,
-    per the plan's future-proofing rationale).
-  - **Test:** apply the migration to the Supabase project; query each table
-    via `curl`/psql and confirm the expected columns exist, including the new
-    status enums and `coach_notes`; confirm an invalid status value is
-    rejected by the enum constraint; insert a second dummy `athlete_id` row
-    and confirm a query filtered to the real `athlete_id` cannot see it (RLS
-    is actually enforced, not just declared).
+  - Added RLS policies scoped by `athlete_id` (kept even in single-athlete
+    v1, per the plan's future-proofing rationale): one `auth.uid() =
+    athlete_id` policy per table (`auth.uid() = id` on `athletes`).
+  - **Test — done:** applied the migration to the Supabase project; confirmed
+    all 8 tables + columns exist via `list_tables` (including the status
+    enums and `coach_notes`); confirmed an invalid status value is rejected
+    by the enum constraint; inserted two dummy athletes + child rows and
+    confirmed an anon-key REST call sees zero rows on any table and an
+    anon-key write is rejected with a `42501` RLS violation — proving the
+    policies are live, not just declared. Test data cleaned up afterward.
+    Deferred to B3: the literal "two different logged-in athletes only see
+    their own rows" version of this test, which needs a real Supabase Auth
+    session (no login flow exists yet). See `docs/infra.md` for the full
+    verification writeup.
   - Depends on: B1.
 
 - [ ] **B3. Core loop, minimal**
