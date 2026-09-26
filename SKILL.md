@@ -34,7 +34,7 @@ From the config take, grouped by what they drive:
 
 None of the self-reported fields above are fixed at onboarding: if the athlete mentions a change (an injury clearing up, new lifting experience, a return to consistent training, a newly noticed food sensitivity), update the relevant field in `athlete.json` on the spot rather than only ever asking at first setup.
 
-If `targetEvent` is set and matches an id in `references/events/README.md`, resolve its reference file for course/limiter context. Full event-driven countdown periodization (replacing the generic rolling block below) is scoped separately — until that lands, an event just informs framing and goal language, not the week structure.
+If `targetEvent` is set and matches an id in `references/events/README.md`, resolve its reference file for course/limiter context; if it doesn't match any registry id, treat it as free text and fall back to generic ultra-endurance heuristics rather than failing to resolve. Full event-driven countdown periodization (base/build/peak/taper toward `eventDate`, replacing the generic rolling block below) is scoped to the season-macrocycle work and not wired in yet — a resolved event doesn't change the week's phase. It does still override session priorities (Step 2) and add event-specific archetypes (Step 5).
 
 If `age` is missing from an existing config, ask for it before continuing — it is required to set recovery windows. If `gender` is missing, ask for it or accept a skip; note that it defaults to gender-neutral W/kg benchmarks when absent.
 
@@ -74,6 +74,8 @@ If `physicalNotes` is non-empty, weigh it alongside this data-derived classifica
 
 If `ultraDistanceExperience` is `none` and `targetEvent` resolves to an ultra-distance event file, say so plainly and lean the plan toward that event file's durability/handling/back-to-back-days limiters rather than pure power development — a first-time ultra finish is its own goal, distinct from raw fitness. `cyclingYearsExperience` and `longestEffortCompleted` are context for how aggressively volume can grow week to week, not inputs to the rider-type classification itself (that stays power-curve-derived, per above).
 
+If `targetEvent` resolves to an event file, let its "Limiters this event trains for" section override the session priorities above rather than just informing framing — e.g. `ultra-gravel` deprioritizes VO2max/sprint work in favor of durability, fat-max endurance, back-to-back long days, technical/loose-surface handling, and heat/altitude tolerance, whatever the power-curve-derived rider type would otherwise emphasise. State the override in the same one-line summary as the detected type (e.g. "Detected: puncheur, but Badlands overrides toward durability and fat-max endurance over top-end work").
+
 ### Step 3 - confirm intake and session design
 
 Restate the goal from the config in one line, then confirm or complete intake values gathered at the start. Ensure these are explicitly captured: available training days, group-ride day(s), duration per workout day, how many structured key sessions (default `maxStructuredSessions`), indoor or outdoor preference, week's focus, strength mode (strength/core/both), and strength/core frequency. Keep the intake short with the interactive picker when available. Always provide a "use profile defaults" path so the athlete can accept predefined config values and only override what changed. Factor last week's load into the new week.
@@ -93,6 +95,7 @@ Build the workout files inside this skill in ZWO format.
 - Session archetypes, rotation rules, and progression steps live in `references/workout-library.md`.
 - ZWO format spec (Zwift): `references/zwo-format.md` — power as FTP fractions, durations in seconds, XML output.
 - Before selecting sessions, check the archetypes extracted from last week's Strava rides (Step 1). Do not repeat the same archetype unless advancing it by one progression step. Use the rotation table in `references/workout-library.md` to pick this week's pair.
+- If `targetEvent` resolves to an event file with its own "Session archetypes + periodization overlay" section, treat those as available alongside `workout-library.md`'s standard set when the week's emphasis calls for them (e.g. long back-to-back days, heat acclimation, loaded-bike climbing, technical/loose-surface handling) — build and describe them the same as any other session, honoring the event file's own phase caveats (e.g. a fasted-ride archetype flagged base-phase-only) even though full countdown-phase periodization isn't wired in yet.
 - Every structured bike session must produce one workout file per requested format.
 - Use `% FTP` for planning and convert to watts in the markdown plan using the week's FTP.
 - Store power as FTP fractions and durations in seconds. Add localized `textevent` cues in the athlete's language.
@@ -113,7 +116,7 @@ Save everything to `/mnt/user-data/outputs/` and present it. If that path is una
 1. A weekly markdown plan file exists and includes all required sections (week id, goal, focus, FTP used, rider type, last-week summary, day-by-day schedule table, structured session detail blocks).
 2. FTP used in the markdown plan equals the live FTP (or the stated fallback when Strava is unavailable).
 3. Every structured bike day in the markdown references exactly one workout file per requested format; watt targets in markdown match the % FTP targets at the stated FTP.
-4. Session priorities match the detected rider type and the goal.
+4. Session priorities match the detected rider type and the goal, or the resolved event's override when `targetEvent` is set and the two diverge.
 5. The week works toward the goal, structured days capped, group days social, strength off the pre-interval day, last week factored in.
 6. Every workout file passes the validation checklist in its format reference (`references/zwo-format.md` for ZWO) and is rendered inline as a labeled fenced code block.
 7. All human-readable text is in the config language and units, honoring `styleNotes`. State the week id, focus, detected rider type, last week in one line, and which files you created.
