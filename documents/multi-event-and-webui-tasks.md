@@ -114,13 +114,22 @@ infra required. Ships as a `SKILL.md` version bump.
     explained back to the athlete.
   - Depends on: A1, A3.
 
-- [ ] **A5. SKILL.md workflow: event resolution + countdown periodization**
+- [x] **A5. SKILL.md workflow: event resolution + countdown periodization**
   - **Superseded by A13** for the periodization branch specifically: once
     A9-A13 land, the phase (base/build/refine + deload) comes from
     `season-plan.json`, not a raw countdown computed inline here. Keep this
     task scoped to event-file resolution and the rider-type/session-priority
     override, which A13 still depends on; drop the countdown-periodization
     bullet below if A9-A13 are implemented first.
+  - **Shipped scoped-down, per the note above:** implemented event-file
+    resolution (already partly in place), the event-driven session-priority
+    override in Step 2 (an event's "Limiters this event trains for" section
+    can now override the rider-type-derived priorities, stated in the same
+    one-line summary), and event-specific archetypes in Step 5 (an event
+    file's own "Session archetypes + periodization overlay" section is
+    usable alongside `workout-library.md`'s standard set). The
+    countdown-periodization bullet below was dropped, since A9-A13 (season
+    macrocycle) supersede it and it would otherwise be throwaway work.
   - Edit `SKILL.md`: config-resolution step also resolves the event file and
     countdown; the training-model step (Step 4) branches to countdown-driven
     periodization (base/build/peak/taper toward `eventDate`) when an event is
