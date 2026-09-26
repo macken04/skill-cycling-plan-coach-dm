@@ -4,7 +4,7 @@ description: Plan a cyclist's training week as a standalone coaching package wit
 metadata:
   author: Elio Struyf <elio@struyfconsulting.be>
   license: MIT
-  version: 2.2.0
+  version: 2.3.0
 ---
 
 # Cycling plan coach
@@ -21,7 +21,9 @@ Before doing any real work:
 
 `athlete.json` is the single source of truth for who the plan is for. Fields are documented in `references/athlete-config.md`.
 
-From the config take: `name` (greetings), `language` and `units` (everything the athlete reads is produced in these), `styleNotes` (writing rules to honor), `goal`, `targetEvent`, `eventDate`, `age`, `gender`, `weightKg`, `fallbackFtp`, `targetWkg`, `groupRideDays`, `typicalAvailableDays`, `typicalWorkoutDurationMin`, `maxStructuredSessions`, `strengthDefault`, `physicalNotes`, and optional `riderTypeOverride`.
+From the config take: `name` (greetings), `language` and `units` (everything the athlete reads is produced in these), `styleNotes` (writing rules to honor), `goal`, `targetEvent`, `eventDate`, `age`, `gender`, `weightKg`, `fallbackFtp`, `targetWkg`, `groupRideDays`, `typicalAvailableDays`, `typicalWorkoutDurationMin`, `maxStructuredSessions`, `strengthDefault`, `physicalNotes` (plus `physicalNotesFrequency` / `physicalNotesAssessed` when set), `strengthExperience`, `strengthInjuryNotes`, `dietaryRestrictions`, `fuelingNotes`, `fuelingPreference`, and optional `riderTypeOverride`.
+
+None of `physicalNotes`, `strengthExperience`/`strengthInjuryNotes`, or the nutrition fields are fixed at onboarding: if the athlete mentions a change (an injury clearing up, new lifting experience, a newly noticed food sensitivity), update the relevant field in `athlete.json` on the spot rather than only ever asking at first setup.
 
 If `targetEvent` is set and matches an id in `references/events/README.md`, resolve its reference file for course/limiter context. Full event-driven countdown periodization (replacing the generic rolling block below) is scoped separately — until that lands, an event just informs framing and goal language, not the week structure.
 
@@ -65,7 +67,7 @@ If `physicalNotes` is non-empty, weigh it alongside this data-derived classifica
 
 Restate the goal from the config in one line, then confirm or complete intake values gathered at the start. Ensure these are explicitly captured: available training days, group-ride day(s), duration per workout day, how many structured key sessions (default `maxStructuredSessions`), indoor or outdoor preference, week's focus, strength mode (strength/core/both), and strength/core frequency. Keep the intake short with the interactive picker when available. Always provide a "use profile defaults" path so the athlete can accept predefined config values and only override what changed. Factor last week's load into the new week.
 
-When strength/core emphasis is chosen for the week, apply `strength-library.md`'s "tune to the athlete" guidance using both the Step 2 rider type and any Step 2 `physicalNotes` hypothesis (e.g. a described lower-back/power-transfer issue on climbs leans the exercise selection toward core and posterior chain) — name the connection to the athlete in one line when it drives a choice, so the plan visibly reflects what they described rather than silently absorbing it.
+When strength/core emphasis is chosen for the week, apply `strength-library.md`'s "tune to the athlete" guidance using the Step 2 rider type, any `physicalNotes` hypothesis (e.g. a described lower-back/power-transfer issue on climbs leans the exercise selection toward core and posterior chain), and `strengthExperience`/`strengthInjuryNotes` (e.g. a new lifter gets the conservative first-block progression, not the standard working loads) — name the connection to the athlete in one line when it drives a choice, so the plan visibly reflects what they described rather than silently absorbing it.
 
 ### Step 4 - apply the training model
 

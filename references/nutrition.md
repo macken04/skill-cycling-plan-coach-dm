@@ -11,6 +11,26 @@ Body-weight-scaled figures use `weightKg` from `athlete.json`. Worked
 examples below use a 70 kg athlete; substitute the athlete's actual
 `weightKg` when giving a concrete number.
 
+## Personalizing within the model
+
+The targets below are generic; three fields from onboarding narrow them to
+the athlete without changing the underlying g/kg math:
+
+- **`dietaryRestrictions`:** when suggesting concrete foods or products
+  (not just g/kg figures), keep suggestions consistent with these (e.g.
+  don't suggest a whey-based recovery shake for a `dairyFree` athlete;
+  suggest plant-based multi-source carb options for `vegan`).
+- **`fuelingNotes`:** treat this the same way `physicalNotes` is treated in
+  `strength-library.md` — a hypothesis from the athlete's own account, not a
+  lab result. If it names a food/product that causes GI distress, steer
+  on-bike suggestions away from it even before a logged in-ride signal
+  confirms it (see "Interpreting a logged fueling signal" below for the
+  case where a signal *is* logged later). If it names something the athlete
+  tolerates well, prefer that as the default suggestion.
+- **`fuelingPreference`:** lean suggestions toward `gels`, `realFood`, or a
+  `mixed` approach accordingly; treat `noPreference` as license to suggest
+  whatever best hits the g/h target for the day type.
+
 ## Daily carb periodization by day type
 
 Daily total carb target scales with the day's training demand, not a flat

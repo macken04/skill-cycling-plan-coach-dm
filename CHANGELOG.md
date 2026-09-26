@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0] - 2026-09-26
+
+### Added
+
+- **Strength & training background section** in onboarding (`references/onboarding.md`): asks lifting experience (`strengthExperience`: new/returning/experienced) and, when relevant, lifting-specific injury/joint notes (`strengthInjuryNotes`). `strength-library.md` now prescribes a conservative first block (lighter load, higher reps) for a new lifter instead of starting everyone at working loads, and substitutes/regresses exercises that conflict with a named injury.
+- **Structured follow-up on the physical-limiter narrative** (onboarding question 10a): when the athlete describes something in question 10, two closed follow-up questions capture how often it shows up (`physicalNotesFrequency`) and whether it's been professionally assessed (`physicalNotesAssessed`). Onboarding and `SKILL.md` now both note that `physicalNotes` and the strength/nutrition fields are not write-once — they're updated whenever the athlete reports a change, not only at first setup.
+- **Nutrition preferences section** in onboarding: dietary restrictions/allergies (`dietaryRestrictions`), a free-text fueling-tolerance narrative (`fuelingNotes`), and an on-bike fueling lean (`fuelingPreference`). `nutrition.md` now personalizes concrete food/product suggestions against these fields on top of the existing generic g/kg model.
+- New `athlete-config.md` fields documenting all of the above: `physicalNotesFrequency`, `physicalNotesAssessed`, `strengthExperience`, `strengthInjuryNotes`, `dietaryRestrictions`, `fuelingNotes`, `fuelingPreference`.
+
+### Fixed
+
+- Closes the three gaps flagged in `bug-reports/onboarding-shallow-intake-gaps.md`: onboarding previously asked nothing about strength/training history, had no structured follow-up or revisit path for the physical-limiter narrative, and asked nothing about nutritional preferences despite a fueling model meant to be personalized.
+
 ## [2.2.0] - 2026-06-23
 
 ### Added

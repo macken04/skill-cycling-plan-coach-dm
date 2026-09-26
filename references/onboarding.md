@@ -46,21 +46,47 @@ This is the question that shapes everything else, so ask it before the logistics
 
 10. **[narrative]** Is there anything that feels like it's holding you back physically on the bike? Describe it in your own words — pain, fatigue, or power you can't seem to put down, especially on climbs or hard efforts. A few sentences are more useful here than a quick label.
 
-   For example, an athlete might say: *"When climbing up steep gradients, I feel like I am dragging on the bike. I feel pain in my lower back. I feel like I cannot apply the power that my legs have to the bike. This is something I feel like I need to work on."* That kind of detail is exactly what's useful — it points at something like a posture/core/posterior-chain limiter that a power curve alone can't surface.
+    For example, an athlete might say: *"When climbing up steep gradients, I feel like I am dragging on the bike. I feel pain in my lower back. I feel like I cannot apply the power that my legs have to the bike. This is something I feel like I need to work on."* That kind of detail is exactly what's useful — it points at something like a posture/core/posterior-chain limiter that a power curve alone can't surface.
 
-   Store the answer verbatim as `physicalNotes` in `athlete.json` (empty string if the athlete has nothing to add — don't force an answer). Treat it as a **hypothesis to weigh, not a diagnosis**: when Step 2/3 of the main workflow sets session and strength/core emphasis, read `physicalNotes` alongside the data-derived rider type from `rider-types.md`, never in place of it. If the two disagree (e.g. the narrative suggests a strength limiter but the power curve looks fine), say so plainly rather than picking one silently.
+    Store the answer verbatim as `physicalNotes` in `athlete.json` (empty string if the athlete has nothing to add — don't force an answer). Treat it as a **hypothesis to weigh, not a diagnosis**: when Step 2/3 of the main workflow sets session and strength/core emphasis, read `physicalNotes` alongside the data-derived rider type from `rider-types.md`, never in place of it. If the two disagree (e.g. the narrative suggests a strength limiter but the power curve looks fine), say so plainly rather than picking one silently.
 
-## 5. Training logistics
+    **10a. Structured follow-up** (only if question 10 described an actual issue — skip entirely if the athlete had nothing to add). The narrative alone doesn't say how often it matters or whether it's been looked at, so ask two quick closed questions before moving on. If the athlete's answer bundled more than one distinct thing (e.g. a power limiter and a pain location), ask these about whichever one they'd flag as most relevant to training — the full verbatim answer is already preserved in `physicalNotes`, this just adds two data points on top of it.
 
-11. **[choice]** Which days are your group or social rides? Options: Mon/Tue/Wed/Thu/Fri/Sat/Sun (multi-select); default Saturday and Sunday if skipped.
-12. **[choice]** Which days can you usually train? Options: Mon/Tue/Wed/Thu/Fri/Sat/Sun (multi-select); default all if skipped.
-13. **[value]** Typical session duration? (minutes per workout, e.g. 60 or 90; the weekly intake can vary this per day)
-14. **[choice]** How many structured key sessions per week? Options: 1, 2, 3. Default 2.
-15. **[choice]** Strength by default? Options: strength + core, core only, none.
-16. **[narrative]** Any writing preferences? (tone, things to avoid; optional — free text, no wrong answer)
+    - **[choice]** How often does this come up — every ride, mainly on hard efforts or climbs, or only occasionally? Options: every ride, mainly hard efforts/climbs, occasionally. Store as `physicalNotesFrequency`.
+    - **[choice]** Has this been looked at by a physio, doctor, or bike fitter? Options: yes, no, not yet but planning to. Store as `physicalNotesAssessed`.
+
+    Mention once, briefly, that this isn't fixed forever — the athlete can tell you at any point that it's changed, better, worse, or gone, and you'll update `physicalNotes` (and the two follow-up fields) then, rather than only ever asking at first setup.
+
+## 5. Strength & training background
+
+11. **[choice]** Have you strength-trained before — things like squats, deadlifts, or similar barbell/dumbbell lifts? Options:
+    - New to it / never really lifted
+    - Some experience, but out of practice
+    - Yes, I train regularly already
+
+    Store as `strengthExperience`: `new`, `returning`, or `experienced`. This gates how `strength-library.md` prescribes load: a first-time lifter starts conservative (lighter load, more form-focused reps) before working up to the standard prescriptions; an experienced lifter can start there directly.
+
+12. **[value]** (skip if the athlete just picked "yes, I train regularly already" above) Any past injuries, surgeries, or joint issues that matter for lifting — knees, back, shoulders, or anything else? Optional, free text, leave blank if nothing comes to mind. Store as `strengthInjuryNotes` (empty string if skipped). This is separate from `physicalNotes` above: it's specifically about what to avoid or adapt when selecting strength exercises, not about what limits the athlete on the bike.
+
+## 6. Training logistics
+
+13. **[choice]** Which days are your group or social rides? Options: Mon/Tue/Wed/Thu/Fri/Sat/Sun (multi-select); default Saturday and Sunday if skipped.
+14. **[choice]** Which days can you usually train? Options: Mon/Tue/Wed/Thu/Fri/Sat/Sun (multi-select); default all if skipped.
+15. **[value]** Typical session duration? (minutes per workout, e.g. 60 or 90; the weekly intake can vary this per day)
+16. **[choice]** How many structured key sessions per week? Options: 1, 2, 3. Default 2.
+17. **[choice]** Strength by default? Options: strength + core, core only, none.
+18. **[narrative]** Any writing preferences? (tone, things to avoid; optional — free text, no wrong answer)
+
+## 7. Nutrition preferences
+
+19. **[choice]** Any dietary restrictions or allergies I should plan fueling around? Options (multi-select): none, vegetarian, vegan, gluten-free, dairy-free, other (name it). Store as `dietaryRestrictions` (string array; empty array for "none").
+20. **[narrative]** Anything you've noticed about fueling on the bike — foods or products that upset your stomach during hard or long rides, or ones you know you tolerate well? A few sentences is useful: brand names, food types, whatever you've noticed, even if it's never been formally diagnosed. Store as `fuelingNotes` verbatim (empty string if nothing to add).
+21. **[choice]** For on-bike fueling, do you lean toward gels/drink mix, real food, or a mix of both? Options: mostly gels/drink mix, mostly real food, a mix of both, no preference yet. Store as `fuelingPreference`.
 
 ## Write the config
 
-Map the answers onto the fields in `athlete-config.md` and write `athlete.json`, including `targetEvent`, `eventDate`, and `physicalNotes` from the goal branch and narrative question above. Set `riderTypeOverride` to null so the skill derives the rider type from data. Confirm in one line — goal, event if any, and that a physical note was captured if given — and continue to the weekly plan.
+Map the answers onto the fields in `athlete-config.md` and write `athlete.json`, including `targetEvent`, `eventDate`, and `physicalNotes` (plus `physicalNotesFrequency` / `physicalNotesAssessed` when question 10a was asked) from the goal branch and narrative questions above, and `strengthExperience`, `strengthInjuryNotes`, `dietaryRestrictions`, `fuelingNotes`, and `fuelingPreference` from the new sections above. Set `riderTypeOverride` to null so the skill derives the rider type from data. Confirm in one line — goal, event if any, and that a physical note was captured if given — and continue to the weekly plan.
+
+None of `physicalNotes`, the strength background, or the nutrition fields are fixed forever: if the athlete brings up a change later (an injury clearing up, a new sensitivity, more lifting experience), update the relevant field(s) in `athlete.json` on the spot rather than treating onboarding as the only time these are ever asked.
 
 If FTP is unknown, set `fallbackFtp` to a conservative estimate (e.g. 2.5 W/kg times weight) and tell the athlete the first Strava pull or an FTP test will replace it.
