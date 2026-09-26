@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0] - 2026-09-26
+
+### Added
+
+- **Multi-event architecture**: an event registry (`references/events/README.md`) and Badlands Ultra as the first supported event (`references/events/badlands-ultra.md`) — course profile, format rules, event-specific limiters, session archetypes, and a fueling delta on top of the shared nutrition module. Adding a second event is a new registry file, not a restructuring. `athlete-config.md` gains `targetEvent`, `eventDate`, and derived `daysToEvent`; onboarding gains an event branch (supported event / general plan / unlisted event with fallback heuristics), explicit option lists for every closed-choice question, and an open-narrative physical-limiter question the coach weighs alongside the data-derived rider type. `SKILL.md`'s event resolution overrides session priorities and adds event-driven archetypes (long back-to-back days, heat acclimation, overnight/low-sleep simulation, loaded-bike climbing) alongside the standard library. `plan-format.md` gains an event countdown header and fueling subsection.
+- **Season macrocycle planning**: once an event and event date are both set, the skill generates and maintains a `season-plan.json` skeleton — a Base/Deload/Build/Deload/Refine phase structure spanning to the event (`references/macrocycle-model.md`) — and a coach-designed B/C trial-event ladder rehearsing the event's own discrete limiters at increasing fidelity, culminating in a near-full-dress rehearsal early in Refine (`references/trial-events.md`). Only the current phase is planned week-by-week; other phases render as a dated one-line summary (`references/season-plan-format.md`). `SKILL.md` wires skeleton generation, phase resolution (recomputed on every read, never trusted stale), and athlete-triggered replanning (illness, missed weeks, a bad trial event, a shifted event date) into the weekly flow, superseding the earlier raw-countdown periodization. Fueling and strength periodization ramp across the season in step with the trial-event ladder (`nutrition.md`'s gut-training g/h checkpoints, `strength-library.md`'s general-prep → max-strength → power/maintenance mapping).
+- **Interpretation rules for logged outcomes**: a defined, mechanically-applicable rule table (no "use judgement" left to the coach) for what each logged session status implies — `completed_easier_than_planned` advances progression faster, `failed_too_hard` holds or regresses it, repeated `skipped` resets to Step 1 — in `workout-library.md`, with the equivalent load/rep regression rule in `strength-library.md`. Trial-event outcomes get their own two-part signal (`completionStatus` + `fuelingSignal`, defined in `macrocycle-model.md`): a comfortable dry run can pull the remaining ladder forward, a difficult one or a DNF holds difficulty and can trigger a replan, and a fueling signal (GI distress, bonking) holds the fueling ramp at its last-rehearsed rate rather than advancing (`trial-events.md`, `nutrition.md`). Everything here remains athlete-triggered only — no scheduled or autonomous evaluation is introduced, per `documents/agentic-coach-prd.md`.
+
+### Changed
+
+- **Major version bump** (`2.4.0` → `3.0.0`): the `athlete-config.md`/`athlete.json` shape and the weekly-plan periodization logic both changed in backwards-incompatible ways (event/season fields, phase-driven periodization replacing the raw countdown block).
+
 ## [2.4.0] - 2026-09-26
 
 ### Added

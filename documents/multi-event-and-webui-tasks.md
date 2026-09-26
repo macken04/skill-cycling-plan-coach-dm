@@ -291,7 +291,7 @@ infra required. Ships as a `SKILL.md` version bump.
     as A8's test).
   - Depends on: A8, A10, A14.
 
-- [ ] **A16. Version bump, changelog, description updates**
+- [x] **A16. Version bump, changelog, description updates**
   - Bump `package.json` version (breaking config shape → major bump, e.g.
     `2.2.0` → `3.0.0`).
   - Add a `CHANGELOG.md` entry at the top describing multi-event + nutrition
