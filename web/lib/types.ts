@@ -103,3 +103,12 @@ export interface StrengthLog {
   notes: string;
   created_at: string;
 }
+
+export interface CoachNote {
+  id: string;
+  athlete_id: string;
+  workout_log_id: string | null;
+  strength_log_id: string | null;
+  note: string;
+  created_at: string;
+}

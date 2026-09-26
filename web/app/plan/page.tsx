@@ -8,6 +8,7 @@ import {
   DAY_ORDER,
   SESSION_STATUSES,
   SESSION_STATUS_LABELS,
+  type CoachNote,
   type Event,
   type Plan,
   type SessionStatus,
@@ -34,6 +35,7 @@ export default function PlanPage() {
     Record<string, WorkoutLog>
   >({});
   const [savingWorkoutId, setSavingWorkoutId] = useState<string | null>(null);
+  const [coachNotes, setCoachNotes] = useState<CoachNote[]>([]);
 
   const loadPlan = useCallback(async (athleteId: string) => {
     const today = new Date().toISOString().slice(0, 10);
@@ -97,6 +99,14 @@ export default function PlanPage() {
         setLatestLogByWorkout(latest);
       }
     }
+
+    const { data: noteRows } = await supabase
+      .from("coach_notes")
+      .select("*")
+      .eq("athlete_id", athleteId)
+      .order("created_at", { ascending: false })
+      .limit(10);
+    setCoachNotes(noteRows ?? []);
 
     setLoadState("ready");
   }, []);
@@ -242,7 +252,39 @@ export default function PlanPage() {
         ))}
         {workouts.length === 0 && <p>No workouts scheduled this week.</p>}
       </div>
+
+      {coachNotes.length > 0 && (
+        <section style={{ marginTop: "2rem" }}>
+          <h2 style={{ fontSize: "1.1rem", marginBottom: "0.75rem" }}>
+            Coach notes
+          </h2>
+          <div style={{ display: "grid", gap: "0.5rem" }}>
+            {coachNotes.map((note) => (
+              <CoachNoteCard key={note.id} note={note} />
+            ))}
+          </div>
+        </section>
+      )}
     </main>
+  );
+}
+
+function CoachNoteCard({ note }: { note: CoachNote }) {
+  return (
+    <div
+      style={{
+        border: "1px solid #ddd",
+        borderRadius: 8,
+        padding: "0.75rem 1rem",
+        background: "#fafafa",
+      }}
+    >
+      <div style={{ fontSize: "0.75rem", color: "#777", marginBottom: "0.25rem" }}>
+        {note.workout_log_id ? "Bike session" : "Strength session"} ·{" "}
+        {new Date(note.created_at).toLocaleDateString()}
+      </div>
+      <p style={{ margin: 0 }}>{note.note}</p>
+    </div>
   );
 }
 
