@@ -145,7 +145,7 @@ infra required. Ships as a `SKILL.md` version bump.
     output is unchanged from current behavior (regression check).
   - Depends on: A1, A3.
 
-- [ ] **A6. New event-driven session archetypes**
+- [x] **A6. New event-driven session archetypes**
   - Edit `references/workout-library.md`: add long back-to-back days, heat
     acclimation, overnight/low-sleep simulation, loaded-bike climbing
     archetypes, plus progression rows for each.
