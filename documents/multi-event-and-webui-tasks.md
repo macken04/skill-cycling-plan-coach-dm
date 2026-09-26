@@ -56,7 +56,7 @@ infra required. Ships as a `SKILL.md` version bump.
     this file.
   - Depends on: none.
 
-- [ ] **A2. Shared nutrition module**
+- [x] **A2. Shared nutrition module**
   - Create `references/nutrition.md`: daily carb periodization (by day
     type — rest/endurance/structured/long), training-day fueling,
     hydration/electrolyte guidance, race-day fueling principles.
