@@ -1,0 +1,169 @@
+# Badlands (Ultra-Distance Gravel Race)
+
+**Status: draft, pending review/approval.** Course specifics below were pulled
+from the official race site (badlands.cc) in September 2026. Badlands changes
+its route, exact distance, elevation, and cutoff most editions — reconfirm
+every figure against the current year's official course notes before relying
+on it for pacing or safety-critical decisions (cutoffs, water/resupply
+planning), and update this file once confirmed. Nothing here should be
+treated as authoritative until an athlete/coach has reviewed it against the
+current edition's official materials.
+
+Event id: `badlands-ultra` · Event type: `ultra-gravel` · Registry: `README.md`
+
+## Course profile
+
+- **Format:** solo or pairs, single continuous effort, self-supported/
+  unsupported (no drafting, no planned support crew, no pre-booked
+  logistics — see Format rules below).
+- **Start/finish:** Granada, Spain, looping through Almería province and
+  back. 2026 edition started/finished at the Palacio de Congresos de
+  Granada.
+- **Distance / elevation (approximate, edition-dependent):** roughly 800 km
+  with 14,000–16,000 m of climbing. Official materials have quoted both
+  "817 km / 14,420 m" (a prior/preview course description) and
+  "800 km / 16,000 m" (2026 official listing) — treat as "~800 km,
+  ~15,000 m" for planning purposes and do not hard-code either figure into a
+  pacing model without checking the current year's page.
+- **Terrain mix:** Sierra Nevada high-mountain passes (including Pico
+  Veleta, ~3,396 m — the highest paved road in continental Europe, on
+  unpaved/gravel surface near the summit), sandy ramblas (dry riverbeds,
+  loose and technical), the Tabernas and Gorafe deserts (arid, exposed,
+  rocky/sandy badlands terrain), Cabo de Gata coastal sections (flat,
+  wind-exposed, hot), and pine-forested mountain passes. One documented
+  stretch after Almería stacks roughly 3,000 m of climbing into about
+  100 km — expect the route to concentrate extreme climbing blocks rather
+  than spread them evenly.
+- **Cutoff:** approximately 96–108 hours (2026 edition: start 08:00, cutoff
+  deadline roughly 4.5 days later). This is a hard deadline for the full
+  ~800 km/~15,000 m course — riders who don't reach the finish by the
+  deadline are recorded as DNF, though they may continue and return the
+  tracker at a designated point. **Reconfirm the exact hour count for the
+  current edition** — this is the single figure most load-bearing for
+  pacing plans and back-of-the-envelope finish-time targets.
+
+## Format rules (self-supported ultra)
+
+- **Self-sufficiency:** food, drink, and belongings must be carried or
+  acquired unplanned en route (shops, water sources). No pre-booked
+  accommodation, no logistics support, no virtual base-camps, no planned
+  support crew. Support is allowed only at the start and finish.
+- **No drafting:** riders can't explicitly follow another rider or vehicle
+  for aerodynamic benefit, except during the neutralized start or for the
+  pairs category. Riding side-by-side (not paced) is allowed.
+- **Mandatory tracker:** satellite tracker required for the whole route;
+  long inactivity or turning it off is penalized. Relevant for training:
+  athletes should practice managing tracker/electronics battery life
+  alongside lights and navigation devices over multi-day efforts.
+- **Night riding:** helmet, front and rear lights, and reflective gear are
+  mandatory after dark; headphones are prohibited throughout. Given the
+  cutoff length, most finishers will ride through at least one full night.
+- **Eligibility/safety:** minimum age 18; valid liability and medical
+  insurance covering rescue and repatriation is required to start.
+
+## Limiters this event trains for
+
+Ultra-gravel deprioritizes short-power work (VO2max/sprint) relative to a
+criterium- or road-race-focused plan, in favor of:
+
+- **Durability** — the ability to keep producing usable power after 10+
+  hours and multiple days, not peak power on fresh legs.
+- **Fat-max / low-intensity endurance** — most of the ~800 km is ridden
+  well below threshold; an athlete who can fuel and move efficiently at low
+  intensity for hours goes faster overall than one who can only hold high
+  power briefly.
+- **Back-to-back long days** — the format is one continuous multi-day
+  effort, so the relevant training stress is accumulated fatigue across
+  consecutive long rides, not single-session peak load.
+- **Technical / loose-surface handling** — sandy ramblas, desert
+  singletrack-adjacent gravel, and the unpaved section near Pico Veleta
+  reward bike-handling skill on loose terrain, which a pure road/structured
+  program won't build.
+- **Heat tolerance** — Tabernas/Gorafe desert and Cabo de Gata coastal
+  sections are hot and exposed; heat acclimation is a real limiter, not
+  just a comfort issue.
+- **Sleep deprivation / overnight riding** — the cutoff virtually
+  guarantees at least one overnight stretch; the ability to fuel, navigate,
+  and stay safe while sleep-deprived is a trainable skill, not just
+  toughness.
+- **Sustained high-altitude climbing** — Pico Veleta and the Sierra Nevada
+  passes concentrate large, singular climbing efforts (see the ~3,000 m in
+  ~100 km note above) rather than the shorter repeated climbs a criterium
+  or crit-style plan would emphasize.
+
+## Session archetypes + periodization overlay
+
+Countdown-driven periodization toward `eventDate` (base → build → peak →
+taper), replacing the generic rolling 3-build+1-taper block when
+`targetEvent: badlands-ultra` is set. On top of the standard archetypes in
+`workout-library.md`, add these event-specific ones during build/peak:
+
+- **Long back-to-back days** — two consecutive long endurance rides
+  (Z2, fat-max pace) on a weekend, building total back-to-back volume over
+  the build phase rather than single-ride duration alone.
+- **Heat acclimation** — endurance rides deliberately scheduled/dressed for
+  heat exposure as the event date and typical desert conditions approach;
+  substitute indoor heat sessions if ambient conditions don't allow it.
+- **Overnight / low-sleep simulation** — at least one long ride starting
+  late evening or extending past normal sleep hours during peak phase, to
+  rehearse fueling and decision-making while sleep-deprived. Use sparingly
+  given the fatigue cost; this is a peak-phase, not base-phase, tool.
+- **Loaded-bike climbing** — climbing repeats or long climbs done with
+  race-representative bikepacking bag weight, to build climbing durability
+  under the load the athlete will actually carry.
+- **Technical/loose-surface handling** — dedicated gravel/off-road handling
+  rides on sandy or loose terrain where available, or skills drills, rather
+  than assuming road/smooth-gravel handling transfers directly.
+- **Fasted/low-fuel long rides** (base phase only, used deliberately and
+  sparingly) — to build fat-max efficiency; do not combine with high
+  intensity, and never use this as the default fueling approach for long
+  rides once gut-training toward race fueling begins (see Fueling below).
+
+Taper: reduce volume and back-to-back-day load while preserving one shorter
+loaded-bike or technical-handling session to keep skills sharp; treat the
+final week primarily as glycogen/rest preparation, not fitness-building.
+
+## Gear/logistics notes relevant to training
+
+- Train on the actual race setup (bike + bikepacking bags, race-representative
+  weight) for at least the loaded-bike sessions above — handling, climbing,
+  and fueling access all change meaningfully with load.
+- Tubeless tire setup and puncture resistance matter more than usual given
+  sandy/rocky desert terrain; if the athlete is testing new tire/tubeless
+  setups, do it well before peak phase, not race week.
+- Lighting and tracker battery life should be tested on at least one
+  overnight training ride, not assumed from specs.
+- Because support is start/finish only, resupply logistics (carrying enough
+  buffer between towns, planning around shop hours) are part of the athlete's
+  own preparation, not something the plan needs to schedule — but the
+  fueling plan (below) should assume unplanned, opportunistic resupply
+  rather than reliable planned stops.
+
+## Fueling delta
+
+This section adds the Badlands-specific delta on top of the shared fueling
+model in `references/nutrition.md`. **Note:** `nutrition.md` does not exist
+in this repo yet — it's scoped as a separate task; once it lands, this
+section should reference its daily carb periodization and race-day fueling
+principles directly rather than restating them.
+
+- **Gut training toward 90–120 g/h carbohydrate** on long training rides
+  during build/peak, progressively, since the race requires sustained high
+  carb intake for many consecutive hours across multiple days.
+- **Desert heat electrolyte load** — sodium/electrolyte intake should be
+  trained and tuned for heat exposure (Tabernas/Gorafe/Cabo de Gata
+  conditions), not just carbohydrate.
+- **Multi-day, unplanned-resupply-as-fuel-stop fueling** — because support
+  is start/finish only, the athlete's fueling plan should rehearse buying
+  and eating real food from shops/petrol stations opportunistically, not
+  rely solely on carried race nutrition products.
+- **Sleep-deprivation fueling** — caffeine timing and staying adequately fed
+  while cognitively impaired by sleep loss should be rehearsed on the
+  overnight/low-sleep training sessions above, not left to race day.
+
+## Sources (for review)
+
+- https://badlands.cc/rules/ — format rules, self-supported definition, drafting, tracker, mandatory gear, eligibility/insurance.
+- https://badlands.cc/badlands2026/ — 2026 distance/elevation, start location, dates.
+- https://bikepacking.com/event/badlands-2026/ — 2026 start location/date, terrain (Pico Veleta, deserts, coast), distance/elevation confirmation.
+- https://badlands.cc/2026preview/ — course/terrain detail (climbs, desert sections); note this figure set (817 km/14,420 m) diverges from the 2026 official listing (800 km/16,000 m), which is the edition-to-edition variance this file flags throughout.
