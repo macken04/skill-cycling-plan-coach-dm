@@ -93,35 +93,114 @@ criterium- or road-race-focused plan, in favor of:
 
 ## Session archetypes + periodization overlay
 
-Countdown-driven periodization toward `eventDate` (base → build → peak →
-taper), replacing the generic rolling 3-build+1-taper block when
-`targetEvent: badlands-ultra` is set. On top of the standard archetypes in
-`workout-library.md`, add these event-specific ones during build/peak:
+Periodization toward `eventDate` follows `references/macrocycle-model.md`'s
+(A9) five-phase season skeleton — **Base → Deload → Build → Deload →
+Refine** — once `season-plan.json` exists for this event (see the
+instantiation below); this replaces the generic rolling 3-build+1-taper
+block from `training-model.md` when `targetEvent: badlands-ultra` is set.
+On top of the standard archetypes in `workout-library.md`, add these
+event-specific ones during Build/Refine:
 
 - **Long back-to-back days** — two consecutive long endurance rides
   (Z2, fat-max pace) on a weekend, building total back-to-back volume over
-  the build phase rather than single-ride duration alone.
+  the Build phase rather than single-ride duration alone.
 - **Heat acclimation** — endurance rides deliberately scheduled/dressed for
   heat exposure as the event date and typical desert conditions approach;
   substitute indoor heat sessions if ambient conditions don't allow it.
 - **Overnight / low-sleep simulation** — at least one long ride starting
-  late evening or extending past normal sleep hours during peak phase, to
+  late evening or extending past normal sleep hours during Refine, to
   rehearse fueling and decision-making while sleep-deprived. Use sparingly
-  given the fatigue cost; this is a peak-phase, not base-phase, tool.
+  given the fatigue cost; this is a Refine-phase, not Base-phase, tool.
 - **Loaded-bike climbing** — climbing repeats or long climbs done with
   race-representative bikepacking bag weight, to build climbing durability
   under the load the athlete will actually carry.
 - **Technical/loose-surface handling** — dedicated gravel/off-road handling
   rides on sandy or loose terrain where available, or skills drills, rather
   than assuming road/smooth-gravel handling transfers directly.
-- **Fasted/low-fuel long rides** (base phase only, used deliberately and
+- **Fasted/low-fuel long rides** (Base phase only, used deliberately and
   sparingly) — to build fat-max efficiency; do not combine with high
   intensity, and never use this as the default fueling approach for long
   rides once gut-training toward race fueling begins (see Fueling below).
 
 Taper: reduce volume and back-to-back-day load while preserving one shorter
-loaded-bike or technical-handling session to keep skills sharp; treat the
-final week primarily as glycogen/rest preparation, not fitness-building.
+loaded-bike or technical-handling session to keep skills sharp; treat
+race week (Refine's final block, per the macrocycle model) primarily as
+glycogen/rest preparation, not fitness-building.
+
+## Season macrocycle instantiation (A11)
+
+Concrete instantiation of `macrocycle-model.md`'s (A9) phase algorithm and
+`trial-events.md`'s (A10) ladder method for this event specifically — the
+worked numbers a coach run would actually produce, not a re-derivation of
+either generic method. Both files should be read first; only the
+Badlands-specific output is repeated here.
+
+**Event inputs:** `eventDate` = **2027-08-31** (the race start date, per
+`athlete-config.md`'s `eventDate` field and the season-macrocycle PRD's
+brief — the ~4.5-day cutoff means the athlete's actual finish falls several
+days later, but the plan targets the start date, same as `daysToEvent`'s
+existing definition). `D` ≈ 800 km, `E` ≈ 15,000 m, age band under 40
+(`deloadWeeks` = 1) — the illustrative choice used below; an actual
+athlete's older age band would only change the two deload lengths (2 or 3
+weeks each per the age-band table), not the Build/Refine lengths or the
+ladder's phase-fraction placement.
+
+### Phase lengths
+
+Both master phases are fixed at the algorithm's nominal length, which
+already sits inside the PRD's 12–14 week range, so no shrink branch is
+needed here:
+
+- **Build:** 13 weeks.
+- **Refine:** 13 weeks (nominal — Refine's actual end date is always the
+  literal `eventDate`, so its true length absorbs whatever the runway's
+  `totalDays % 7` remainder is, per `macrocycle-model.md` step 7).
+
+### Worked skeleton
+
+Illustrative `startDate` = 2026-09-26 (today, at the time this instantiation
+was written — an actual run recomputes this from that athlete's onboarding
+date). `totalDays` = 339, `totalWeeks` = 48 (floor). `reserved` = 13 + 13 +
+2×1 = 28. `baseWeeks` = 48 − 28 = 20 (≥ 12, no shrink needed):
+
+| Phase | Start | End | Length |
+|---|---|---|---|
+| Base | 2026-09-26 | 2027-02-13 | 20 weeks |
+| Deload 1 | 2027-02-13 | 2027-02-20 | 1 week |
+| Build | 2027-02-20 | 2027-05-22 | 13 weeks |
+| Deload 2 | 2027-05-22 | 2027-05-29 | 1 week |
+| Refine | 2027-05-29 | **2027-08-31** | 13 weeks + 3 days |
+
+Sum spans the full runway exactly, `startDate` to the real `eventDate`, with
+no gap and no fourth named phase — Refine absorbs the 3-day remainder that
+48-week floor division leaves over, per `macrocycle-model.md` step 7.
+
+### Trial-event ladder
+
+Applying `trial-events.md`'s placement fractions (§4) to the phase dates
+above, and its distance/elevation formulas (§2/§3) to `D` ≈ 800 km /
+`E` ≈ 15,000 m:
+
+| Rung | Category | Target date | Spec | Limiters rehearsed |
+|---|---|---|---|---|
+| C1 | C | 2026-12-19 (`Base + 12wk`) | 150–200 km, ~3,000–3,750 m; representative gravel/road terrain, no overnight/loaded-bike | Fat-max/low-intensity endurance, back-to-back long days (partial) |
+| C2 | C | 2027-03-27 (`Build + 5wk`) | 250–300 km, ~4,500–6,000 m; representative terrain | Fat-max endurance, back-to-back long days, current gut-training g/h target |
+| B1 | B | 2027-04-24 (`Build + 9wk`) | Same 250–300 km/4,500–6,000 m scale as C2, on Badlands-representative sandy/technical terrain at matching climbing density | Technical/loose-surface handling, sustained high-altitude climbing |
+| B2 (culminating) | B | 2027-06-12 (`Refine + 2wk`, ~15% into Refine) | Loaded-bike, full-gear (lighting, tracker) rehearsal spanning a genuine sunset-to-sunrise stretch, at the then-current gut-trained g/h rate, with opportunistic resupply | Loaded-bike handling, sleep deprivation/overnight riding, heat tolerance, opportunistic-resupply fueling |
+
+B2 lands ~15% into Refine, leaving roughly 11 of Refine's 13 weeks for
+recovery, final race-specific sharpening, and taper before 2027-08-31 —
+within `trial-events.md`'s required 15–25% window. Each rung's spec traces
+directly to entries in this file's "Limiters this event trains for" section
+above; C1/C2 deliberately don't target the discrete (terrain/overnight/
+altitude/loaded-bike) limiters, per `trial-events.md` §1 — that's what
+distinguishes them from B1/B2.
+
+`season-plan.json`'s `trialEvents[]` entries for this event should carry
+`distanceKm`/`elevationM` as the ranges above, `terrainFidelity: "low"` for
+C1/C2 and `"high"` for B1/B2, `overnight`/`loadedBike: true` only on B2, and
+`opportunisticResupply: true` on B2 (per Badlands' start/finish-only support
+rule above).
 
 ## Gear/logistics notes relevant to training
 
@@ -130,7 +209,7 @@ final week primarily as glycogen/rest preparation, not fitness-building.
   and fueling access all change meaningfully with load.
 - Tubeless tire setup and puncture resistance matter more than usual given
   sandy/rocky desert terrain; if the athlete is testing new tire/tubeless
-  setups, do it well before peak phase, not race week.
+  setups, do it well before Refine, not race week.
 - Lighting and tracker battery life should be tested on at least one
   overnight training ride, not assumed from specs.
 - Because support is start/finish only, resupply logistics (carrying enough
@@ -148,7 +227,7 @@ principles) — read that file first; only the Badlands-specific emphasis is
 repeated here.
 
 - **Gut training toward the top of `nutrition.md`'s long-ride on-bike range
-  (90–120 g/h)** on long training rides during build/peak, progressively,
+  (90–120 g/h)** on long training rides during Build/Refine, progressively,
   since the race requires sustained high carb intake for many consecutive
   hours across multiple days.
 - **Desert heat electrolyte load** — sodium/electrolyte intake should be

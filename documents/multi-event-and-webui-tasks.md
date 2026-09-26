@@ -222,7 +222,7 @@ infra required. Ships as a `SKILL.md` version bump.
     the general method reproduces the specific example already agreed.
   - Depends on: none.
 
-- [ ] **A11. Badlands macrocycle + ladder instantiation**
+- [x] **A11. Badlands macrocycle + ladder instantiation**
   - Edit `references/events/badlands-ultra.md`: add a concrete instantiation
     of A9's phase model and A10's ladder method for this event specifically
     — phase length choices within the 12-14 week range, deload lengths, and
