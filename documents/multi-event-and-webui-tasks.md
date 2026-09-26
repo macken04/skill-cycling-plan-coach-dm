@@ -33,7 +33,7 @@ replacing it.
 Pure skill/content work: markdown files inside this repo. No external
 infra required. Ships as a `SKILL.md` version bump.
 
-- [ ] **A1. Event registry + Badlands Ultra event file**
+- [x] **A1. Event registry + Badlands Ultra event file**
   - Create `references/events/README.md`: registry format — event id, display
     name, aliases (for matching free-text onboarding answers), event type tag
     (e.g. `ultra-gravel`).
@@ -65,7 +65,7 @@ infra required. Ships as a `SKILL.md` version bump.
     target and hydration note, not just prose.
   - Depends on: none.
 
-- [ ] **A3. Config schema additions**
+- [x] **A3. Config schema additions**
   - Edit `references/athlete-config.md`: add `targetEvent` (event id or
     `null`), `eventDate`, and derived `daysToEvent` to the field table. Note
     that `goal` is auto-populated/confirmed from the event when one is set,
@@ -76,7 +76,7 @@ infra required. Ships as a `SKILL.md` version bump.
     blank `goal` with an event set gets a sensible default per the doc.
   - Depends on: A1 (event id needs to exist to be a valid reference).
 
-- [ ] **A4. Onboarding: event branch, closed-choice questions, and limiter narrative**
+- [x] **A4. Onboarding: event branch, closed-choice questions, and limiter narrative**
   - Edit `references/onboarding.md` to make onboarding dynamic rather than a
     flat checklist, with every question explicitly typed:
     - **Goal branch (event question).** Add "Are you training for a specific
