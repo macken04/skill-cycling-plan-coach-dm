@@ -267,7 +267,7 @@ infra required. Ships as a `SKILL.md` version bump.
     the remaining skeleton shifts, with prior weeks unchanged.
   - Depends on: A9, A10, A11, A12, A3.
 
-- [ ] **A14. Season-level nutrition and strength periodization**
+- [x] **A14. Season-level nutrition and strength periodization**
   - Per PRD FR4: edit `references/nutrition.md` (A2) to add a fueling-target
     ramp (e.g. gut-training g/h progression) aligned to the trial-event
     ladder's dates, and `references/strength-library.md` to add a
