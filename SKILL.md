@@ -4,7 +4,7 @@ description: Plan a cyclist's training week as a standalone coaching package wit
 metadata:
   author: Elio Struyf <elio@struyfconsulting.be>
   license: MIT
-  version: 2.3.0
+  version: 2.4.0
 ---
 
 # Cycling plan coach
@@ -21,9 +21,18 @@ Before doing any real work:
 
 `athlete.json` is the single source of truth for who the plan is for. Fields are documented in `references/athlete-config.md`.
 
-From the config take: `name` (greetings), `language` and `units` (everything the athlete reads is produced in these), `styleNotes` (writing rules to honor), `goal`, `targetEvent`, `eventDate`, `age`, `gender`, `weightKg`, `fallbackFtp`, `targetWkg`, `groupRideDays`, `typicalAvailableDays`, `typicalWorkoutDurationMin`, `maxStructuredSessions`, `strengthDefault`, `physicalNotes` (plus `physicalNotesFrequency` / `physicalNotesAssessed` when set), `strengthExperience`, `strengthInjuryNotes`, `dietaryRestrictions`, `fuelingNotes`, `fuelingPreference`, and optional `riderTypeOverride`.
+From the config take, grouped by what they drive:
 
-None of `physicalNotes`, `strengthExperience`/`strengthInjuryNotes`, or the nutrition fields are fixed at onboarding: if the athlete mentions a change (an injury clearing up, new lifting experience, a newly noticed food sensitivity), update the relevant field in `athlete.json` on the spot rather than only ever asking at first setup.
+- **Identity and output:** `name`, `language`, `units`, `styleNotes`.
+- **Goal:** `goal`, `targetEvent`, `eventDate`, `riderTypeOverride` (optional).
+- **Baseline fitness and physique:** `age`, `gender`, `weightKg`, `fallbackFtp`, `targetWkg`, `bodyCompositionGoal`, `bodyFatPercent`, `restingHr`, `labTestingNotes`.
+- **Cycling background and current status:** `cyclingYearsExperience`, `longestEffortCompleted`, `ultraDistanceExperience`, `currentTrainingStatus`, `trainingBreakDuration`.
+- **Logistics:** `groupRideDays`, `typicalAvailableDays`, `typicalWorkoutDurationMin`, `maxStructuredSessions`, `strengthDefault`.
+- **Physical limiter:** `physicalNotes`, `physicalNotesFrequency`, `physicalNotesAssessed`.
+- **Strength background:** `strengthExperience`, `strengthYearsExperience`, `strengthRecentFrequency`, `strengthCurrentLifts`, `strengthInjuryNotes`.
+- **Nutrition:** `dietaryRestrictions`, `fuelingNotes`, `fuelingPreference`, `currentEatingPatternNotes`, `currentWeightGoalDirection`.
+
+None of the self-reported fields above are fixed at onboarding: if the athlete mentions a change (an injury clearing up, new lifting experience, a return to consistent training, a newly noticed food sensitivity), update the relevant field in `athlete.json` on the spot rather than only ever asking at first setup.
 
 If `targetEvent` is set and matches an id in `references/events/README.md`, resolve its reference file for course/limiter context. Full event-driven countdown periodization (replacing the generic rolling block below) is scoped separately — until that lands, an event just informs framing and goal language, not the week structure.
 
@@ -63,6 +72,8 @@ Unless `riderTypeOverride` is set, classify the athlete from their own power cur
 
 If `physicalNotes` is non-empty, weigh it alongside this data-derived classification when Step 3 sets strength/core and session emphasis — it's the athlete's own account of what feels limiting, useful for exactly what a power curve can't show (e.g. a posture or posterior-chain issue on climbs). Treat it as a hypothesis, not a diagnosis: never let it silently override the power-curve-derived rider type, and say so plainly if the two point in different directions.
 
+If `ultraDistanceExperience` is `none` and `targetEvent` resolves to an ultra-distance event file, say so plainly and lean the plan toward that event file's durability/handling/back-to-back-days limiters rather than pure power development — a first-time ultra finish is its own goal, distinct from raw fitness. `cyclingYearsExperience` and `longestEffortCompleted` are context for how aggressively volume can grow week to week, not inputs to the rider-type classification itself (that stays power-curve-derived, per above).
+
 ### Step 3 - confirm intake and session design
 
 Restate the goal from the config in one line, then confirm or complete intake values gathered at the start. Ensure these are explicitly captured: available training days, group-ride day(s), duration per workout day, how many structured key sessions (default `maxStructuredSessions`), indoor or outdoor preference, week's focus, strength mode (strength/core/both), and strength/core frequency. Keep the intake short with the interactive picker when available. Always provide a "use profile defaults" path so the athlete can accept predefined config values and only override what changed. Factor last week's load into the new week.
@@ -72,6 +83,8 @@ When strength/core emphasis is chosen for the week, apply `strength-library.md`'
 ### Step 4 - apply the training model
 
 Use the FTP from Strava (fallback: `fallbackFtp`), the rider type from Step 2, and the goal. Convert every % FTP target to watts in the human-readable text using that FTP. Principles and session shapes are in `references/training-model.md`. Always: polarized week, at most `maxStructuredSessions` structured days midweek, group-ride days social with no forced structure, never three hard days back to back, steer by power and allow backing off on feel.
+
+Apply `training-model.md`'s ramp-in guidance using `currentTrainingStatus` (a fallback signal when there's no live Garmin ACWR/training-status yet) and its energy-availability caution using `currentWeightGoalDirection`/`bodyCompositionGoal` — state either explicitly to the athlete in one line when it changes the plan rather than silently applying it.
 
 ### Step 5 - build structured workouts
 

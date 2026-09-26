@@ -30,6 +30,35 @@ the athlete without changing the underlying g/kg math:
 - **`fuelingPreference`:** lean suggestions toward `gels`, `realFood`, or a
   `mixed` approach accordingly; treat `noPreference` as license to suggest
   whatever best hits the g/h target for the day type.
+- **`currentEatingPatternNotes`:** a qualitative baseline of what the athlete
+  already eats day to day, from onboarding. Read it the same way as
+  `fuelingNotes` — a hypothesis about current habits, not a lab result —
+  when deciding whether daily carb targets above represent a big jump from
+  today or a small one, and say so if it's a big jump (see energy
+  availability below).
+
+## Energy availability caution
+
+The daily carb targets above assume the athlete is fueling training, not
+simultaneously running a large calorie deficit. When `currentWeightGoalDirection`
+is `losing` or `bodyCompositionGoal` (`athlete-config.md`) is `significantLoss`,
+check that tension explicitly rather than quietly applying the full daily
+carb target on top of an unknown deficit:
+
+- State plainly, once, that combining meaningful weight loss with the
+  training load this plan prescribes — especially toward a high-volume or
+  ultra-distance `targetEvent` — needs a conservative rate of loss (roughly
+  0.5-1% of body weight per week is a common conservative bound) to avoid
+  under-fueling training and recovery.
+- Prefer to concentrate any deficit on lower-volume/easy days and protect
+  the on-bike fueling rates in the table above in full on structured/long/
+  event-specific days — the deficit should come from daily intake outside
+  training, not from underfueling the sessions that need the carbs most.
+- This module isn't a substitute for individualized medical or dietetic
+  advice; say so once when `bodyCompositionGoal` is `significantLoss`, and
+  leave the actual deficit size and rate to the athlete (and their own
+  doctor/dietitian if they involve one) rather than prescribing calorie
+  numbers here.
 
 ## Daily carb periodization by day type
 

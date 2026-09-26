@@ -4,7 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.3.0] - 2026-09-26
+## [2.4.0] - 2026-09-26
+
+### Added
+
+- **Cycling background & current training status section** in onboarding (`references/onboarding.md`): years cycling, longest effort completed, prior ultra-distance experience, and current training consistency (`consistent`/`returningFromBreak`/`new`) as a self-report fallback for Garmin's live `training_status`/ACWR signal when no Garmin export exists yet. `training-model.md` now has an explicit ramp-in section keyed off `currentTrainingStatus`, and `SKILL.md` Step 2 leans a first-time-ultra plan toward durability/handling per the matched event file.
+- **Body composition fields**: `bodyCompositionGoal` and optional `bodyFatPercent`, captured alongside the existing physical-profile questions, plus a one-line caution at onboarding when `significantLoss` is chosen.
+- **Resting HR / metabolic baseline section**: `restingHr` and `labTestingNotes` (VO2max/lactate/metabolic test results) as a self-report fallback for athletes without a Garmin export, which otherwise supplies `vo2max`/`lthr` live.
+- **Deeper strength background**: `strengthYearsExperience`, `strengthRecentFrequency`, and `strengthCurrentLifts` (current working weights on key lifts) alongside the existing `strengthExperience`/`strengthInjuryNotes`. `strength-library.md` now anchors a first strength block to reported current lifts when given, and adds a short re-ramp for a recently-inactive lifter regardless of lifetime experience level.
+- **Current nutrition baseline and energy availability**: `currentEatingPatternNotes` and `currentWeightGoalDirection`. `nutrition.md` and `training-model.md` both gained an explicit energy-availability caution — flagged once, not silently absorbed — when a significant weight-loss goal is combined with high training load or an ultra-distance target.
+- Corresponding `athlete-config.md` field documentation for all of the above; `SKILL.md`'s config field list restructured into grouped categories to stay readable at this size.
+
+
 
 ### Added
 
