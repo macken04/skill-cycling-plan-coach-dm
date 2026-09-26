@@ -15,7 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Current nutrition baseline and energy availability**: `currentEatingPatternNotes` and `currentWeightGoalDirection`. `nutrition.md` and `training-model.md` both gained an explicit energy-availability caution — flagged once, not silently absorbed — when a significant weight-loss goal is combined with high training load or an ultra-distance target.
 - Corresponding `athlete-config.md` field documentation for all of the above; `SKILL.md`'s config field list restructured into grouped categories to stay readable at this size.
 
-
+## [2.3.0] - 2026-09-26
 
 ### Added
 
@@ -26,7 +26,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Fixed
 
-- Closes the three gaps flagged in `bug-reports/onboarding-shallow-intake-gaps.md`: onboarding previously asked nothing about strength/training history, had no structured follow-up or revisit path for the physical-limiter narrative, and asked nothing about nutritional preferences despite a fueling model meant to be personalized.
+- Closes the three gaps originally flagged in a since-resolved onboarding gap report: onboarding previously asked nothing about strength/training history, had no structured follow-up or revisit path for the physical-limiter narrative, and asked nothing about nutritional preferences despite a fueling model meant to be personalized.
 
 ## [2.2.0] - 2026-06-23
 
