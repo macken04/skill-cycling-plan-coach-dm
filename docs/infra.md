@@ -171,6 +171,14 @@ key — to create it ahead of time). So:
    and set the result as `supabaseAthleteId` in his `athlete.json`.
 3. From then on, Step 7 syncs every generated week automatically.
 
+**Note (post-3.1.1):** steps 1-2 used to be something only whoever read this
+file would know to do — the coaching conversation itself said nothing about
+the web dashboard while `supabaseAthleteId` stayed `null`. `SKILL.md`'s Step
+7 now tells the athlete this in-conversation (once per unlinked run) and, if
+they confirm they've already done step 1 and the current session has
+Supabase access, completes step 2 on the spot rather than requiring a
+separate developer-side session to notice and do it later.
+
 **Verified this session** (dummy athletes, not David's real account —
 cleaned up afterward, same pattern as B2): created two athletes + one plan
 + one workout each; via `set_config('request.jwt.claims', ...)` (the same

@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.1] - 2026-09-26
+
+### Fixed
+
+- **Silent Supabase-linking gap**: `SKILL.md`'s "Sync to Supabase" step previously said, verbatim, to "say nothing about Supabase" whenever `supabaseAthleteId` was `null` — so an athlete who had never linked a web account had no way to discover the web dashboard existed at all, or how to link it, from the coaching conversation itself; that instruction only ever lived in `SKILL.md`/`docs/infra.md` for whoever happened to read the source. Step 7 now tells the athlete, once per unlinked run, how to sign in and link their account, and completes the linking on the spot (looking up their `auth.users` id by email and setting `supabaseAthleteId`) when they confirm they've already signed in and the session has Supabase access — rather than deferring it to some future session that may never come.
+
+### Changed
+
+- **Patch version bump** (`3.1.0` → `3.1.1`): behavior-only fix, no new fields or schema changes — a linked athlete (`supabaseAthleteId` already set) sees no change.
+
 ## [3.1.0] - 2026-09-26
 
 ### Added
