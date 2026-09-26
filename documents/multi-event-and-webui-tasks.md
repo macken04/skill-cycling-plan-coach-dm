@@ -11,6 +11,17 @@ every task can be tested before moving to the next.
   future-proofing, but auth/UI logic assumes one athlete.
 - **Infra provisioning:** kept as an explicit task (B1) with manual sub-steps,
   rather than assumed to already exist.
+- **Status vocabulary (resolves PRD open question 2):** the five-way split —
+  `completed_as_planned` / `completed_easier_than_planned` /
+  `completed_harder_than_planned` / `failed_too_hard` / `skipped` — for
+  `workout_logs` and `strength_logs`, as specified in the PRD's FR3.
+  `nutrition_logs` gets its own simpler flag (hit/missed carb target, plus a
+  hydration note) rather than reusing this vocabulary.
+- **Interpretation timing (resolves PRD open question 1):** v1 surfaces
+  interpretations at the next chat planning session (`SKILL.md` Step 1 reading
+  logged signals back, built in B6/B8) — no rules-evaluation endpoint required
+  for the core loop. A synchronous submit-time response (immediate feedback in
+  the web UI) is deferred to B7 as a polish item, not a B3 requirement.
 
 ## Milestone A — multi-event coaching content
 
@@ -108,7 +119,32 @@ infra required. Ships as a `SKILL.md` version bump.
     existing example plan in the same file.
   - Depends on: A2, A5.
 
-- [ ] **A8. Version bump, changelog, description updates**
+- [ ] **A8. Interpretation rules for logged signals**
+  - Per the agentic-coach PRD (FR4): write the rule table mapping each FR3
+    status to a concrete adjustment, into whichever reference file already
+    governs that archetype's progression:
+    - `failed_too_hard` (bike session) → don't advance that archetype's
+      progression step next time it's scheduled; consider substituting an
+      easier variant; note in `workout-library.md`.
+    - `completed_easier_than_planned` → eligible to advance the progression
+      step faster than the default rotation.
+    - `skipped` (repeated on the same archetype) → explicit missed-session
+      rule, not left to judgement.
+    - Failed/too-hard strength session → regress load/reps next occurrence,
+      per `strength-library.md`'s existing progression pattern.
+  - This is documentation only — no dependency on Milestone B shipping first.
+    It sits unused by the chat flow until B8 wires `SKILL.md` Step 1 to read
+    logged signals back and apply these rules (see B8), but the vocabulary
+    (per the "Decisions locked in" section above) is already agreed, so this
+    can be written now.
+  - **Test:** for a sample logged status of each kind, confirm the rule table
+    gives an unambiguous adjustment (no "use judgement" left for the coach to
+    interpret) and that it's stated in terms `SKILL.md` Step 1 can apply
+    mechanically.
+  - Depends on: none (only needs the status vocabulary, already decided
+    above).
+
+- [ ] **A9. Version bump, changelog, description updates**
   - Bump `package.json` version (breaking config shape → major bump, e.g.
     `2.2.0` → `3.0.0`).
   - Add a `CHANGELOG.md` entry at the top describing multi-event + nutrition
@@ -119,7 +155,7 @@ infra required. Ships as a `SKILL.md` version bump.
   - **Test:** run `npm run build`; confirm `cycling-plan-coach.skill` is
     produced and the staged `SKILL.md` inside it has `version: 3.0.0`
     stamped; confirm `CHANGELOG.md` has the new entry at the top.
-  - Depends on: A1–A7 (bump happens once the content behind it exists).
+  - Depends on: A1–A8 (bump happens once the content behind it exists).
 
 ## Milestone B — persistent data + web UI
 
@@ -145,42 +181,62 @@ each phase closes a working loop before the next adds scope.
     folder) creating the seven tables from the plan: `athletes`, `events`,
     `plans`, `workouts`, `workout_logs`, `nutrition_logs`, `strength_logs`,
     with the columns listed in the plan doc's schema table.
+  - Per the agentic-coach PRD (FR3): add a `status` enum column to
+    `workout_logs` and `strength_logs` (`completed_as_planned` /
+    `completed_easier_than_planned` / `completed_harder_than_planned` /
+    `failed_too_hard` / `skipped`, per the "Decisions locked in" vocabulary
+    above) and a simpler hit/missed-target + hydration flag on
+    `nutrition_logs`.
+  - Per FR5: add a `coach_notes` table (or column on the log rows) keyed to
+    the triggering log row, to hold the surfaced interpretation text so it's
+    visible in the web UI without waiting for the next chat.
   - Add RLS policies scoped by `athlete_id` (kept even in single-athlete v1,
     per the plan's future-proofing rationale).
   - **Test:** apply the migration to the Supabase project; query each table
-    via `curl`/psql and confirm the expected columns exist; insert a second
-    dummy `athlete_id` row and confirm a query filtered to the real
-    `athlete_id` cannot see it (RLS is actually enforced, not just declared).
+    via `curl`/psql and confirm the expected columns exist, including the new
+    status enums and `coach_notes`; confirm an invalid status value is
+    rejected by the enum constraint; insert a second dummy `athlete_id` row
+    and confirm a query filtered to the real `athlete_id` cannot see it (RLS
+    is actually enforced, not just declared).
   - Depends on: B1.
 
 - [ ] **B3. Core loop, minimal**
   - Update the skill so it posts a generated plan + its workouts to the API
     (via `curl` + service key) instead of, or alongside, local files.
   - Build a bare-bones Next.js page on Vercel listing the current week's
-    workouts with a "mark complete" action that writes to `workout_logs`.
+    workouts with a completion action that writes to `workout_logs`. Per
+    FR3, this is a status picker (the five-way vocabulary), not a plain
+    "mark complete" toggle.
+  - Per FR5/FR6 (v1 = next-chat surfacing, per "Decisions locked in" above):
+    no rules-evaluation endpoint is required here — the status just needs to
+    be captured and stored so B8 can read it back. (A submit-time inline
+    response is deferred to B7.)
   - **Test (end-to-end):** run the skill to generate a week; query
     `plans`/`workouts` via `curl` and confirm the rows exist and match the
-    generated content. Load the frontend page, mark one workout complete,
-    and confirm a `workout_logs` row appears with the correct `workout_id`
-    and `status`.
+    generated content. Load the frontend page, log one workout with each of
+    the five statuses in turn, and confirm each produces a `workout_logs`
+    row with the correct `workout_id` and `status` value.
   - Depends on: B2.
 
 - [ ] **B4. Nutrition logging UI**
   - Add a daily entry form + history view to the frontend, writing to
-    `nutrition_logs`.
+    `nutrition_logs`, including the hit/missed-target + hydration flag
+    (FR3).
   - Update the skill's Step 1 (data pull) to read recent `nutrition_logs`
     back in and factor them into fueling notes.
-  - **Test:** log 3 days of nutrition via the UI; run the skill's weekly
-    planning flow and confirm the generated plan's summary references the
-    logged data (e.g. mentions average carb intake or a hydration gap).
+  - **Test:** log 3 days of nutrition via the UI, including at least one
+    missed-target day; run the skill's weekly planning flow and confirm the
+    generated plan's summary references the logged data (e.g. mentions
+    average carb intake or a hydration gap).
   - Depends on: B3.
 
 - [ ] **B5. S&C logging UI**
   - Add the same log/view pattern for `strength_logs` (sets/reps/load done,
-    notes).
-  - **Test:** mark a strength session complete via the UI; confirm the
-    `strength_logs` row has correct sets/reps/load and shows up in a history
-    view.
+    notes), including the FR3 status field (at minimum
+    completed-as-planned / failed-too-hard / skipped for strength sessions).
+  - **Test:** log a strength session as failed/too-hard via the UI; confirm
+    the `strength_logs` row has correct sets/reps/load, the status value, and
+    shows up in a history view.
   - Depends on: B3.
 
 - [ ] **B6. Fold in Milestone A on top of the data layer**
@@ -195,18 +251,43 @@ each phase closes a working loop before the next adds scope.
     the event countdown correctly.
   - Depends on: Milestone A complete, B3.
 
+- [ ] **B8. Signal interpretation wired into the coaching flow**
+  - Per the agentic-coach PRD (FR4/FR5/FR8): update `SKILL.md` Step 1 (data
+    pull) to read back the FR3 status fields on recent `workout_logs` /
+    `strength_logs`, apply the A8 rule table, and state any resulting
+    adjustment explicitly in the plan's last-week summary line (not left
+    implicit in "factor last week's load").
+  - Write the resulting interpretation to the `coach_notes` table/column
+    (B2) keyed to the triggering log row, so it's visible in the frontend
+    without waiting for the next chat, per FR5.
+  - **Test (end-to-end):** log a workout as `failed_too_hard` for a given
+    archetype via the frontend; run the skill's next weekly planning flow
+    and confirm (a) that archetype's progression step did not advance, (b)
+    the plan's summary states the adjustment and why, and (c) a
+    `coach_notes` row exists for the triggering log and is visible via the
+    frontend. Repeat for a failed strength session and confirm a load/rep
+    regression next occurrence.
+  - Depends on: A8, B2, B3, B5.
+
 - [ ] **B7. Polish**
-  - Add an event countdown view, compliance/trend charts, and a taper/
-    race-week view to the frontend.
+  - Add an event countdown view, a compliance/trend view driven by the FR3
+    status history (e.g. share of sessions landing as-planned vs.
+    harder-than-planned vs. failed, per archetype), and a taper/race-week
+    view to the frontend.
+  - Optionally add a submit-time rules-evaluation endpoint so a logged
+    status produces an inline "here's what that means" response immediately
+    (FR6 option (a)), rather than only surfacing at the next chat — deferred
+    here per the "Decisions locked in" section above.
   - **Test:** manual UI walkthrough — countdown view shows the correct
-    days-to-event; a trend chart reflects at least 2 weeks of logged data;
-    the taper/race-week view activates within the correct window before
+    days-to-event; the compliance view correctly buckets at least 2 weeks of
+    logged data by FR3 status; a trend chart reflects that data; the
+    taper/race-week view activates within the correct window before
     `eventDate` per the periodization rules from A5.
-  - Depends on: B4, B5, B6.
+  - Depends on: B4, B5, B6, B8.
 
 ## Suggested execution order
 
-Milestone A (A1→A8) can ship on its own as a skill release. Milestone B can
-start in parallel from B1 once Supabase/Vercel accounts exist, but B6
-specifically needs Milestone A finished first — everything else in B is
-independent of A.
+Milestone A (A1→A9) can ship on its own as a skill release. Milestone B can
+start in parallel from B1 once Supabase/Vercel accounts exist, but B6 and B8
+specifically need Milestone A finished first (B6 needs the event content,
+B8 needs A8's rule table) — everything else in B is independent of A.
