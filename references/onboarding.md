@@ -2,11 +2,17 @@
 
 Run this when `athlete.json` is missing or incomplete. Keep it conversational and dynamic, not a form read aloud: ask in the order below, but branch where noted, skip what a prior answer already implies, and only circle back for something missing at the end. Ask in the athlete's language once it is known (start in English, switch as soon as they pick a language). After writing `athlete.json`, continue directly into weekly planning in the same turn.
 
+## Before you start - check the runtime
+
+This flow is designed for the packaged skill running in an athlete's own Claude client (claude.ai or Claude Desktop with Skills), where the interactive picker and Strava connector are actually available. A session working inside this skill's own source repository (a Claude Code / dev-repo session, editing files like this one directly) cannot reproduce that experience — there is no interactive picker and no Strava connector here, only whatever generic tools the coding client happens to expose, which are not the same thing and may be denied or behave unexpectedly.
+
+If it looks like onboarding is being asked for inside this dev repo rather than through the packaged skill, say so plainly before proceeding — an athlete's real onboarding conversation (and the `supabaseAthleteId` linking bootstrap in `docs/infra.md`) should happen in their own Claude client, not here. Continue with a simulated/dev run only if the person explicitly confirms that's what they want, and treat any `athlete.json` produced here as a dev fixture, not a real athlete's config.
+
 This is a long list because the plan may need to engineer large changes — big weight loss, a first ultra-distance finish, a big strength or power jump — not just optimize around a stable baseline, and getting that safely right needs a real baseline. Move briskly anyway: many questions below are explicitly optional or skippable, say so when you ask them, and never make the athlete feel like they're filling out a medical form. A short "skip" or "don't know" is always an acceptable answer where noted.
 
 Every question below is tagged with how to ask it:
 
-- **[choice]** — a definitive/categorical answer. Present the options as an explicit list the athlete picks from (use the interactive picker when available; otherwise a lettered/numbered list). Never phrase these as "e.g." prose that leaves the athlete guessing the valid values.
+- **[choice]** — a definitive/categorical answer. Present the options as an explicit list the athlete picks from (use the interactive picker when available; otherwise a lettered/numbered list). Never phrase these as "e.g." prose that leaves the athlete guessing the valid values. If a picker call errors, is unavailable, or comes back denied, do not retry it or explain the failure mid-flow — drop to a plain lettered/numbered list immediately for that question and every remaining choice question in the run.
 - **[value]** — a concrete number or short fact (age, weight, FTP, a date). Free text is fine because there's nothing to categorize.
 - **[narrative]** — an open invitation for a longer, personal answer. Tell the athlete a few sentences are welcome and useful. Do not offer a pick-list here; the value is in what the athlete chooses to describe.
 
