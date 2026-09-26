@@ -511,17 +511,46 @@ each phase closes a working loop before the next adds scope.
     should be re-run for real.
   - Depends on: B3.
 
-- [ ] **B6. Fold in Milestone A on top of the data layer**
+- [x] **B6. Fold in Milestone A on top of the data layer**
   - Wire the multi-event/nutrition logic from Milestone A into the DB-backed
     flow: `events` table gets populated from `targetEvent`/`eventDate`;
     `plans` rows carry the current season-macrocycle `phase`
     (base/build/refine, plus a `deload` flag) sourced from `season-plan.json`
     (A9-A13) instead of only appearing in local markdown.
-  - **Test (end-to-end):** run the skill for an athlete with
-    `targetEvent: badlands-ultra`; confirm an `events` row is created, the
-    resulting `plans` row's `phase`/`deload` values match the athlete's
-    `season-plan.json` for that week, and the frontend plan viewer displays
-    the event countdown correctly.
+  - **`plans.phase`/`deload` turned out to already be wired from B3**: Step
+    7's `plans` upsert already carried these columns, sourced from Step 4's
+    `season-plan.json`-resolved `currentPhaseId` (never trusted stale, per
+    the season-skeleton resolution step). The actual gap closed here was the
+    `events` table, which nothing wrote to yet.
+  - **Shipped:** `SKILL.md` Step 7 gained a new item 2 — when
+    `targetEvent`/`eventDate` are both set, delete any existing `events` rows
+    for the athlete and insert one fresh row (`event_key` when the registry
+    matched, else `null`; `event_name`; `event_date`). Delete-and-reinsert
+    rather than a stored-id upsert, matching the single-current-event
+    assumption `season-plan.json` already makes (v1 tracks one target event
+    per athlete, not a history) — no schema migration needed. Added quality
+    check 11 for this. `web/lib/types.ts` gained an `Event` type; `/plan`
+    (`web/app/plan/page.tsx`) now reads the athlete's `events` row and
+    renders an event-countdown line ("N days to \<event\> · Phase: \<Phase\>
+    (deload)") above the existing week/focus line, in the same wording as
+    `plan-format.md`'s countdown header, falling back to the pre-existing
+    phase-in-the-week-line rendering when no event is set.
+  - **Test — done:** the literal end-to-end version (run the skill for a
+    real athlete with `targetEvent` set, check the deployed frontend) is
+    still blocked on David's one-time linking step from B3/B4/B5
+    (`docs/infra.md`'s "Linking bootstrap"). Verified instead, the same way
+    as B2-B5: two dummy athletes, `set_config('request.jwt.claims', ...)`
+    simulating each one's authenticated session, all test rows cleaned up
+    after. Athlete A's delete-then-insert of an `events` row (mirroring what
+    Step 7 now does) succeeds and is the only row A's own `select * from
+    events` returns; athlete B's `select` on `events` returns `0` rows;
+    an insert impersonating athlete A's `athlete_id` while authenticated as
+    B is rejected `42501`. `npm run build`/`npm run lint` pass in `web/`
+    (build requires `NEXT_PUBLIC_SUPABASE_URL`/`NEXT_PUBLIC_SUPABASE_ANON_KEY`
+    to be set, same as B3-B5). **Still open, same blocker as B3-B5:** once
+    David completes the linking bootstrap, run the skill for real with
+    `targetEvent`/`eventDate` set and confirm the `/plan` page's countdown
+    line matches `season-plan.json`.
   - Depends on: Milestone A complete, B3.
 
 - [ ] **B9. Season macrocycle persistence in the DB (deferred)**
