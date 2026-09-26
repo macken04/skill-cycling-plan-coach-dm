@@ -278,7 +278,7 @@ infra required. Ships as a `SKILL.md` version bump.
     and nearest trial event that week falls under.
   - Depends on: A2, A9, A11.
 
-- [ ] **A15. Interpretation rules for trial-event outcomes**
+- [x] **A15. Interpretation rules for trial-event outcomes**
   - Per PRD FR8: extend A8's rule table with trial-event-specific signals
     (e.g. a B-event logged with fueling distress adjusts the fueling ramp
     from A14 or slows the ladder; a comfortably-completed B-event can pull

@@ -191,9 +191,24 @@ at the generic table's range.
 
 ## Interpreting a logged fueling signal
 
-A trial-event or race log that reports "GI distress" or "bonked / ran out of
-fuel" is a fueling-plan signal, not just a performance note: it should
-adjust the on-bike g/h target or the fueling-source choice for the next
-occurrence, per the interpretation rules this module feeds into
-(`documents/agentic-coach-prd.md` FR4, `documents/season-macrocycle-prd.md`
-FR8).
+A trial event's `fuelingSignal` (per `macrocycle-model.md`'s A15 `outcome`
+schema) is a fueling-plan signal, not just a performance note — it
+overrides the season-level ramp's *next* checkpoint per the table below,
+per `documents/agentic-coach-prd.md` FR4 / `documents/season-macrocycle-prd.md`
+FR8. This is independent of that same rung's `completionStatus`
+(`trial-events.md` §7), which adjusts ladder difficulty/timing instead —
+a rung can trigger both tables at once. State any resulting adjustment
+explicitly in the next plan's Fueling section, not left implicit.
+
+| Logged `fuelingSignal` | Adjustment to the fueling ramp |
+|---|---|
+| `on_target` | No change — the season-level ramp's checkpoint table (above) continues on schedule. |
+| `gi_distress` | Hold the g/h target at this rung's already-rehearsed rate for the remaining ramp — do not advance to the next checkpoint's higher rate until the held rate is rehearsed successfully (`on_target` or better) at least once more. Also consider a fueling-source/mix change (per the on-course source guidance above) before assuming rate alone is the problem. |
+| `bonked_underfueled` | Hold the rate at this rung's rehearsed level, same as `gi_distress`, but treat it as an execution gap rather than a capacity ceiling: state in the plan whether the miss looks like pacing (intake timing lapsed under fatigue) or availability (fuel ran out/wasn't accessible), since those call for different fixes (a reminder/schedule cue vs. carrying more) rather than lowering the target. |
+| `not_applicable` | No fueling-ramp adjustment — this rung had no meaningful fueling component. |
+
+**Worked example:** C2 is logged with `fuelingSignal: gi_distress` at its
+90 g/h checkpoint (per the Badlands worked example above). B1's target
+holds at 90 g/h instead of stepping to 105 g/h; B1 only advances to 105 g/h
+once logged `on_target` (or better) at 90 g/h, and the plan's Fueling
+section states the hold and why.
