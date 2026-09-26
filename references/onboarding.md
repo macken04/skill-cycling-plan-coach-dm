@@ -17,13 +17,14 @@ Every question below is tagged with how to ask it:
 
 This is the question that shapes everything else, so ask it before the logistics questions below.
 
-3. **[choice]** Are you training for a specific event, or do you want a general training plan? Options:
-   - A specific event — name it (match against the registry in `references/events/README.md` by alias; if it matches, confirm the display name and go to 3a; if it doesn't match, still capture the name and go to 3b).
+3. **[choice]** Are you training for a specific event, or do you want a general training plan? Build the option list dynamically from the `Display name` column of `references/events/README.md` (one option per registry row, growing automatically as events are added — never hardcode a specific event as one of only two permanent options), then append two fixed options last:
+   - *(one option per row in the event registry, e.g. "Badlands (Ultra-Distance Gravel Race)")*
+   - Other event (not in the list above) — name it (free text, then match against the registry's aliases as a fallback; if it now matches a row, treat it as 3a; otherwise go to 3b).
    - A general training plan, not tied to one event.
 
-   **3a. Matched event.** Ask **[value]** "What's the event date?" and set `targetEvent` to the matched event id and `eventDate` accordingly. Confirm the goal in one line using the event's own framing (e.g. "training toward Badlands on 2027-08-31") — the athlete can still override with their own words in question 4.
+   **3a. Matched event** (picked directly from the list, or matched via the "Other event" fallback). Ask **[value]** "What's the event date?" and set `targetEvent` to the matched event id and `eventDate` accordingly. Confirm the goal in one line using the event's own framing (e.g. "training toward Badlands on 2027-08-31") — the athlete can still override with their own words in question 4.
 
-   **3b. Unmatched event name.** Still capture it as `targetEvent` (free text, no registry id) and ask for the date. Tell the athlete this event isn't in the supported list yet, so the plan will use generic ultra-endurance heuristics rather than an event-specific overlay.
+   **3b. Unmatched event name** (from the "Other event" fallback, still not found in the registry). Still capture it as `targetEvent` (free text, no registry id) and ask for the date. Tell the athlete this event isn't in the supported list yet, so the plan will use generic ultra-endurance heuristics rather than an event-specific overlay.
 
    **3c. No event.** Set `targetEvent` to `null` and `eventDate` to `null`. Continue to question 4 for the goal in the athlete's own words.
 
