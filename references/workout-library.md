@@ -96,6 +96,88 @@ Start a returning archetype at the step the athlete last completed, then advance
 - Use a `<FreeRide>` block for social/group rides rather than forcing power targets.
 - If a group ride is the hard session, drop one structured hard session that week.
 
+## Event-driven ultra-endurance archetypes
+
+These only apply when an event's overlay (e.g. `references/events/badlands-ultra.md`'s
+"Session archetypes + periodization overlay" section) adds them on top of the
+standard rotation above — they are not part of the default polarized model and
+should never appear for an athlete with no `targetEvent` set. Same target-%FTP
+convention as the rest of this file.
+
+### Long back-to-back days
+- **Shape:** two consecutive long endurance rides (Z2, fat-max pace, 60-70%
+  FTP) on consecutive days, e.g. Saturday + Sunday. Progress total
+  back-to-back volume across the build phase, not single-ride duration alone.
+- **Cadence:** 85-95 RPM, same as standard endurance riding.
+- **Purpose:** trains the ability to keep producing usable power on tired legs
+  the next day — the relevant training stress for a multi-day event is
+  accumulated fatigue across consecutive long rides, not single-session peak
+  load.
+
+### Heat acclimation
+- **Shape:** an endurance ride (Z2, 60-70% FTP) deliberately scheduled or
+  dressed for heat exposure — outdoors during the hottest part of the day, or
+  indoors with reduced cooling/extra layers if ambient heat isn't available.
+- **Cadence:** 85-95 RPM — keep intensity in the standard endurance range;
+  heat is the stimulus, not power.
+- **Purpose:** drives the physiological adaptations (plasma volume expansion,
+  earlier/higher sweat rate) that make sustained effort in hot, exposed
+  terrain tolerable on race day.
+- **Caution:** hydrate and fuel electrolytes deliberately; watch for
+  heat-illness signs (dizziness, confusion, cessation of sweating) and stop if
+  they appear. Don't stack with high intensity while still acclimating.
+
+### Overnight / low-sleep simulation
+- **Shape:** a single long ride that starts in the late evening and extends
+  past the athlete's normal sleep hours, ridden at endurance/fat-max pace, to
+  rehearse fueling and decision-making while sleep-deprived.
+- **Cadence:** 85-95 RPM — pace stays endurance, not a hard session stacked on
+  top of sleep loss.
+- **Purpose:** the ability to fuel, navigate, and stay safe while
+  sleep-deprived is trainable, not just a matter of toughness or grit.
+- **Caution:** high fatigue cost — a peak-phase tool used sparingly (1-2 times
+  total), never a base-phase or routine session. Ride somewhere lit/safe with
+  someone aware of the route, given the added risk of night riding while
+  fatigued.
+
+### Loaded-bike climbing
+- **Shape:** climbing repeats or a sustained climb ridden with
+  race-representative bikepacking bag weight, at endurance/tempo pace
+  (65-80% FTP).
+- **Cadence:** 70-85 RPM — expect cadence to drop under load versus unloaded
+  climbing.
+- **Purpose:** builds climbing durability under the load the athlete will
+  actually carry; handling, braking, and power delivery all change
+  meaningfully with a loaded bike, so unloaded climbing repeats don't transfer
+  fully.
+- **Caution:** test the loaded setup (bag weight/placement) on a shorter climb
+  before committing to a long loaded session.
+
+**Progression within an event-overlay archetype:**
+
+| Archetype | Step 1 | Step 2 | Step 3 |
+|-----------|--------|--------|--------|
+| Long back-to-back days | 2 x 3h @ Z2 | 2 x 4h @ Z2 | 2 x 5-6h @ Z2 (or matching the event's expected daily distance) |
+| Heat acclimation | 60-90 min in heat | 2-3h in heat | 3-4h+ in heat, matching the event's expected daily heat exposure |
+| Overnight / low-sleep simulation | Partial night (start ~22:00, ride to ~2-3am, 4-5h) | Full overnight (6-8h through to dawn) | Overnight into next day (8-10h+); cap at 1-2 total across the peak block |
+| Loaded-bike climbing | One loaded climb, 20-30 min | 2-3 loaded climbs or 45-60 min continuous | Extended loaded climbing block matching the event's largest single continuous climb |
+
+Reset to Step 1 after a rest or recovery week, same as the standard archetypes
+above.
+
+**Scheduling (where these replace a standard slot):**
+
+| Archetype | Replaces | Frequency |
+|-----------|----------|-----------|
+| Long back-to-back days | The weekend long endurance ride (both days) | 1x/week during build; drop to 2x/month during peak given fatigue cost |
+| Heat acclimation | Any scheduled endurance slot | Increase frequency as the event nears; duration follows the progression table above |
+| Overnight / low-sleep simulation | A Saturday or Sunday long ride | Peak phase only, 1-2 times total |
+| Loaded-bike climbing | A mid-week or weekend endurance/climbing ride | 1x/week during build/peak |
+
+These never substitute for a hard bike session (VO2max, threshold, etc.) —
+they add to or replace endurance/supporting volume, keeping the
+2-hard-sessions/week ceiling intact.
+
 ## Example polarized week
 
 | Day | Session | Format |
