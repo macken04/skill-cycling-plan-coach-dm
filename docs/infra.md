@@ -237,9 +237,62 @@ as B3/B4: needs the linking bootstrap above (David signed in once,
 `supabaseAthleteId` set) before a real UI entry can be checked against the
 history view for real.
 
-## Next steps (B8)
+B6 (events table + season-phase columns on `plans`), B7 (frontend polish —
+event countdown, compliance/trend, taper/race-week views), and B8 (signal
+interpretation wired into coach_notes) shipped since; see
+`documents/multi-event-and-webui-tasks.md` for their full writeups.
 
-Reading logged signals back into the coaching flow (B8) builds on this
-loop. B6 (folding Milestone A's season-macrocycle content into the DB
-layer) and B9 (persisting `season-plan.json` itself) still wait on
-Milestone A being finished per the tasks file's suggested execution order.
+## Season macrocycle persistence (B9 — done)
+
+Per `documents/season-macrocycle-prd.md` §3.3/§5 and
+`documents/multi-event-and-webui-tasks.md`'s B9: the file-based
+`season-plan.json` (A9) now has a DB counterpart, `season_plans`
+(`supabase/migrations/20260926210000_season_plans.sql`) — one row per
+athlete's *current* skeleton (`unique (athlete_id)`, upserted in place on
+replan, mirroring the single-file-per-athlete assumption `season-plan.json`
+already makes, the same pattern `events` uses). `phases` (always exactly 5
+entries — enforced by a `jsonb_array_length(phases) = 5` check constraint)
+and `trial_events` are JSONB columns rather than normalized child tables:
+both are small, fixed-shape documents always read/written as a whole, never
+queried by sub-field, so normalizing them would add join overhead with no
+query benefit. Field names inside the JSON follow this repo's existing
+`strength_logs.sets_reps_load` precedent — snake_case, not the camelCase
+`season-plan.json` itself uses — since these are DB column contents, not
+the local file; `SKILL.md` Step 7 item 3 translates on write.
+
+`SKILL.md`'s Step 7 gained item 3 (upsert `season_plans` whenever a
+`season-plan.json` was resolved this run) and quality check 13. The
+frontend gained `web/app/season/page.tsx`: the header block, 5-row phase
+table (current phase highlighted), and trial-event ladder table, mirroring
+`references/season-plan-format.md`'s rendering — linked from `/plan`'s nav
+whenever an `events` row exists. `web/lib/types.ts` gained the
+`SeasonPlan`/`SeasonPlanPhase`/`TrialEvent` family of types.
+
+**Verified this session** (one dummy athlete with a full Badlands-Ultra-shaped
+skeleton — the same 48-week worked example from `macrocycle-model.md`/
+`trial-events.md`/`season-plan-format.md` — plus a second dummy athlete for
+the cross-athlete checks, all cleaned up after): the `jsonb_array_length(phases)
+= 5` check constraint rejects a malformed (1-entry) skeleton; athlete A's
+authenticated `select` returns their own row; athlete B's authenticated
+`select` returns `0` rows; an insert impersonating athlete A's `athlete_id`
+while authenticated as athlete B is rejected `42501`; an `insert ... on
+conflict (athlete_id) do update` (the shape of a real replan) updates the
+existing row in place — row count for the athlete stays `1`, and the
+updated `phases`/`last_replanned_at` are the new values, not a second row.
+`get_advisors(type: security)` shows no new lint findings from this
+migration. `npm run build`/`npm run lint` pass in `web/`; `/season` and
+`/plan` were smoke-tested unauthenticated against a local prod server (both
+200, rendering the client-side loading/sign-in state, same pattern as
+B3-B7).
+
+**Still open, same blocker as B3-B8:** the literal test as B9 originally
+scoped it — migrate one *real* athlete's existing `season-plan.json` into
+this table and confirm `/season` matches the source file with no loss of
+information — needs a real signed-in, linked athlete who has actually run
+the skill with a `targetEvent`/`eventDate` set, which is still blocked on
+the linking bootstrap above. David has now completed step 1 of that
+bootstrap (signed in for real — `auth.users` has his row as of this
+session), but steps 2-3 (setting `supabaseAthleteId`, then a real weekly
+planning run) still need a real onboarding conversation in his own Claude
+client, not this dev-repo session — see the linking bootstrap section
+above.

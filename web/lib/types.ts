@@ -153,3 +153,116 @@ export interface CoachNote {
   note: string;
   created_at: string;
 }
+
+// B9: season macrocycle persistence, mirroring
+// supabase/migrations/20260926210000_season_plans.sql and the file-based
+// season-plan.json shape in references/macrocycle-model.md (A9) /
+// references/trial-events.md (A10).
+
+export const SEASON_PHASE_IDS = [
+  "base",
+  "deload-1",
+  "build",
+  "deload-2",
+  "refine",
+] as const;
+
+export type SeasonSkeletonPhaseId = (typeof SEASON_PHASE_IDS)[number];
+
+export const SEASON_PHASE_LABELS: Record<SeasonSkeletonPhaseId, string> = {
+  base: "Base",
+  "deload-1": "Deload",
+  build: "Build",
+  "deload-2": "Deload",
+  refine: "Refine",
+};
+
+export interface SeasonPlanPhase {
+  id: SeasonSkeletonPhaseId;
+  label: string;
+  start_date: string;
+  end_date: string;
+  deload: boolean;
+  focus: string;
+}
+
+export type TrialEventCategory = "B" | "C";
+export type TrialEventStatus = "planned" | "logged";
+
+export interface TrialEventSpec {
+  distance_km: number | [number, number] | null;
+  elevation_m: number | [number, number] | null;
+  limiters_rehearsed: string[];
+  terrain_fidelity: "low" | "high";
+  overnight: boolean;
+  loaded_bike: boolean;
+  fueling_target_gh: number | null;
+  opportunistic_resupply: boolean;
+}
+
+export type TrialEventCompletionStatus =
+  | "completed_comfortably"
+  | "completed_as_planned"
+  | "completed_with_difficulty"
+  | "dnf_stopped_early"
+  | "skipped";
+
+export type TrialEventFuelingSignal =
+  | "on_target"
+  | "gi_distress"
+  | "bonked_underfueled"
+  | "not_applicable";
+
+export interface TrialEventOutcome {
+  completion_status: TrialEventCompletionStatus;
+  fueling_signal: TrialEventFuelingSignal;
+  notes: string;
+}
+
+export const TRIAL_EVENT_COMPLETION_STATUS_LABELS: Record<
+  TrialEventCompletionStatus,
+  string
+> = {
+  completed_comfortably: "Completed comfortably",
+  completed_as_planned: "Completed as planned",
+  completed_with_difficulty: "Completed with difficulty",
+  dnf_stopped_early: "DNF - stopped early",
+  skipped: "Skipped",
+};
+
+export const TRIAL_EVENT_FUELING_SIGNAL_LABELS: Record<
+  TrialEventFuelingSignal,
+  string
+> = {
+  on_target: "Fueling on target",
+  gi_distress: "GI distress",
+  bonked_underfueled: "Bonked / underfueled",
+  not_applicable: "No fueling component",
+};
+
+export interface TrialEvent {
+  id: string;
+  category: TrialEventCategory;
+  target_date: string;
+  phase_id: SeasonSkeletonPhaseId;
+  spec: TrialEventSpec;
+  status: TrialEventStatus;
+  outcome: TrialEventOutcome | null;
+}
+
+export type AgeBand = "under40" | "masters40to49" | "senior50plus";
+
+export interface SeasonPlan {
+  id: string;
+  athlete_id: string;
+  target_event: string;
+  event_date: string;
+  start_date: string;
+  age_band_at_generation: AgeBand;
+  deload_weeks: number;
+  generated_at: string;
+  last_replanned_at: string | null;
+  current_phase_id: SeasonSkeletonPhaseId;
+  phases: SeasonPlanPhase[];
+  trial_events: TrialEvent[];
+}

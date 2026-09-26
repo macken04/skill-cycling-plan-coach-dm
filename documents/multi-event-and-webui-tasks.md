@@ -553,7 +553,7 @@ each phase closes a working loop before the next adds scope.
     line matches `season-plan.json`.
   - Depends on: Milestone A complete, B3.
 
-- [ ] **B9. Season macrocycle persistence in the DB (deferred)**
+- [x] **B9. Season macrocycle persistence in the DB**
   - Per `documents/season-macrocycle-prd.md` §3.3/§5: once the file-based
     `season-plan.json` (A9) has been in real use, design and migrate its
     schema into Supabase — either a `season_plans` table (one row per
@@ -562,9 +562,69 @@ each phase closes a working loop before the next adds scope.
     designed now — explicitly deferred until after B6/B8 ship and the
     file-based schema has proven itself, per the "local file now, DB later"
     decision.
-  - **Test:** migrate one athlete's existing `season-plan.json` into the new
-    table(s) and confirm the frontend season/countdown view reads from the
-    DB with no loss of information versus the source file.
+  - **On the "proven itself in real use" precondition:** by the time this was
+    picked up, B6/B8 had shipped, but no real athlete (David included) had
+    actually run the skill with a `targetEvent`/`eventDate` set — checking
+    `auth.users` this session found he'd completed the linking bootstrap's
+    step 1 (a real magic-link sign-in exists) but not steps 2-3 (setting
+    `supabaseAthleteId`, then a real weekly-planning run), and there is no
+    real `season-plan.json` anywhere to migrate. Getting a real one required
+    a real onboarding conversation in David's own Claude client (this
+    dev-repo session can't reproduce the native skill experience — no
+    interactive picker, no Strava connector, not the packaged skill) —
+    David's explicit call was to skip that and build B9 now regardless,
+    using the same simulated-dummy-athlete pattern B1-B8 already relied on
+    wherever the literal real-athlete test wasn't available.
+  - **Shipped:** `season_plans` table
+    (`supabase/migrations/20260926210000_season_plans.sql`) — one row per
+    athlete's *current* skeleton (`unique (athlete_id)`, upserted in place on
+    replan rather than versioned, the same single-current-skeleton
+    assumption `events` already makes). `phases` (a `jsonb_array_length(phases)
+    = 5` check constraint enforces the fixed Base/Deload/Build/Deload/Refine
+    shape) and `trial_events` are JSONB columns rather than normalized child
+    tables — both are small, fixed-shape documents always read/written whole
+    and never queried by sub-field, so normalizing would add join overhead
+    with no query benefit. Field names inside the JSON are snake_case
+    (`start_date`, `target_date`, `loaded_bike`, `completion_status`, etc.),
+    following this repo's existing `strength_logs.sets_reps_load` precedent
+    rather than `season-plan.json`'s own camelCase, since these are DB
+    column contents, not the local file. `SKILL.md`'s Step 7 gained item 3
+    (upsert `season_plans` whenever a `season-plan.json` was resolved this
+    run, translating each field to its snake_case shape, skipped entirely
+    when no skeleton exists) and quality check 13. `web/app/season/page.tsx`
+    is new: header block (event, days-to-go, current phase), a 5-row phase
+    table (current phase highlighted), and a trial-event ladder table with
+    logged-outcome summaries beneath it — mirroring
+    `references/season-plan-format.md`'s rendering — linked from `/plan`'s
+    nav whenever an `events` row exists. `web/lib/types.ts` gained the
+    `SeasonPlan`/`SeasonPlanPhase`/`TrialEvent`/`TrialEventSpec`/
+    `TrialEventOutcome` family of types and label maps.
+  - **Test — done, via simulation (see above for why not the literal
+    real-athlete version):** built one dummy athlete's `season_plans` row
+    from the exact 48-week Badlands Ultra worked example already validated
+    by hand in `macrocycle-model.md`/`trial-events.md`/
+    `season-plan-format.md` (Base 20wk/Deload 1wk/Build 13wk/Deload 1wk/
+    Refine 13wk, the 4-rung C1/C2/B1/B2 ladder, C1 already logged
+    `completed_as_planned`), plus a second dummy athlete for the
+    cross-athlete checks, all cleaned up after. Confirmed: the
+    `jsonb_array_length(phases) = 5` check constraint rejects a malformed
+    (1-entry) phases array; athlete A's authenticated `select` returns
+    exactly their own row; athlete B's authenticated `select` returns `0`
+    rows; an insert impersonating athlete A's `athlete_id` while
+    authenticated as athlete B is rejected `42501`; an `insert ... on
+    conflict (athlete_id) do update` (the shape a real replan takes) updates
+    the existing row in place — the row count for that athlete stays `1`
+    and the updated `phases`/`last_replanned_at` reflect the new values, not
+    a second row. `get_advisors(type: security)` shows no new findings from
+    this migration. `npm run build`/`npm run lint` pass in `web/`; `/season`
+    and `/plan` were smoke-tested unauthenticated against a local prod
+    server (both 200, rendering the client-side sign-in state, same pattern
+    as B3-B7). **Still open:** the literal test as originally scoped —
+    migrate one *real* athlete's `season-plan.json` and confirm `/season`
+    matches it with no loss of information — needs David to complete the
+    remaining linking-bootstrap steps (`docs/infra.md`) via a real
+    onboarding conversation in his own Claude client with `targetEvent`/
+    `eventDate` set, then a re-run of this same comparison for real.
   - Depends on: B6, A9 (schema must exist and be in use before it's worth
     migrating).
 
