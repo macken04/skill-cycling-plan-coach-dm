@@ -190,7 +190,7 @@ infra required. Ships as a `SKILL.md` version bump.
   - Depends on: none (only needs the status vocabulary, already decided
     above).
 
-- [ ] **A9. Season macrocycle model + `season-plan.json` schema**
+- [x] **A9. Season macrocycle model + `season-plan.json` schema**
   - Per `documents/season-macrocycle-prd.md` FR1/FR3: create
     `references/macrocycle-model.md` defining, generically (not
     Badlands-specific): the three-master-phase (Base/Build/Refine) + two
