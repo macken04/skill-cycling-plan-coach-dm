@@ -4,6 +4,11 @@ Companion to `multi-event-and-webui-plan.md`. Breaks that plan into tasks that
 can each be picked up, implemented, and verified independently. Ordered so
 every task can be tested before moving to the next.
 
+A9-A15 implement `documents/season-macrocycle-prd.md` (the long-term,
+multi-phase plan structure with B/C dry-run events) — a second review PRD
+alongside `agentic-coach-prd.md`, both adjusting this task list rather than
+replacing it.
+
 ## Decisions locked in (resolves the plan's "Open decisions" section)
 
 - **Hosting:** Supabase (Postgres + PostgREST + Auth) + Vercel (Next.js), as drafted.
@@ -84,6 +89,12 @@ infra required. Ships as a `SKILL.md` version bump.
   - Depends on: A1, A3.
 
 - [ ] **A5. SKILL.md workflow: event resolution + countdown periodization**
+  - **Superseded by A13** for the periodization branch specifically: once
+    A9-A13 land, the phase (base/build/refine + deload) comes from
+    `season-plan.json`, not a raw countdown computed inline here. Keep this
+    task scoped to event-file resolution and the rider-type/session-priority
+    override, which A13 still depends on; drop the countdown-periodization
+    bullet below if A9-A13 are implemented first.
   - Edit `SKILL.md`: config-resolution step also resolves the event file and
     countdown; the training-model step (Step 4) branches to countdown-driven
     periodization (base/build/peak/taper toward `eventDate`) when an event is
@@ -144,18 +155,119 @@ infra required. Ships as a `SKILL.md` version bump.
   - Depends on: none (only needs the status vocabulary, already decided
     above).
 
-- [ ] **A9. Version bump, changelog, description updates**
+- [ ] **A9. Season macrocycle model + `season-plan.json` schema**
+  - Per `documents/season-macrocycle-prd.md` FR1/FR3: create
+    `references/macrocycle-model.md` defining, generically (not
+    Badlands-specific): the three-master-phase (Base/Build/Refine) + two
+    inter-phase deload/transition blocks structure; how the season's total
+    runway (start date to `eventDate`) is split across them, with slack
+    absorbed into Base rather than a fourth named phase; and the
+    `season-plan.json` file schema (phase list with start/end dates and a
+    `deload: bool` flag, the trial-event ladder, which phase is "current").
+  - **Test:** for a sample runway of 48 weeks starting today, hand-compute
+    the phase/deload date ranges the doc's rule would produce and confirm
+    they sum to the full runway with no gap and no fourth phase.
+  - Depends on: none.
+
+- [ ] **A10. Trial-event ladder design (B/C simulated events)**
+  - Per the PRD's FR2 and resolved decision (§3.2): create
+    `references/trial-events.md` defining, generically, how to derive a B/C
+    trial-event ladder from a target event's "Limiters this event trains
+    for" section: C-events step a distance ladder; B-events step a
+    limiter-fidelity ladder (the target event's specific limiters —
+    elevation volume, terrain mix, overnight/sleep-deprivation, loaded-bike
+    handling, etc.) culminating in one near-full-dress rehearsal early in
+    Refine. Explicit that these are coach-designed standalone efforts, never
+    real races the coach looks up or recommends by name — no web-search
+    capability is introduced.
+  - **Test:** run Badlands Ultra's limiter list (`badlands-ultra.md`)
+    through the doc's method by hand and confirm it produces a ladder
+    matching the PRD's example (C: ~150-200km → ~250-300km;
+    B: elevation/terrain-mix event → culminating overnight rehearsal), i.e.
+    the general method reproduces the specific example already agreed.
+  - Depends on: none.
+
+- [ ] **A11. Badlands macrocycle + ladder instantiation**
+  - Edit `references/events/badlands-ultra.md`: add a concrete instantiation
+    of A9's phase model and A10's ladder method for this event specifically
+    — phase length choices within the 12-14 week range, deload lengths, and
+    the concrete B/C ladder (target distance/elevation/terrain/overnight
+    spec per event, roughly at the points in Base/Build/Refine described in
+    the PRD's §3.2 example).
+  - **Test:** confirm the instantiated ladder's dates fall inside the phases
+    A9's model would produce for Badlands' actual `eventDate`, and that
+    each rung's spec traces to a specific limiter in this file's existing
+    "Limiters this event trains for" section.
+  - Depends on: A9, A10.
+
+- [ ] **A12. `season-plan-format.md`**
+  - Create `references/season-plan-format.md` (parallel to
+    `plan-format.md`): the rendered/human-readable format for the season
+    skeleton — phase table, deload markers, trial-event ladder with
+    dates/specs — plus the rule that only the current phase renders in full
+    week-by-week detail (FR5) while other phases render as a one-line
+    summary + their trial-event entries.
+  - **Test:** render a sample season-plan snippet (one current phase in
+    full, two summarized) and confirm it's visually distinguishable which
+    phase is "live" versus a future outline.
+  - Depends on: A9.
+
+- [ ] **A13. SKILL.md workflow: season skeleton generation + replanning**
+  - Edit `SKILL.md`: add a step (alongside the existing config-resolution
+    step) that generates `season-plan.json` the first time an athlete has
+    `targetEvent`/`eventDate` set and none exists yet (using A9-A12); the
+    weekly planning flow (Step 4) reads current phase/deload state and any
+    due trial event from `season-plan.json` instead of computing phase from
+    raw `daysToEvent` directly — **this supersedes the simple countdown-only
+    periodization scoped in A5**, which should be marked as folded into this
+    task rather than implemented separately.
+  - Add the replanning trigger per PRD FR7: an athlete-reported material
+    divergence (illness, missed weeks, a badly-logged trial event, a request
+    to shift the event) causes the coach to update the skeleton's remaining
+    phase/deload/event dates, never rewriting completed weeks. No scheduled
+    or autonomous trigger, consistent with `agentic-coach-prd.md` §4.
+  - **Test:** dry-run onboarding with `targetEvent`/`eventDate` set and
+    confirm a `season-plan.json` is produced matching A9-A12's rules; then
+    simulate an athlete reporting "I was sick for 3 weeks" and confirm only
+    the remaining skeleton shifts, with prior weeks unchanged.
+  - Depends on: A9, A10, A11, A12, A3.
+
+- [ ] **A14. Season-level nutrition and strength periodization**
+  - Per PRD FR4: edit `references/nutrition.md` (A2) to add a fueling-target
+    ramp (e.g. gut-training g/h progression) aligned to the trial-event
+    ladder's dates, and `references/strength-library.md` to add a
+    general-prep → max-strength → power/maintenance progression mapped onto
+    Base/Build/Refine.
+  - **Test:** for a sample season-plan, confirm the fueling target and
+    strength phase stated for a given week match the Base/Build/Refine phase
+    and nearest trial event that week falls under.
+  - Depends on: A2, A9, A11.
+
+- [ ] **A15. Interpretation rules for trial-event outcomes**
+  - Per PRD FR8: extend A8's rule table with trial-event-specific signals
+    (e.g. a B-event logged with fueling distress adjusts the fueling ramp
+    from A14 or slows the ladder; a comfortably-completed B-event can pull
+    the ladder forward). Write into whichever file already governs the
+    affected content (`nutrition.md` for fueling adjustments,
+    `trial-events.md` for ladder-difficulty adjustments).
+  - **Test:** for a sample trial-event log of each kind, confirm the rule
+    table gives an unambiguous adjustment to the remaining ladder/fueling
+    ramp, stated in terms `SKILL.md` Step 1 can apply mechanically (same bar
+    as A8's test).
+  - Depends on: A8, A10, A14.
+
+- [ ] **A16. Version bump, changelog, description updates**
   - Bump `package.json` version (breaking config shape → major bump, e.g.
     `2.2.0` → `3.0.0`).
   - Add a `CHANGELOG.md` entry at the top describing multi-event + nutrition
-    support.
+    + season-macrocycle support.
   - Update `SKILL.md` frontmatter `version` (or confirm the build script
     stamps it) and the `README.md`/`SKILL.md` descriptions to mention
-    multi-event + nutrition support.
+    multi-event + nutrition + season-macrocycle support.
   - **Test:** run `npm run build`; confirm `cycling-plan-coach.skill` is
     produced and the staged `SKILL.md` inside it has `version: 3.0.0`
     stamped; confirm `CHANGELOG.md` has the new entry at the top.
-  - Depends on: A1–A8 (bump happens once the content behind it exists).
+  - Depends on: A1–A15 (bump happens once the content behind it exists).
 
 ## Milestone B — persistent data + web UI
 
@@ -242,14 +354,30 @@ each phase closes a working loop before the next adds scope.
 - [ ] **B6. Fold in Milestone A on top of the data layer**
   - Wire the multi-event/nutrition logic from Milestone A into the DB-backed
     flow: `events` table gets populated from `targetEvent`/`eventDate`;
-    `plans` rows carry the countdown-driven `phase` (base/build/peak/taper)
-    instead of only appearing in local markdown.
+    `plans` rows carry the current season-macrocycle `phase`
+    (base/build/refine, plus a `deload` flag) sourced from `season-plan.json`
+    (A9-A13) instead of only appearing in local markdown.
   - **Test (end-to-end):** run the skill for an athlete with
     `targetEvent: badlands-ultra`; confirm an `events` row is created, the
-    resulting `plans` row's `phase` column matches the countdown-driven phase
-    for that athlete's `daysToEvent`, and the frontend plan viewer displays
+    resulting `plans` row's `phase`/`deload` values match the athlete's
+    `season-plan.json` for that week, and the frontend plan viewer displays
     the event countdown correctly.
   - Depends on: Milestone A complete, B3.
+
+- [ ] **B9. Season macrocycle persistence in the DB (deferred)**
+  - Per `documents/season-macrocycle-prd.md` §3.3/§5: once the file-based
+    `season-plan.json` (A9) has been in real use, design and migrate its
+    schema into Supabase — either a `season_plans` table (one row per
+    athlete's current skeleton, phases/deloads/ladder as JSON columns or
+    normalized child tables) or an extension of `plans`/`events`. Not
+    designed now — explicitly deferred until after B6/B8 ship and the
+    file-based schema has proven itself, per the "local file now, DB later"
+    decision.
+  - **Test:** migrate one athlete's existing `season-plan.json` into the new
+    table(s) and confirm the frontend season/countdown view reads from the
+    DB with no loss of information versus the source file.
+  - Depends on: B6, A9 (schema must exist and be in use before it's worth
+    migrating).
 
 - [ ] **B8. Signal interpretation wired into the coaching flow**
   - Per the agentic-coach PRD (FR4/FR5/FR8): update `SKILL.md` Step 1 (data
@@ -287,7 +415,13 @@ each phase closes a working loop before the next adds scope.
 
 ## Suggested execution order
 
-Milestone A (A1→A9) can ship on its own as a skill release. Milestone B can
-start in parallel from B1 once Supabase/Vercel accounts exist, but B6 and B8
-specifically need Milestone A finished first (B6 needs the event content,
-B8 needs A8's rule table) — everything else in B is independent of A.
+Milestone A (A1→A16) can ship on its own as a skill release. Within Milestone
+A, A9-A15 (season macrocycle: model, ladder, Badlands instantiation, format,
+`SKILL.md` wiring, nutrition/strength periodization, trial-event
+interpretation) depend on A1-A3 and A8 as noted per-task, and should land
+after A1-A8 for the same reason A9's version bump always lands last — they
+build on the event/nutrition/strength content those tasks establish. Milestone
+B can start in parallel from B1 once Supabase/Vercel accounts exist, but B6,
+B8, and B9 specifically need Milestone A finished first (B6 needs the
+season-macrocycle content, B8 needs A8's rule table, B9 needs A9's file-based
+schema proven in use) — everything else in B is independent of A.

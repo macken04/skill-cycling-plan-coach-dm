@@ -156,6 +156,24 @@ This sequencing gets a working (if plain) log-and-view loop fast in steps 1–3,
 then layers the deeper coaching intelligence on top once the plumbing exists,
 rather than building the rich content first and re-plumbing it later.
 
+## Part 3 — Season macrocycle layer
+
+A later review (`documents/season-macrocycle-prd.md`) added a requirement
+this original plan didn't cover: the coach needs to build a long-term,
+multi-phase plan toward a single A-priority event (Base/Build/Refine, each
+12–14 weeks, with deload/transition blocks absorbing the slack between three
+phases and the event's actual runway), place coach-designed B/C "dry run"
+trial events in that calendar, and generate only the current phase in full
+detail while later phases stay as a dated outline — all changeable as the
+athlete's actual training diverges from the skeleton. See that PRD for the
+full brief, gap analysis, and resolved decisions; see
+`multi-event-and-webui-tasks.md` tasks A9-A15 for the implementing work. This
+sits above the weekly-planning flow described in Part 1 — the weekly flow
+reads its current phase/deload/trial-event context from the season skeleton
+instead of computing a phase from raw `daysToEvent` directly — and persists
+as a local file (`season-plan.json`) until Milestone B's data layer picks it
+up (`B9`, deferred).
+
 ## Open decisions — resolved
 
 - **Hosting:** Supabase + Vercel, as drafted above (not self-hosting a DB/API).
