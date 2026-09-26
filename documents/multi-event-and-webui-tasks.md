@@ -623,7 +623,7 @@ each phase closes a working loop before the next adds scope.
     and a strength session.
   - Depends on: A8, B2, B3, B5.
 
-- [ ] **B7. Polish**
+- [x] **B7. Polish**
   - Add an event countdown view, a compliance/trend view driven by the FR3
     status history (e.g. share of sessions landing as-planned vs.
     harder-than-planned vs. failed, per archetype), and a taper/race-week
@@ -632,11 +632,66 @@ each phase closes a working loop before the next adds scope.
     status produces an inline "here's what that means" response immediately
     (FR6 option (a)), rather than only surfacing at the next chat — deferred
     here per the "Decisions locked in" section above.
-  - **Test:** manual UI walkthrough — countdown view shows the correct
-    days-to-event; the compliance view correctly buckets at least 2 weeks of
-    logged data by FR3 status; a trend chart reflects that data; the
-    taper/race-week view activates within the correct window before
-    `eventDate` per the periodization rules from A5.
+  - **Shipped:** three additions to `web/`, no schema changes (all three read
+    data B1-B8 already sync):
+    - **Event countdown view:** `web/app/plan/page.tsx`'s existing one-line
+      countdown was promoted to a dedicated `EventCountdownCard` component —
+      a bigger days-to-go figure, event name, and a phase/deload pill —
+      still sourced from the same `events`/`plans` rows.
+    - **Compliance/trend view:** new page `web/app/compliance/page.tsx`.
+      Reads back `workout_logs` (embedded-joined to `workouts` for
+      `archetype` via PostgREST's resource embedding, `select("status,
+      created_at, workouts(archetype)")`) and `strength_logs`, and buckets
+      FR3 status counts three ways: by bike archetype, by strength session
+      name, and by ISO 8601 week (bike + strength combined) for the trend
+      view. Each bucket renders as a horizontal stacked bar plus an
+      always-present data table underneath (the accessible fallback, and
+      the only place the full 5-way status split survives — the bar
+      collapses to 4 severity roles, below). Status colors follow the
+      dataviz skill's fixed status palette rather than an arbitrary
+      categorical one, since FR3 status inherently means "did this go
+      well": `completed_as_planned`/`completed_easier_than_planned` →
+      good, `completed_harder_than_planned` → warning, `skipped` →
+      serious, `failed_too_hard` → critical (this session's mapping,
+      documented in `lib/types.ts`'s `STATUS_ROLE`/`STATUS_ROLE_COLOR`
+      alongside the existing `SESSION_STATUSES`) — always paired with a
+      legend swatch + label and a native hover tooltip, never color alone,
+      per the skill's status-color rule. Direct in-segment labels only
+      render when a segment is wide enough (>=15%) to hold them, per the
+      skill's "never a number that gets clipped" rule.
+    - **Taper/race-week view:** a `TaperBanner` on `/plan`, shown only
+      inside an explicit window this session defined against
+      `macrocycle-model.md`'s "Refine's final block is race week itself"
+      (no stored sub-phase field exists to read a taper window from
+      instead): the final 7 days up to and including `eventDate` render a
+      "Race week" banner, the 7 days before that a "Taper" banner: outside
+      `[eventDate - 13, eventDate]` nothing renders. Documented inline as
+      this session's explicit reading, since no reference file states a
+      numeric taper length.
+  - **Test:** the literal manual UI walkthrough needs a real signed-in,
+    linked athlete with >= 2 weeks of varied logged data — still blocked on
+    David's one-time linking step from B3 (`docs/infra.md`'s "Linking
+    bootstrap"). Verified what this session could without it: the ISO-week
+    bucketing helper against four hand-picked edge cases (a mid-year Monday,
+    a Jan 1st that lands in week 1, a Dec 29th that's already week 1 of the
+    following ISO year, and the 2020-W53 edge case) in a standalone Node
+    script; the PostgREST embedded-resource query syntax
+    (`workouts(archetype)`) against the real project with the anon key
+    (`curl`, no session -- 200 with an empty array, confirming the
+    relationship embed is accepted rather than a 400 "no relationship
+    found," the distinguishing signal available without a real login);
+    `/plan` and `/compliance` smoke-tested unauthenticated against a local
+    dev server (both render the sign-in prompt, same pattern as B3-B6); and
+    a static-HTML re-creation of the stacked-bar/table markup and the
+    countdown/banner cards, screenshotted with the pre-installed Playwright
+    Chromium, to eyeball label placement (the <15% segment correctly hides
+    its label), color legibility (dark ink on the yellow `warning` segment,
+    white on the other three), and the race-week/taper banner styling.
+    `npm run build`/`npm run lint` pass in `web/`. **Still open, same
+    blocker as B3-B6:** once David completes the linking bootstrap, log a
+    genuinely mixed >= 2-week history and re-run the walkthrough against the
+    real deployed pages; also confirm the taper/race-week window reads
+    right for a real `eventDate` inside it.
   - Depends on: B4, B5, B6, B8.
 
 ## Suggested execution order

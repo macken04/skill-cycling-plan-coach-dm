@@ -169,6 +169,7 @@ export default function NutritionPage() {
         <nav style={{ display: "flex", gap: "1rem", alignItems: "baseline" }}>
           <Link href="/plan">This week&apos;s plan</Link>
           <Link href="/strength">Strength log</Link>
+          <Link href="/compliance">Compliance</Link>
           <button onClick={signOut}>Sign out</button>
         </nav>
       </header>

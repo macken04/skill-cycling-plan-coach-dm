@@ -18,6 +18,47 @@ export const SESSION_STATUS_LABELS: Record<SessionStatus, string> = {
   skipped: "Skipped",
 };
 
+// B7 compliance/trend view: each FR3 status reads as one of a fixed set of
+// four severity roles (good/warning/serious/critical), never a plain
+// identity color, since the status inherently means "did this go well" -
+// per dataviz's status-color rule. `completed_easier_than_planned` and
+// `completed_as_planned` share "good" (both on-track outcomes); `skipped`
+// is "serious" (a training gap) rather than "critical", which is reserved
+// for an attempted-and-overreached session.
+export type StatusRole = "good" | "warning" | "serious" | "critical";
+
+export const STATUS_ROLE: Record<SessionStatus, StatusRole> = {
+  completed_as_planned: "good",
+  completed_easier_than_planned: "good",
+  completed_harder_than_planned: "warning",
+  skipped: "serious",
+  failed_too_hard: "critical",
+};
+
+// Fixed status scale (light-surface steps), per the dataviz skill's palette
+// reference -- never themed, always paired with the icon/label below.
+export const STATUS_ROLE_COLOR: Record<StatusRole, string> = {
+  good: "#0ca30c",
+  warning: "#fab219",
+  serious: "#ec835a",
+  critical: "#d03b3b",
+};
+
+export const STATUS_ROLE_LABELS: Record<StatusRole, string> = {
+  good: "On track (as planned / easier)",
+  warning: "Harder than planned",
+  serious: "Skipped",
+  critical: "Failed - too hard",
+};
+
+// Segment order is fixed (never reshuffled), a mild-to-severe reading order.
+export const STATUS_ROLE_ORDER: StatusRole[] = [
+  "good",
+  "warning",
+  "serious",
+  "critical",
+];
+
 export const DAY_ORDER = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
 
 export type Day = (typeof DAY_ORDER)[number];
