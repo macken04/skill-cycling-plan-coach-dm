@@ -476,13 +476,39 @@ each phase closes a working loop before the next adds scope.
     back → plan summary reflects it) should be re-run for real.
   - Depends on: B3.
 
-- [ ] **B5. S&C logging UI**
+- [x] **B5. S&C logging UI**
   - Add the same log/view pattern for `strength_logs` (sets/reps/load done,
     notes), including the FR3 status field (at minimum
     completed-as-planned / failed-too-hard / skipped for strength sessions).
-  - **Test:** log a strength session as failed/too-hard via the UI; confirm
-    the `strength_logs` row has correct sets/reps/load, the status value, and
-    shows up in a history view.
+  - **Shipped:** `web/app/strength/page.tsx` — a session entry form (session
+    name, the full five-way FR3 status vocabulary reusing `SESSION_STATUSES`
+    rather than a narrower subset, a repeatable exercise row of
+    exercise/sets/reps/load-kg, and free notes) plus a history view (most
+    recent 30), inserting into `strength_logs` (`sets_reps_load` stored as
+    `{ exercises: [...] }`, matching the "exercise name, sets x reps, load"
+    shape already used in `strength-library.md`). `workout_id` is left
+    unset — like `nutrition_logs`, this is a standalone daily/session entry,
+    not tied to a specific scheduled `workouts` row. Nav links added between
+    `/plan`, `/nutrition`, and `/strength`. `lib/types.ts` gained
+    `StrengthLog`/`ExerciseEntry` types mirroring the migration.
+  - **Test — same shape of partial as B3/B4, for the same reason:** the
+    literal test (log a failed/too-hard session via the UI, confirm it
+    shows up in history) needs a real signed-in, linked athlete — still
+    blocked on David's one-time linking step from B3
+    (`docs/infra.md`'s "Linking bootstrap"). Instead verified the exact
+    DB-layer behavior the UI depends on, using the same
+    `set_config('request.jwt.claims', ...)`-simulated-auth technique as
+    B2/B3/B4 (two dummy athletes, cleaned up after): athlete A's insert of a
+    `failed_too_hard` session with two exercises (sets/reps/load-kg) succeeds
+    and round-trips the exact `sets_reps_load` JSON shape the UI sends;
+    athlete B sees `0` of athlete A's `strength_logs` rows; an insert
+    impersonating athlete A's `athlete_id` while authenticated as athlete B
+    is rejected `42501`. `npm run build`/`npm run lint` pass in `web/`;
+    `/strength` was smoke-tested unauthenticated against a local dev server
+    (200, renders the client-side loading/sign-in state, same pattern as
+    B3/B4). **Still open, same blocker as B3/B4:** once David completes the
+    linking bootstrap, the full round-trip (real UI entry → history view)
+    should be re-run for real.
   - Depends on: B3.
 
 - [ ] **B6. Fold in Milestone A on top of the data layer**
