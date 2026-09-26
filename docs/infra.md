@@ -178,10 +178,33 @@ first. `npm run build` and `npm run lint` both pass clean in `web/`, and
 the unauthenticated `/login` and `/plan` routes were smoke-tested against
 a local dev server.
 
-## Next steps (B4/B5/B8)
+## Nutrition logging UI (B4 — done)
 
-Nutrition and S&C logging UIs (B4/B5) and reading logged signals back into
-the coaching flow (B8) build on this loop. B6 (folding Milestone A's
-season-macrocycle content into the DB layer) and B9 (persisting
-`season-plan.json` itself) still wait on Milestone A being finished per the
-tasks file's suggested execution order.
+Shipped in `web/app/nutrition/page.tsx`: a daily entry form + history view
+writing to `nutrition_logs`, upserting on the table's existing
+`(athlete_id, log_date)` unique constraint (re-logging a day edits it, no
+duplicates). `SKILL.md` Step 1 now reads the last 7-14 days of
+`nutrition_logs` back (same `execute_sql`-via-MCP path as Step 7's writes)
+when `supabaseAthleteId` is set, and folds the hit/missed split and any
+hydration/notes text into that run's fueling guidance.
+
+**Verified this session** (dummy athletes, same pattern as B2/B3, cleaned up
+afterward): the upsert path correctly updates-in-place rather than
+duplicating a re-logged day; RLS scoping holds for `nutrition_logs` the same
+way it does for `plans`/`workout_logs` (a second authenticated athlete sees
+zero of the first's rows and a cross-athlete write is rejected `42501`); the
+`carb_target_status` check constraint rejects an invalid value. `npm run
+build`/`npm run lint` pass in `web/`.
+
+**Not yet verified end-to-end with a real browser session** — same blocker
+as B3: needs the linking bootstrap above (David signed in once,
+`supabaseAthleteId` set) before a real UI entry can be read back by a real
+skill run and checked against the resulting plan summary.
+
+## Next steps (B5/B8)
+
+The S&C logging UI (B5) and reading logged signals back into the coaching
+flow (B8) build on this loop. B6 (folding Milestone A's season-macrocycle
+content into the DB layer) and B9 (persisting `season-plan.json` itself)
+still wait on Milestone A being finished per the tasks file's suggested
+execution order.

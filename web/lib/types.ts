@@ -54,3 +54,25 @@ export interface WorkoutLog {
   notes: string;
   created_at: string;
 }
+
+export const CARB_TARGET_STATUSES = ["hit", "missed"] as const;
+
+export type CarbTargetStatus = (typeof CARB_TARGET_STATUSES)[number];
+
+export const CARB_TARGET_STATUS_LABELS: Record<CarbTargetStatus, string> = {
+  hit: "Hit carb target",
+  missed: "Missed carb target",
+};
+
+export interface NutritionLog {
+  id: string;
+  athlete_id: string;
+  log_date: string;
+  carbs_g: number | null;
+  calories: number | null;
+  carb_target_status: CarbTargetStatus | null;
+  hydration_note: string;
+  body_weight_kg: number | null;
+  notes: string;
+  created_at: string;
+}

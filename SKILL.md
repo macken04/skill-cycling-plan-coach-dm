@@ -79,6 +79,8 @@ Retrieve the athlete's current numbers and recent history. Use whichever sources
 
 Summarise last week and the readiness state back to the athlete in their language in one or two sentences. If readiness data triggers a plan adjustment, state it explicitly.
 
+**When `athlete.json`'s `supabaseAthleteId` is set** (per Step 7): also read back the most recent 7-14 days of `nutrition_logs` for that athlete (project `gurxzxcdxxxezwyatwlf`, per `docs/infra.md`; `execute_sql` via the Supabase MCP connector, same approach as Step 7). Summarise the `carb_target_status` split (e.g. "hit target 4 of 7 days") and any non-empty `hydration_note`/`notes` into the fueling guidance this run produces (`references/nutrition.md`'s per-day-type targets) — a repeated `missed` pattern or recurring hydration complaint is worth calling out explicitly to the athlete, not silently absorbed. Skip this read entirely when `supabaseAthleteId` is `null` — there's nothing logged yet.
+
 ### Step 2 - classify rider type (data-driven)
 
 Unless `riderTypeOverride` is set, classify the athlete from their own power curve using `references/rider-types.md`. The classification (sprinter/puncheur, all-rounder, diesel/time-triallist) plus the athlete's `goal` set the session priorities, which sessions to emphasise and which to skip. Do not assume a fixed rider type; derive it. State the detected type and the resulting focus in one line.
@@ -154,3 +156,4 @@ Per task **B3** (`documents/multi-event-and-webui-tasks.md`): the web UI (`web/`
 7. All human-readable text is in the config language and units, honoring `styleNotes`. State the week id, focus, detected rider type, last week in one line, and which files you created.
 8. When `targetEvent`/`eventDate` are both set, `season-plan.json`'s `currentPhaseId` was recomputed against today's date (not trusted stale), the stated phase in Step 4's summary line matches it, and `season-plan.md` was written/updated to match — regenerated or replanned this run if it didn't already exist or a divergence was reported.
 9. When `supabaseAthleteId` is set, this week's `plans`/`workouts` rows were upserted (Step 7) and that was stated in one line; when it's `null`, nothing Supabase-related was attempted or mentioned.
+10. When `supabaseAthleteId` is set, recent `nutrition_logs` were read back (Step 1) and any missed-target/hydration pattern is reflected in this run's fueling guidance rather than silently dropped.
