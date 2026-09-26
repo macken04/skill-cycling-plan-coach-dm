@@ -8,11 +8,18 @@ import {
   DAY_ORDER,
   SESSION_STATUSES,
   SESSION_STATUS_LABELS,
+  type Event,
   type Plan,
   type SessionStatus,
   type Workout,
   type WorkoutLog,
 } from "@/lib/types";
+
+function daysUntil(dateStr: string): number {
+  const today = new Date(new Date().toISOString().slice(0, 10));
+  const target = new Date(dateStr);
+  return Math.round((target.getTime() - today.getTime()) / 86_400_000);
+}
 
 type LoadState = "loading" | "no-session" | "no-plan" | "ready" | "error";
 
@@ -21,6 +28,7 @@ export default function PlanPage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [session, setSession] = useState<Session | null>(null);
   const [plan, setPlan] = useState<Plan | null>(null);
+  const [event, setEvent] = useState<Event | null>(null);
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [latestLogByWorkout, setLatestLogByWorkout] = useState<
     Record<string, WorkoutLog>
@@ -50,6 +58,13 @@ export default function PlanPage() {
       return;
     }
     setPlan(currentPlan);
+
+    const { data: eventRows } = await supabase
+      .from("events")
+      .select("*")
+      .eq("athlete_id", athleteId)
+      .limit(1);
+    setEvent(eventRows?.[0] ?? null);
 
     const { data: workoutRows, error: workoutError } = await supabase
       .from("workouts")
@@ -194,11 +209,23 @@ export default function PlanPage() {
         </nav>
       </header>
 
+      {event && (
+        <p style={{ marginBottom: "0.25rem", fontWeight: 600 }}>
+          {daysUntil(event.event_date)} days to{" "}
+          {event.event_name ?? event.event_key ?? "your event"}
+          {plan?.phase
+            ? ` · Phase: ${plan.phase[0].toUpperCase()}${plan.phase.slice(1)}${
+                plan.deload ? " (deload)" : ""
+              }`
+            : ""}
+        </p>
+      )}
+
       {plan && (
         <p style={{ marginBottom: "1.5rem", color: "#555" }}>
           Week of {plan.week_start_date}
-          {plan.phase ? ` - ${plan.phase} phase` : ""}
-          {plan.deload ? " (deload)" : ""}
+          {!event && plan.phase ? ` - ${plan.phase} phase` : ""}
+          {!event && plan.deload ? " (deload)" : ""}
           {plan.focus ? ` - ${plan.focus}` : ""}
         </p>
       )}
