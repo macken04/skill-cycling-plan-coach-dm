@@ -133,9 +133,9 @@ Inputs from `references/events/badlands-ultra.md`: `D` ≈ 800 km, `E` ≈
 15,000 m (density ≈ 18.75 m/km). Discrete limiters: technical/loose-surface
 handling, heat tolerance, sleep deprivation/overnight riding, sustained
 high-altitude climbing, loaded-bike handling. Phase dates from
-`macrocycle-model.md`'s own worked example (48-week runway, Base 20 weeks
-from 2026-09-26, Build 13 weeks from 2027-02-20, Refine 13 weeks from
-2027-05-29 to `eventDate` 2027-08-28).
+`badlands-ultra.md`'s own A11 instantiation of the macrocycle model (48-week
+runway, Base 20 weeks from 2026-09-26, Build 13 weeks from 2027-02-20,
+Refine 13 weeks + 3 days from 2027-05-29 to the real `eventDate` 2027-08-31).
 
 - **C1** (Base, `2026-09-26 + 12 weeks` = 2026-12-19): distance 20-25% of
   800 km = 160-200 km → rounded to nearest 50 km = **150-200 km** —
@@ -152,8 +152,8 @@ from 2026-09-26, Build 13 weeks from 2027-02-20, Refine 13 weeks from
   (echoing the event file's ~3,000 m/100 km note), rehearsing the
   terrain-mix and elevation limiters at high fidelity for the first time.
 - **B2 — culminating** (Refine, `2027-05-29 + 2 weeks` = 2027-06-12, i.e.
-  ~15% into Refine, leaving ~11 of Refine's 13 weeks for recovery, final
-  sharpening, and taper before 2027-08-28): a loaded-bike, overnight,
+  ~15% into Refine, leaving ~11 of Refine's ~13.4 weeks for recovery, final
+  sharpening, and taper before 2027-08-31): a loaded-bike, overnight,
   full-gear (lighting, tracker) rehearsal spanning a genuine sunset-to-
   sunrise stretch, with opportunistic resupply fueling at the then-current
   gut-trained g/h rate — the "elevation/terrain-mix event → culminating

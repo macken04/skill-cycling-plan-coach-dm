@@ -95,14 +95,15 @@ like a ready-to-run plan before its time.
 
 ## Example
 
-Badlands Ultra athlete, using `macrocycle-model.md`'s worked example
-(48-week runway, `startDate` 2026-09-26) and `trial-events.md`'s worked
+Badlands Ultra athlete, using `references/events/badlands-ultra.md`'s (A11)
+actual instantiation of the macrocycle model (48-week runway, `startDate`
+2026-09-26, real `eventDate` 2027-08-31) and `trial-events.md`'s worked
 ladder for the same inputs. Today's date falls inside Build.
 
 ```markdown
-# Season Plan – Badlands Ultra (2027-08-28)
+# Season Plan – Badlands Ultra (2027-08-31)
 **Days to event:** 187 · **Current phase:** Build
-**Season:** 2026-09-26 → 2027-08-28 (48 weeks)
+**Season:** 2026-09-26 → 2027-08-31 (48 weeks + 3 days)
 **Age band:** Under 40 · **Deload length:** 1 week per block
 
 ## Phases
@@ -113,7 +114,7 @@ ladder for the same inputs. Today's date falls inside Build.
 | Deload | 2027-02-13 – 2027-02-20 | 1 wk | Reset — reduced volume/intensity |
 | **Build** | 2027-02-20 – 2027-05-22 | 13 wk | **← current** — event-specific limiter work, max strength, fueling ramp |
 | Deload | 2027-05-22 – 2027-05-29 | 1 wk | Reset — reduced volume/intensity |
-| Refine | 2027-05-29 – 2027-08-28 | 13 wk | Race-specific rehearsal, power/maintenance strength, taper |
+| Refine | 2027-05-29 – 2027-08-31 | 13 wk + 3d | Race-specific rehearsal, power/maintenance strength, taper |
 
 ## Trial-event ladder
 
