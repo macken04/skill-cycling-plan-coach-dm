@@ -149,7 +149,21 @@ Auth user id, and that id doesn't exist until he's signed in at the web app
 at least once (there's no admin API call available here — no service-role
 key — to create it ahead of time). So:
 
-1. David visits the deployed `web/` app (Vercel preview/production URL,
+0. **One-time Supabase Auth config fix, found when this was actually tried:**
+   the project's Auth **Site URL** was still the default `localhost:3000`
+   (nothing in B1-B3 had set it, since no real email round-trip had been
+   tested before). A magic-link email always resolves to the Site URL
+   unless the requested redirect is in the **Redirect URLs** allow-list, so
+   the link David received pointed at `localhost` instead of the deployed
+   app. Not fixable via the Supabase MCP connector (Auth config isn't a
+   Postgres table `execute_sql` can reach) — fix once in the dashboard:
+   [Auth → URL Configuration](https://supabase.com/dashboard/project/gurxzxcdxxxezwyatwlf/auth/url-configuration)
+   for the `cycling-plan-coach` project — set **Site URL** to
+   `https://cycling-plan-coach.vercel.app` and add
+   `https://cycling-plan-coach.vercel.app/**` to **Redirect URLs**. Any
+   magic-link email sent *before* this fix still points at `localhost` and
+   won't work even after saving — request a fresh one.
+1. David visits the deployed `web/` app (`https://cycling-plan-coach.vercel.app`,
    logged into the right Vercel account per the SSO note above) and signs
    in with his email via the magic link.
 2. In a Claude Code session with the Supabase MCP connector attached, look
