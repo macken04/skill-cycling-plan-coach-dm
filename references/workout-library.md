@@ -33,6 +33,19 @@ Use the ISO 8601 week number mod 3 to pick the row (e.g. week 27 → 27 % 3 = 0)
 
 Start a returning archetype at the step the athlete last completed, then advance by one step. Reset to Step 1 after a rest or recovery week. **After Step 3:** rotate to the next archetype in the rotation table for that rider type; do not invent a Step 4.
 
+### Logged-outcome rules (override the default advance-by-one-step rule)
+
+Once an athlete logs a session's outcome (web UI, per `documents/multi-event-and-webui-tasks.md` B3/B8), its status overrides the default "advance by one step" rule above for that archetype's next scheduled occurrence. These rules apply equally to the standard archetypes above and to the event-driven overlay archetypes' progression table further down this file. Until logged data exists (no `workout_logs` table yet — see B2/B8), this table is unused; the default rule stands.
+
+| Logged status | Adjustment at the archetype's next scheduled occurrence |
+|---|---|
+| `completed_as_planned` | Advance one step, per the default rule above. |
+| `completed_easier_than_planned` | Advance two steps instead of one (skip a step), capped at Step 3 — never jump past Step 3 in one move. |
+| `completed_harder_than_planned` | Hold at the same step; do not advance. The prescribed load was already at or above what the athlete could handle. |
+| `failed_too_hard` | Do not advance; repeat the same step. If this is the second consecutive `failed_too_hard` on this archetype, drop back one step instead of repeating, and substitute an easier variant of the archetype where one exists (e.g. Threshold → Sweet spot, 40/20s → 30/15s Step 1). State the adjustment and why in the next plan's last-week summary. |
+| `skipped` (first occurrence) | No adjustment — reschedule at the athlete's last-completed step, its normal next slot in the rotation. |
+| `skipped` (this archetype skipped twice or more in a row) | Reset to Step 1 next time scheduled, same as after a rest/recovery week. State this explicitly in the next plan's summary rather than silently re-offering the same step. |
+
 ## Bike - hard sessions (pick 2/week)
 
 ### VO2max
@@ -163,7 +176,8 @@ convention as the rest of this file.
 | Loaded-bike climbing | One loaded climb, 20-30 min | 2-3 loaded climbs or 45-60 min continuous | Extended loaded climbing block matching the event's largest single continuous climb |
 
 Reset to Step 1 after a rest or recovery week, same as the standard archetypes
-above.
+above. The same logged-outcome rules above (`completed_easier_than_planned`,
+`failed_too_hard`, repeated `skipped`, etc.) apply to these archetypes too.
 
 **Scheduling (where these replace a standard slot):**
 
