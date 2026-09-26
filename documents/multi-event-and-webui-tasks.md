@@ -155,7 +155,7 @@ infra required. Ships as a `SKILL.md` version bump.
   - Depends on: A1 (event file's session-archetype list drives which
     archetypes are needed).
 
-- [ ] **A7. Plan output format: countdown header + fueling section**
+- [x] **A7. Plan output format: countdown header + fueling section**
   - Edit `references/plan-format.md`: add the optional event countdown/phase
     header line (following the existing optional-line pattern used by the
     Readiness line) and a fueling subsection; add a race-day fueling/pacing
