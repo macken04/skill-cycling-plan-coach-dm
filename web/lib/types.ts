@@ -76,3 +76,21 @@ export interface NutritionLog {
   notes: string;
   created_at: string;
 }
+
+export interface ExerciseEntry {
+  exercise: string;
+  sets: number | null;
+  reps: number | null;
+  load_kg: number | null;
+}
+
+export interface StrengthLog {
+  id: string;
+  athlete_id: string;
+  workout_id: string | null;
+  session_name: string;
+  status: SessionStatus;
+  sets_reps_load: { exercises: ExerciseEntry[] };
+  notes: string;
+  created_at: string;
+}

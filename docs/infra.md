@@ -215,10 +215,31 @@ as B3: needs the linking bootstrap above (David signed in once,
 `supabaseAthleteId` set) before a real UI entry can be read back by a real
 skill run and checked against the resulting plan summary.
 
-## Next steps (B5/B8)
+## S&C logging UI (B5 — done)
 
-The S&C logging UI (B5) and reading logged signals back into the coaching
-flow (B8) build on this loop. B6 (folding Milestone A's season-macrocycle
-content into the DB layer) and B9 (persisting `season-plan.json` itself)
-still wait on Milestone A being finished per the tasks file's suggested
-execution order.
+Shipped in `web/app/strength/page.tsx`: a session entry form (session name,
+the full five-way FR3 status vocabulary, a repeatable exercise row of
+exercise/sets/reps/load-kg, notes) + history view, inserting into
+`strength_logs` (`sets_reps_load` stored as `{ exercises: [...] }`). Unlike
+`workout_logs`, this is a standalone entry not tied to a specific scheduled
+`workouts` row — `workout_id` is left null, same shape as `nutrition_logs`.
+
+**Verified this session** (dummy athletes, same pattern as B2/B3/B4, cleaned
+up afterward): an authenticated insert of a `failed_too_hard` session with
+two exercises round-trips the exact `sets_reps_load` JSON shape the UI
+sends; a second authenticated athlete sees zero of the first's
+`strength_logs` rows; an insert impersonating the first athlete's
+`athlete_id` while authenticated as the second is rejected `42501`. `npm run
+build`/`npm run lint` pass in `web/`.
+
+**Not yet verified end-to-end with a real browser session** — same blocker
+as B3/B4: needs the linking bootstrap above (David signed in once,
+`supabaseAthleteId` set) before a real UI entry can be checked against the
+history view for real.
+
+## Next steps (B8)
+
+Reading logged signals back into the coaching flow (B8) builds on this
+loop. B6 (folding Milestone A's season-macrocycle content into the DB
+layer) and B9 (persisting `season-plan.json` itself) still wait on
+Milestone A being finished per the tasks file's suggested execution order.

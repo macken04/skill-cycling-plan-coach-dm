@@ -189,6 +189,7 @@ export default function PlanPage() {
         <h1 style={{ fontSize: "1.5rem" }}>This week&apos;s plan</h1>
         <nav style={{ display: "flex", gap: "1rem", alignItems: "baseline" }}>
           <Link href="/nutrition">Nutrition log</Link>
+          <Link href="/strength">Strength log</Link>
           <button onClick={signOut}>Sign out</button>
         </nav>
       </header>
