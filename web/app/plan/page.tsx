@@ -300,6 +300,7 @@ export default function PlanPage() {
       >
         <h1 style={{ fontSize: "1.5rem" }}>This week&apos;s plan</h1>
         <nav style={{ display: "flex", gap: "1rem", alignItems: "baseline" }}>
+          {event && <Link href="/season">Season plan</Link>}
           <Link href="/nutrition">Nutrition log</Link>
           <Link href="/strength">Strength log</Link>
           <Link href="/compliance">Compliance</Link>
