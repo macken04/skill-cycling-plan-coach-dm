@@ -53,11 +53,22 @@ loss.
    (event id or null), `eventDate`, derived `daysToEvent`. `goal` stays free text
    but is populated/confirmed from the event when one is set.
 
-4. **`onboarding.md`**: new question — "Are you training for a specific event?"
-   — offering the supported list (Badlands Ultra Gravel Race, or "no specific
+4. **`onboarding.md`**: made dynamic rather than a flat checklist, in three
+   parts. **(a)** New goal-branch question — "Are you training for a specific
+   event, or do you want a general training plan?" — offering the supported
+   list (Badlands Ultra Gravel Race, or "general training plan"/"no specific
    event") plus event date. Unmatched event names still get captured (name +
    date) and fall back to generic ultra-endurance heuristics, degrading
-   gracefully as more events get added later.
+   gracefully as more events get added later. **(b)** Every question with a
+   definitive/categorical answer (units, gender, strength default, session
+   count, training/group-ride days) presents an explicit list of options to
+   choose from, rather than free text with examples. **(c)** One
+   open-narrative question invites the athlete to describe physical
+   challenges/limiters (e.g. pain, fatigue, power that won't transfer to the
+   pedals on climbs) in their own words; the raw text is stored and read
+   qualitatively alongside the data-derived rider type (`rider-types.md`)
+   when the coach sets session and strength emphasis — a hypothesis to weigh,
+   never a silent override of the power-curve-derived limiter.
 
 5. **`SKILL.md` workflow**: config resolution also resolves the event file and
    countdown; the training-model step branches to countdown-driven periodization

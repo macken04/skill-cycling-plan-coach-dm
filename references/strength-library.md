@@ -1,6 +1,6 @@
 # Strength and core library (cycling-focused)
 
-Generic exercise bank. Translate exercise names, load cues, and rest cues into the athlete's language when building the session. Goal is durable force and stability, not mass. Once or twice a week, never the day before VO2max or threshold. Tune to the athlete: more posterior chain for power, more single-leg and core for stability.
+Generic exercise bank. Translate exercise names, load cues, and rest cues into the athlete's language when building the session. Goal is durable force and stability, not mass. Once or twice a week, never the day before VO2max or threshold. Tune to the athlete: more posterior chain for power, more single-leg and core for stability. If the athlete's onboarding `physicalNotes` describes a specific sensation (e.g. lower-back fatigue or power not transferring on climbs), lean the selection toward the exercises that address it (posterior chain, anti-rotation core) rather than the default split — it's a hypothesis from the athlete's own account, worth testing even without a data signal to confirm it.
 
 ## Strength (legs and posterior chain)
 
