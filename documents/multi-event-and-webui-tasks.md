@@ -204,7 +204,7 @@ infra required. Ships as a `SKILL.md` version bump.
     they sum to the full runway with no gap and no fourth phase.
   - Depends on: none.
 
-- [ ] **A10. Trial-event ladder design (B/C simulated events)**
+- [x] **A10. Trial-event ladder design (B/C simulated events)**
   - Per the PRD's FR2 and resolved decision (§3.2): create
     `references/trial-events.md` defining, generically, how to derive a B/C
     trial-event ladder from a target event's "Limiters this event trains
