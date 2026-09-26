@@ -319,6 +319,20 @@ each phase closes a working loop before the next adds scope.
     folder) creating the seven tables from the plan: `athletes`, `events`,
     `plans`, `workouts`, `workout_logs`, `nutrition_logs`, `strength_logs`,
     with the columns listed in the plan doc's schema table.
+  - **`athletes` columns must be reconciled against the current
+    `references/athlete-config.md` field table, not the plan doc's original
+    sketch** ("mirrors today's `athlete.json` — identity, goal, physiology,
+    preferences"): onboarding has grown substantially since that sketch was
+    written (cycling background, ultra-distance history, body composition,
+    a deeper strength background, nutrition preferences, the physical-limiter
+    narrative and its structured follow-ups, energy-availability signals) —
+    roughly 30 fields as of this writing, versus the handful the plan
+    anticipated. Decide at implementation time which self-reported free-text
+    fields (`physicalNotes`, `fuelingNotes`, `strengthCurrentLifts`,
+    `strengthInjuryNotes`, `currentEatingPatternNotes`, `longestEffortCompleted`,
+    `labTestingNotes`) stay as text columns versus which structured/enum
+    fields get proper typed columns — this is a real design decision the
+    plan doc doesn't resolve, not a mechanical column-for-column port.
   - Per the agentic-coach PRD (FR3): add a `status` enum column to
     `workout_logs` and `strength_logs` (`completed_as_planned` /
     `completed_easier_than_planned` / `completed_harder_than_planned` /
