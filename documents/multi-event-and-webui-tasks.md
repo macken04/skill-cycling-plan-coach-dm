@@ -76,16 +76,42 @@ infra required. Ships as a `SKILL.md` version bump.
     blank `goal` with an event set gets a sensible default per the doc.
   - Depends on: A1 (event id needs to exist to be a valid reference).
 
-- [ ] **A4. Onboarding event question**
-  - Edit `references/onboarding.md`: add the question "Are you training for
-    a specific event?" offering the supported list (from the A1 registry)
-    or "no specific event", plus event date. Unmatched event names are still
-    captured (name + date) and fall back to generic ultra-endurance
-    heuristics.
-  - **Test:** write out (or run in a scratch chat) three onboarding
-    walkthroughs — selects Badlands, says "no event", names an untracked
-    event — and confirm each produces the right `athlete.json` fields and
-    the right fallback behavior for the untracked case.
+- [ ] **A4. Onboarding: event branch, closed-choice questions, and limiter narrative**
+  - Edit `references/onboarding.md` to make onboarding dynamic rather than a
+    flat checklist, with every question explicitly typed:
+    - **Goal branch (event question).** Add "Are you training for a specific
+      event, or do you want a general training plan?" offering the supported
+      list (from the A1 registry) plus "general training plan"/"no specific
+      event". Unmatched event names are still captured (name + date) and fall
+      back to generic ultra-endurance heuristics, per the existing design.
+    - **Closed-choice questions get an explicit option list**, not
+      example-style free text. Every question with a definitive/categorical
+      answer (units, gender, strength default, structured-session count,
+      training/group-ride days) presents a short list of options the athlete
+      picks from — using the interactive picker where available, a
+      lettered/numbered list otherwise — never phrased as "e.g." prose.
+    - **Open-narrative question for context a category can't capture.** Add a
+      prompt inviting a longer, free-form answer about physical challenges or
+      limiters in the athlete's own words — e.g. "Describe anything that
+      feels like it's holding you back physically on the bike: pain,
+      fatigue, or power you can't seem to put down, especially on climbs or
+      hard efforts." Tell the athlete a few sentences are welcome and useful,
+      not just a one-word answer. Store the raw narrative (not a forced
+      category) in `athlete.json`; the coach weighs it qualitatively when
+      picking session/strength emphasis (`training-model.md`,
+      `strength-library.md`), alongside — never instead of — the
+      data-derived rider type from `rider-types.md`. This is a hypothesis to
+      weigh, not a diagnosis: don't silently override the power-curve-derived
+      limiter on narrative text alone.
+  - **Test:** write out (or run in a scratch chat) onboarding walkthroughs
+    covering: selects Badlands, says "general plan", names an untracked
+    event — confirm each produces the right `athlete.json` fields and
+    fallback behavior; separately, confirm every closed-choice question in
+    the rewritten doc presents an explicit option list (no "e.g." prose
+    stand-ins), and that a sample limiter narrative (e.g. "I feel like I'm
+    dragging on climbs, pain in my lower back, can't get power down") ends up
+    stored verbatim and referenced when session/strength emphasis is
+    explained back to the athlete.
   - Depends on: A1, A3.
 
 - [ ] **A5. SKILL.md workflow: event resolution + countdown periodization**

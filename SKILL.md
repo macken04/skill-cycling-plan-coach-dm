@@ -21,7 +21,9 @@ Before doing any real work:
 
 `athlete.json` is the single source of truth for who the plan is for. Fields are documented in `references/athlete-config.md`.
 
-From the config take: `name` (greetings), `language` and `units` (everything the athlete reads is produced in these), `styleNotes` (writing rules to honor), `goal`, `age`, `gender`, `weightKg`, `fallbackFtp`, `targetWkg`, `groupRideDays`, `typicalAvailableDays`, `typicalWorkoutDurationMin`, `maxStructuredSessions`, `strengthDefault`, and optional `riderTypeOverride`.
+From the config take: `name` (greetings), `language` and `units` (everything the athlete reads is produced in these), `styleNotes` (writing rules to honor), `goal`, `targetEvent`, `eventDate`, `age`, `gender`, `weightKg`, `fallbackFtp`, `targetWkg`, `groupRideDays`, `typicalAvailableDays`, `typicalWorkoutDurationMin`, `maxStructuredSessions`, `strengthDefault`, `physicalNotes`, and optional `riderTypeOverride`.
+
+If `targetEvent` is set and matches an id in `references/events/README.md`, resolve its reference file for course/limiter context. Full event-driven countdown periodization (replacing the generic rolling block below) is scoped separately — until that lands, an event just informs framing and goal language, not the week structure.
 
 If `age` is missing from an existing config, ask for it before continuing — it is required to set recovery windows. If `gender` is missing, ask for it or accept a skip; note that it defaults to gender-neutral W/kg benchmarks when absent.
 
@@ -57,9 +59,13 @@ Summarise last week and the readiness state back to the athlete in their languag
 
 Unless `riderTypeOverride` is set, classify the athlete from their own power curve using `references/rider-types.md`. The classification (sprinter/puncheur, all-rounder, diesel/time-triallist) plus the athlete's `goal` set the session priorities, which sessions to emphasise and which to skip. Do not assume a fixed rider type; derive it. State the detected type and the resulting focus in one line.
 
+If `physicalNotes` is non-empty, weigh it alongside this data-derived classification when Step 3 sets strength/core and session emphasis — it's the athlete's own account of what feels limiting, useful for exactly what a power curve can't show (e.g. a posture or posterior-chain issue on climbs). Treat it as a hypothesis, not a diagnosis: never let it silently override the power-curve-derived rider type, and say so plainly if the two point in different directions.
+
 ### Step 3 - confirm intake and session design
 
 Restate the goal from the config in one line, then confirm or complete intake values gathered at the start. Ensure these are explicitly captured: available training days, group-ride day(s), duration per workout day, how many structured key sessions (default `maxStructuredSessions`), indoor or outdoor preference, week's focus, strength mode (strength/core/both), and strength/core frequency. Keep the intake short with the interactive picker when available. Always provide a "use profile defaults" path so the athlete can accept predefined config values and only override what changed. Factor last week's load into the new week.
+
+When strength/core emphasis is chosen for the week, apply `strength-library.md`'s "tune to the athlete" guidance using both the Step 2 rider type and any Step 2 `physicalNotes` hypothesis (e.g. a described lower-back/power-transfer issue on climbs leans the exercise selection toward core and posterior chain) — name the connection to the athlete in one line when it drives a choice, so the plan visibly reflects what they described rather than silently absorbing it.
 
 ### Step 4 - apply the training model
 
