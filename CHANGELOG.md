@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.0] - 2026-09-27
+
+### Added
+
+- **Optional FatSecret integration** (`documents/fatsecret-integration-plan.md`/`-tasks.md`, resolving issue #42): athletes who want a real food database and diary can connect FatSecret from their own Claude client to have this week's actual logged carbs compared against the day-type fueling targets `references/nutrition.md` already sets. Diary-only in v1 — read-back (`get_user_food_entries`) and per-food logging (`add_food_entry`); one-tap meal-plan push (`saved_meal.*`) is a deferred fast-follow, not a v1 blocker.
+  - Same Claude-native-connector shape as Strava: **zero backend code, schema, or credential footprint in this repo** — the per-athlete OAuth token lives entirely in the athlete's own local MCP config, never in this repo, Supabase, or Vercel.
+  - `SKILL.md` Step 1 gained a FatSecret paragraph (checks for the connector, reads the diary back, folds actual-vs-target into fueling guidance); `references/fatsecret-data.md` documents the tool calls and comparison method; `references/onboarding.md` mentions the optional connector once in the nutrition section.
+  - **Not yet usable in production:** registering a FatSecret developer application and running this project's fork of `fcoury/fatsecret-mcp`'s OAuth onboarding tooling is a manual step not yet done (`FA1` in `documents/fatsecret-integration-tasks.md`) — the skill-side wiring is complete, but no live FatSecret account has exercised it end-to-end yet.
+
+### Changed
+
+- **Minor version bump** (`3.2.0` → `3.3.0`): additive — an athlete with no FatSecret connector configured sees no change in behavior.
+
 ## [3.2.0] - 2026-09-27
 
 ### Added

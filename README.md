@@ -8,6 +8,7 @@ It works for any cyclist. Nothing about the athlete is hardcoded in the skill; i
 
 - A connected Strava account (FTP, recent rides, power curve) and/or a pasted Garmin Coach JSON export (`references/garmin-data.md`) for zones, readiness (HRV, sleep, training status/ACWR), and load. Either, both, or neither work — without any data source the skill falls back to the FTP and self-reported baseline in the config.
 - Optionally, a connected WHOOP account (`/connections` in the web dashboard, no manual export) for daily recovery/sleep/strain feeding the same readiness logic Garmin drives, plus per-workout strain/HR matched back to logged sessions (`references/whoop-data.md`, `documents/whoop-integration-plan.md`).
+- Optionally, a connected FatSecret account (a local, per-athlete MCP connector, same shape as Strava) for actual-vs-target fueling comparison against this week's carb targets (`references/fatsecret-data.md`, `documents/fatsecret-integration-plan.md`).
 - No second workout skill is required. ZWO creation is built in via `references/workout-library.md` and `references/zwo-format.md`.
 
 ## Install
