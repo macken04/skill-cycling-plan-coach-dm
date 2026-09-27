@@ -155,16 +155,23 @@ options, not mutually exclusive:
   and optional, exactly like Strava/WHOOP.
 - Not multi-provider nutrition-app abstraction.
 
-## Open questions
+## Resolved decisions (issue #42's open questions)
 
-1. Is logging individual foods (available today via `fcoury/fatsecret-mcp`
-   as-is) an acceptable v1, or is meal-plan-as-one-tap-log (needing the
-   saved-meal addition above) a hard requirement before this ships?
-2. Do we fork and extend `fcoury/fatsecret-mcp` ourselves, or contribute
-   upstream and wait? Affects whose docs this repo's `references/fatsecret-data.md`
-   should point to.
-3. Is the free Basic tier's US-only food dataset sufficient, or does the
-   athlete need non-US coverage (would require a quoted Premier plan)?
+**1. V1 scope.** Diary-only. Ship read-back (`get_user_food_entries`) and
+per-food logging (`add_food_entry`) as v1 — both already work end-to-end
+today via `fcoury/fatsecret-mcp` as-is. One-tap meal-plan push
+(`saved_meal.*`) is a fast-follow, not a blocker (see `F-D` in
+`documents/fatsecret-integration-tasks.md`).
+
+**2. Connector strategy.** Fork and extend `fcoury/fatsecret-mcp` ourselves
+rather than wait on upstream, so the saved-meal fast-follow above has a
+concrete timeline this project controls. This repo's docs
+(`references/fatsecret-data.md`) point athletes at our fork, not upstream.
+
+**3. API tier.** Free Basic tier (5,000 calls/day, US-only food dataset,
+requires visible FatSecret attribution) is sufficient for one athlete's
+personal use. Revisit only if the athlete later needs non-US food data or
+a white-labeled experience — not required for v1.
 
 ## References
 
