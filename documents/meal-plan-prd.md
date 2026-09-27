@@ -4,9 +4,13 @@ Status: draft, for review. Written after the athlete (David) confirmed a gap:
 the coach sets daily fueling *targets* (`references/nutrition.md`'s g/kg
 tables) but never translates them into an actual meal-by-meal list of foods.
 This PRD scopes turning those targets into a real, dynamic weekly meal plan.
-No GitHub issue exists for this yet — same "PRD, no separate architecture
-doc" role `season-macrocycle-prd.md`/`agentic-coach-prd.md` serve for work
-that isn't already an issue.
+Tracked as issue [#46](https://github.com/macken04/skill-cycling-plan-coach-dm/issues/46),
+which this PRD's own scope (§4.1-4.4) is written against. Issue
+[#45](https://github.com/macken04/skill-cycling-plan-coach-dm/issues/45)
+(opened separately, per-item structured feedback with its own
+`meal_recommendations`/`meal_feedback` tables and rating UI) is this PRD's
+phase 2 (§3 item 4) — #46 blocks #45, since #45's own phasing notes it needs
+itemized meal recommendations to exist first.
 
 ## 1. The brief
 
@@ -108,8 +112,9 @@ alternatives worth a deliberate answer rather than a default call.
    `supabaseAthleteId`, and needs no schema change. Phase 2 (explicitly a
    non-goal here, §5) — structured per-meal logging via a new Supabase table
    and web UI, feeding a `workout-library.md`-style "logged-outcome" rule
-   table — is a natural fast-follow once phase 1 is proven out, scoped in
-   its own future PRD/tasks doc rather than bundled into this one.
+   table — is a natural fast-follow once phase 1 is proven out, already
+   tracked as issue #45 rather than needing a new future PRD/tasks doc
+   invented here.
 5. **Approximate, coaching-register precision — not clinical accuracy.**
    Meals target each day type's carb/protein/fat/kcal figures from
    `nutrition.md` within a stated tolerance (±10%, per §7), assembled from
@@ -210,8 +215,8 @@ alternatives worth a deliberate answer rather than a default call.
   entirely in `references/meal-library.md`, self-contained, same trust/
   maintenance boundary as `workout-library.md`.
 - **No structured per-meal logging (Supabase table + web UI) in this PRD.**
-  That's phase 2, deferred to its own future PRD/tasks doc once phase 1 is
-  proven out (per §3 item 4) — this PRD's feedback loop is narrative-only.
+  That's phase 2, already tracked as issue #45 (§3 item 4) — this PRD's
+  feedback loop is narrative-only.
 - **No coupling to the FatSecret/Cronometer integration plans.** Those stay
   independent, optional connectors for actual diary sync; this feature
   never assumes either is connected, and nothing here blocks or depends on
@@ -245,10 +250,12 @@ alternatives worth a deliberate answer rather than a default call.
    athletes who already have an `athlete.json` — should the coach proactively
    offer it once (a single mention next time their plan runs), or only
    surface it if the athlete asks?
-4. **Phase 2 timing.** Once phase 1 ships, should a phase-2 tasks doc
-   (structured `meal_logs` table + web UI, per §3 item 4 / §5) be written
-   immediately as a fast-follow, or left aspirational until phase 1 has
-   actually been used for a few weeks?
+4. ~~**Phase 2 timing.**~~ Resolved: phase 2 is already tracked as issue
+   [#45](https://github.com/macken04/skill-cycling-plan-coach-dm/issues/45)
+   (opened by the athlete, independently specs `meal_recommendations`/
+   `meal_feedback` tables, a rating+keep/change UI, and a `/nutrition-feedback`
+   Claude Code command) rather than needing a new tasks doc invented here.
+   #45 explicitly depends on this PRD's itemized-plan output existing first.
 5. **Household context.** Any need to size portions for a partner/family
    cooking the same meals, or is single-athlete portioning (current
    assumption, §5) sufficient?
