@@ -70,7 +70,10 @@ athlete has an active `targetEvent`. Summarize the week's daily carb targets
 by day type and the on-bike fueling rate for the week's hardest day(s), per
 `references/nutrition.md`. When `targetEvent` resolves to an event file, add
 one line for that file's fueling delta rather than restating the shared
-model.
+model. When `mealPlanEnabled` is `true`, add one more line referencing the
+week's itemized meal plan (e.g. "Full day-by-day meal plan:
+`2026-W26-meals.md`"), the same way section 5 references a full strength
+session — never duplicate the meal list inline here.
 
 ```markdown
 ## Fueling

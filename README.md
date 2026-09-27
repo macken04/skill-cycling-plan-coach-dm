@@ -46,13 +46,27 @@ The coaching is data-driven, not a fixed template. Each week the skill:
 5. builds a polarized week toward your goal, personalizing strength/core and fueling guidance against your background and preferences,
 6. outputs the files in your language and units.
 
-See `references/` for the config schema, onboarding, rider-type logic, plan format, Strava/Garmin/WHOOP mapping, training model, strength library, workout library, nutrition, event files, and ZWO format.
+See `references/` for the config schema, onboarding, rider-type logic, plan format, Strava/Garmin/WHOOP mapping, training model, strength library, workout library, nutrition, meal-plan library, event files, and ZWO format.
+
+## Meal planning (optional)
+
+Opt in at onboarding (`mealPlanEnabled`) for a full itemized weekly meal
+plan — an actual day-by-day breakfast/lunch/dinner/snack list built from
+`references/meal-library.md`'s self-contained food-block library, sized to
+each day type's carb/protein/fat target from `references/nutrition.md`,
+respecting `dietaryRestrictions` and cooking-time/cuisine preferences
+gathered at onboarding. A narrative question each week ("how did last
+week's meals go?") feeds swaps back into the next plan, the same
+logged-feedback pattern already used for training. Skip the opt-in and
+nothing changes — you still get the existing fueling targets and on-bike
+guidance either way. See `documents/meal-plan-prd.md` for the full design.
 
 ## Output
 
 - `YYYY-Wnn-plan.md` - the full weekly plan in readable markdown, including event countdown/fueling sections when applicable.
 - `*.zwo` - one per structured bike session.
 - `YYYY-Wnn-strength.md` (optional) - full gym session details when strength work is scheduled.
+- `YYYY-Wnn-meals.md` (optional) - the full day-by-day meal plan when `mealPlanEnabled` is `true`.
 - `season-plan.json` / `season-plan.md` (optional) - the season macrocycle skeleton and its rendered summary, generated once an event with an `eventDate` is set; regenerated only when the athlete reports a material change.
 
 ## Note

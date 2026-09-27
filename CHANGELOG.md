@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.0] - 2026-09-27
+
+### Added
+
+- **Dynamic, itemized weekly meal plan** (`documents/meal-plan-prd.md`, resolving issue #46): athletes who opt in (`mealPlanEnabled`) get an actual day-by-day breakfast/lunch/dinner/snack (+ on-bike/post-ride fueling) list, not just `references/nutrition.md`'s macro targets restated in prose. This is issue #45's own prerequisite — #45's per-item feedback UI needs concrete named items per day/slot to exist first, which this ships.
+  - New `references/meal-library.md`: a self-contained food-building-block library (grain/starch, protein, fat, fruit/veg, on-bike/recovery fueling) tagged against `dietaryRestrictions`, assembled into day-type templates (Rest/Endurance/Structured/Long, `nutrition.md`'s existing four buckets) landing within ±10% of that day type's carb/protein/fat target. No new food database or external API dependency — same pattern `references/workout-library.md` uses for sessions.
+  - `references/onboarding.md` gains a new opt-in section (§10): `mealPlanEnabled`, and — only if opted in — `mealPattern`, `cookingConstraints`, and a narrative `foodPreferences` question, all documented in `references/athlete-config.md`.
+  - A new weekly deliverable, `YYYY-Wnn-meals.md` (same convention as `YYYY-Wnn-strength.md`), produced in `SKILL.md` Step 6 only when `mealPlanEnabled` is `true`; the main plan's Fueling section (`references/plan-format.md` §6) gains one line referencing it.
+  - **Phase 1 feedback loop (narrative only):** one question folded into the existing weekly-availability intake, interpreted the same way `fuelingNotes` already is, applied via `meal-library.md`'s new "Logged-feedback rules" table (mirrors `workout-library.md`'s "Logged-outcome rules"). Adjustments are stated explicitly in the next plan, never silently absorbed. Structured per-meal logging via a Supabase table and web/Claude-Code rating UI is phase 2, already tracked as issue #45 rather than shipped here.
+  - An existing athlete whose config predates this field is asked the opt-in question once to backfill `mealPlanEnabled`, the same pattern used for other missing-required-field backfills; an athlete who opts out (or hasn't been asked yet) sees zero behavior change.
+
+### Changed
+
+- **Minor version bump** (`3.3.0` → `3.4.0`): additive — an athlete with `mealPlanEnabled` unset or `false` sees no change in behavior.
+
 ## [3.3.0] - 2026-09-27
 
 ### Added
