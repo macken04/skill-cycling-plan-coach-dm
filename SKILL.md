@@ -4,7 +4,7 @@ description: Plan a cyclist's training week as a standalone coaching package wit
 metadata:
   author: Elio Struyf <elio@struyfconsulting.be>
   license: MIT
-  version: 3.3.0
+  version: 3.4.0
 ---
 
 # Cycling plan coach
@@ -31,8 +31,11 @@ From the config take, grouped by what they drive:
 - **Physical limiter:** `physicalNotes`, `physicalNotesFrequency`, `physicalNotesAssessed`.
 - **Strength background:** `strengthExperience`, `strengthYearsExperience`, `strengthRecentFrequency`, `strengthCurrentLifts`, `strengthInjuryNotes`.
 - **Nutrition:** `dietaryRestrictions`, `fuelingNotes`, `fuelingPreference`, `currentEatingPatternNotes`, `currentWeightGoalDirection`.
+- **Meal planning (optional):** `mealPlanEnabled`, `mealPattern`, `cookingConstraints`, `foodPreferences`.
 
 None of the self-reported fields above are fixed at onboarding: if the athlete mentions a change (an injury clearing up, new lifting experience, a return to consistent training, a newly noticed food sensitivity), update the relevant field in `athlete.json` on the spot rather than only ever asking at first setup.
+
+If `mealPlanEnabled` is missing from an existing config (it predates this field), ask `references/onboarding.md`'s opt-in question (35) once this run to backfill it, the same as any other missing-required-field backfill — never assume a value. If the athlete opts in, ask 36-38 too before continuing.
 
 If `targetEvent` is set and matches an id in `references/events/README.md`, resolve its reference file for course/limiter context; if it doesn't match any registry id, treat it as free text and fall back to generic ultra-endurance heuristics rather than failing to resolve. It overrides session priorities (Step 2) and adds event-specific archetypes (Step 5) regardless of whether a season skeleton exists. When `eventDate` is also set, resolve the season skeleton next (below) before continuing into the main workflow — once it exists, it replaces the generic rolling periodization block in Step 4 with the Base/Deload/Build/Deload/Refine season-macrocycle model.
 
@@ -60,6 +63,7 @@ At the start of every weekly planning run, ask a short weekly-availability intak
 - Frequency for strength/core this week (how many times).
 - Workout file format: **ZWO** (Zwift). Store `"zwo"` as `workoutFormat` in `athlete.json` after confirmation.
 - **Garmin export (optional):** Ask once per session whether the athlete has a Garmin Coach JSON export. If yes, accept the pasted JSON and process it using `references/garmin-data.md` before any session design. If the athlete is on Garmin Connect, point them to the Garmin Workout Importer Chrome extension (https://chromewebstore.google.com/detail/garmin-workout-importer/faebbfokokipdpkbolpbpfadmgdbanpo) to generate the export. If the athlete provides neither Strava access nor a Garmin export, continue with `fallbackFtp` and config values only.
+- **Meal-plan feedback (only when `mealPlanEnabled` is `true`):** one narrative question — how did last week's meals go: anything loved, disliked, couldn't finish, didn't have time for, or reacted badly to. Read it the same way `fuelingNotes` is read (a hypothesis from the athlete's own account, not a lab result) and apply `references/meal-library.md`'s "Logged-feedback rules" table when building this run's meals file (Step 6), stating the inferred category and any resulting swap explicitly rather than silently absorbing it.
 
 Always offer a one-step option to use predefined values from `athlete.json` profile config (for example: typical training days, `groupRideDays`, `strengthDefault`, and any stored duration preferences). If the athlete chooses profile defaults, confirm what was applied and only ask for overrides.
 
@@ -143,6 +147,7 @@ Save everything to `/mnt/user-data/outputs/` and present it. If that path is una
 2. One ZWO workout file per structured bike session, built using `references/zwo-format.md`. On-screen cues in the config language. Rendered inline as a fenced XML code block. Filenames must be listed in the markdown plan under their matching day.
 3. When there is a full gym session, add a dedicated markdown file (e.g. `2026-W26-strength.md`) with sets, reps, rest, and coaching cues in the config language. Reference it from the main plan.
 4. When a `season-plan.json` was generated or replanned this run, also save/update `season-plan.md` (per `references/season-plan-format.md`) alongside the weekly files, pointing its current-phase section at this run's weekly plan file.
+5. When `mealPlanEnabled` is `true`, also save a weekly meals file (e.g. `2026-W26-meals.md`) built from `references/meal-library.md`'s day-type templates, mapped onto this week's actual days per Step 4's resolved day types: full breakfast/lunch/dinner/snack (+ on-bike/post-ride fueling where applicable) for every day, landing within ±10% of `references/nutrition.md`'s day-type carb/protein/fat target and honoring `dietaryRestrictions`/`fuelingPreference`/`foodPreferences`/`mealPattern`/`cookingConstraints`. Apply any adjustment from this run's meal-plan-feedback intake (above) via `meal-library.md`'s Logged-feedback rules table and state it explicitly. When `nutrition.md`'s energy-availability caution applies, state plainly where the deficit is taken from at the meal level, per `meal-library.md`'s energy-availability tie-in. Reference the file from the main plan's Fueling section with one line (`plan-format.md` §6), never duplicating the meal list inline. Skip this item entirely when `mealPlanEnabled` is `false`/unset — no meals file, no behavior change from today.
 
 ### Step 7 - sync to Supabase (when linked)
 
@@ -178,3 +183,4 @@ Per task **B3** (`documents/multi-event-and-webui-tasks.md`): the web UI (`web/`
 11. When `supabaseAthleteId` and `targetEvent`/`eventDate` are all set, the `events` row for this athlete (Step 7) matches the current `targetEvent`/`eventDate` exactly — deleted and reinserted this run, never left stale from a prior event.
 12. When `supabaseAthleteId` is set, recent `workout_logs`/`strength_logs` were read back (Step 1) and interpreted via `workout-library.md`'s/`strength-library.md`'s logged-outcome tables; any resulting progression-step or load/rep adjustment was both applied (Step 3/Step 5) and stated explicitly in this run's last-week summary; and a `coach_notes` row was written (Step 7) for each interpreted log that didn't already have one.
 13. When `supabaseAthleteId` is set and a `season-plan.json` exists, the `season_plans` row (Step 7) was upserted this run and matches `season-plan.json`/`season-plan.md` exactly — same `currentPhaseId`, `phases`, and `trialEvents`, never left stale from a prior replan; when no `season-plan.json` exists (no event, or no `eventDate`), nothing `season_plans`-related was attempted.
+14. When `mealPlanEnabled` is `true`, the weekly meals file exists and every day's totals land within ±10% of `nutrition.md`'s day-type carb/protein/fat target for that day, with zero `dietaryRestrictions` violations; any meal-plan-feedback narrative gathered this run produced an explicit, stated swap per `meal-library.md`'s Logged-feedback rules table (never silently absorbed); and the main plan's Fueling section references the meals file by name. When `mealPlanEnabled` is `false`/unset, no meals file was produced and nothing else changed.

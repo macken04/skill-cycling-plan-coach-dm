@@ -128,9 +128,21 @@ Store as `restingHr` (number or `null`) and `labTestingNotes` (string, verbatim,
 
 > **FatSecret note:** mention once, briefly, that connecting a FatSecret account (`references/fatsecret-data.md`) is optional and lets the plan compare actual logged carbs against this week's fueling targets — same tier as the Strava/Garmin/WHOOP connectors, nothing to set up here in the config itself, and skipping it changes nothing about the plan.
 
+## 10. Meal planning (optional)
+
+35. **[choice]** Would you like a full weekly meal plan — an actual day-by-day breakfast/lunch/dinner/snack list — or just the fueling targets and on-bike guidance you already get either way? Options: yes, build a full meal plan; no, targets and guidance only. Store as `mealPlanEnabled` (bool).
+
+    *(questions 36-38 only if opted in above; skip straight to "Write the config" otherwise)*
+
+36. **[choice]** What's your usual meals/snacks pattern? Options: 3 meals + 2 snacks, 3 meals with no snacks, grazing / no fixed pattern. Store as `mealPattern` (`threeMealsPlusTwoSnacks`, `threeMealsNoSnacks`, or `grazing`).
+37. **[choice]** How would you describe your cooking time or setup? Options: I cook fresh most days, I batch-cook on set days and eat leftovers, weekdays need to be minimal-time (weekends can be more involved). Store as `cookingConstraints` (`cooksFreshMostDays`, `batchPrep`, or `minimalTimeWeekdays`).
+38. **[narrative]** Any cuisines or foods you genuinely enjoy, and anything beyond your dietary restrictions above that you actively dislike? A few examples are plenty. Store as `foodPreferences` verbatim (empty string if skipped) — this is about preference, not restriction; `dietaryRestrictions` already covers what to avoid outright.
+
+None of questions 35-38 are write-once, same principle as every other self-reported field here — update on the spot when the athlete mentions a change (a new dislike, a schedule change that shifts cooking constraints, wanting to turn the meal plan on or off).
+
 ## Write the config
 
-Map the answers onto the fields in `athlete-config.md` and write `athlete.json`, including `targetEvent`, `eventDate`, and `physicalNotes` (plus `physicalNotesFrequency` / `physicalNotesAssessed` when question 16a was asked) from the goal branch and narrative questions above, `cyclingYearsExperience`, `longestEffortCompleted`, `ultraDistanceExperience`, `currentTrainingStatus`, `trainingBreakDuration`, `bodyCompositionGoal`, `bodyFatPercent`, `strengthExperience`, `strengthYearsExperience`, `strengthRecentFrequency`, `strengthCurrentLifts`, `strengthInjuryNotes`, `restingHr`, `labTestingNotes`, `dietaryRestrictions`, `fuelingNotes`, `fuelingPreference`, `currentEatingPatternNotes`, and `currentWeightGoalDirection` from the sections above. Set `riderTypeOverride` to null so the skill derives the rider type from data. Confirm in one line — goal, event if any, and that a physical note was captured if given — and continue to the weekly plan.
+Map the answers onto the fields in `athlete-config.md` and write `athlete.json`, including `targetEvent`, `eventDate`, and `physicalNotes` (plus `physicalNotesFrequency` / `physicalNotesAssessed` when question 16a was asked) from the goal branch and narrative questions above, `cyclingYearsExperience`, `longestEffortCompleted`, `ultraDistanceExperience`, `currentTrainingStatus`, `trainingBreakDuration`, `bodyCompositionGoal`, `bodyFatPercent`, `strengthExperience`, `strengthYearsExperience`, `strengthRecentFrequency`, `strengthCurrentLifts`, `strengthInjuryNotes`, `restingHr`, `labTestingNotes`, `dietaryRestrictions`, `fuelingNotes`, `fuelingPreference`, `currentEatingPatternNotes`, `currentWeightGoalDirection`, `mealPlanEnabled`, `mealPattern`, `cookingConstraints`, and `foodPreferences` from the sections above. Set `riderTypeOverride` to null so the skill derives the rider type from data. Confirm in one line — goal, event if any, and that a physical note was captured if given — and continue to the weekly plan.
 
 None of the self-reported fields above are fixed forever: if the athlete brings up a change later (an injury clearing up, more lifting experience, a return to consistent training, a new fueling sensitivity), update the relevant field(s) in `athlete.json` on the spot rather than treating onboarding as the only time these are ever asked.
 
