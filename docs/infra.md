@@ -304,3 +304,93 @@ session), but steps 2-3 (setting `supabaseAthleteId`, then a real weekly
 planning run) still need a real onboarding conversation in his own Claude
 client, not this dev-repo session — see the linking bootstrap section
 above.
+
+## WHOOP integration (Milestone W-A through W-D — schema/code done, WA1 blocked on manual action)
+
+Per `documents/whoop-integration-plan.md`/`-tasks.md`. Optional per-athlete
+WHOOP connection feeding the same readiness decision logic Garmin already
+drives, plus per-workout strain/HR correlation. Athletes with no WHOOP
+connection see zero behavior change.
+
+**Schema (WA2/WC1 — done, verified this session):** two new tables,
+`integration_connections` (`supabase/migrations/20260927120000_integration_connections.sql`)
+and `whoop_daily_metrics` (`supabase/migrations/20260927120100_whoop_daily_metrics.sql`).
+Both are RLS `select`-only for `authenticated` (no insert/update/delete
+policy at all — verified this session that an authenticated insert attempt
+is rejected `42501` on both tables, not just scoped away) — all writes go
+through the service-role client inside `web/app/api/whoop/*`.
+`get_advisors(type: security)` shows no new findings from either migration.
+
+**Vault-backed token storage (WB1 — done, verified this session):** a third
+migration, `20260927130000_whoop_vault_functions.sql`, adds three
+`security definer` RPC functions (`whoop_store_tokens`/`whoop_get_tokens`/
+`whoop_disconnect`) that are the only way to create/read/delete a WHOOP
+token — wrapping `vault.create_secret`/`vault.update_secret`/
+`vault.decrypted_secrets` (the `supabase_vault` extension was already
+installed on this project). Explicitly revoked from `anon`/`authenticated`,
+granted only to `service_role`. Verified this session with a dummy athlete:
+store → get (decrypts correctly) → simulated refresh (same secret ids
+updated in place, `whoop_user_id` preserved via `coalesce`) → disconnect
+(confirmed both the `integration_connections` row **and** both Vault
+secrets are gone afterward, not just the row).
+
+**Route handlers (WB1/WC2/WD1 — code done, untested live):**
+`web/app/api/whoop/{authorize,callback,disconnect,sync}/route.ts` and
+`web/lib/whoopServer.ts` (all WHOOP API calls + the service-role Supabase
+client — the only file in this codebase that ever holds a WHOOP token or
+`SUPABASE_SERVICE_ROLE_KEY`). Endpoint paths
+(`/oauth/oauth2/{auth,token}` for OAuth, `/developer/v2/*` for every data +
+revoke endpoint) and the `offline` scope (required specifically to receive
+a refresh token) were confirmed against `developer.whoop.com`'s live docs
+during this session, not assumed. `state` is a signed, stateless HMAC
+payload (keyed on `WHOOP_CLIENT_SECRET`) rather than a DB-backed nonce, so
+it works across Vercel's independent serverless invocations. `npm run
+build`/`npm run lint` pass; unauthenticated smoke test against a local prod
+server confirms all four routes correctly reject a missing/bad
+Authorization header or `state` (401/307), and the internal-secret sync
+path fails past that gate only on the placeholder `SUPABASE_SERVICE_ROLE_KEY`
+below — expected until a real key is set.
+
+**UI (WB2/WC3 — done):** `web/app/connections/page.tsx` (linked from
+`AppShell.tsx`'s nav), `web/app/plan/page.tsx` gained a non-blocking sync
+trigger on load, gated on an existing connection row (checked first —
+no sync call fires at all for an unconnected athlete).
+
+**Skill-side (WC5/WD2/WD3 — done):** `SKILL.md` Step 1 gained a WHOOP
+paragraph (checks for a connection, triggers `/api/whoop/sync` via `curl` +
+the shared secret, reads `whoop_daily_metrics` back, applies
+`references/whoop-data.md`'s rules/precedence). `references/workout-library.md`'s
+logged-outcome table gained the WHOOP objective-cross-check rule and the
+explicit severity-precedence rule for when both a `web-ui` and `whoop` log
+exist for the same session.
+
+**⚠️ Action needed from David (WA1, blocked — nothing above can be tested
+live without this):**
+
+1. Register a WHOOP developer application at the WHOOP developer dashboard;
+   register the production callback URL
+   `https://cycling-plan-coach.vercel.app/api/whoop/callback`.
+2. Generate a random `WHOOP_INTERNAL_SYNC_SECRET` (e.g. `openssl rand -hex 32`).
+3. Add these as **server-only** (no `NEXT_PUBLIC_` prefix) Vercel project
+   environment variables: `WHOOP_CLIENT_ID`, `WHOOP_CLIENT_SECRET`,
+   `WHOOP_REDIRECT_URI` (the callback URL above),
+   `WHOOP_INTERNAL_SYNC_SECRET`, and `SUPABASE_SERVICE_ROLE_KEY` (this is
+   the first feature that needs the service-role key in Vercel at all — it
+   exists today only as a Claude Code environment variable, per this file's
+   intro section; confirm this is a deliberate, reviewed step).
+4. Add `WHOOP_INTERNAL_SYNC_SECRET` to this Claude Code environment too
+   (same secret value as Vercel's), so Step 1's `curl` call can authenticate.
+
+Until this is done, `whoop_get_tokens`/`whoop_store_tokens` calls from a
+real route handler fail with an "Invalid API key" error from the
+placeholder key used for this session's local build/smoke test (see
+`web/.env.example` for the full var list) — expected, not a bug in the code
+above.
+
+**Not yet verified (needs a real WHOOP developer account + sandbox/test
+user, once WA1 unblocks):** the live authorize → callback → connected →
+disconnect cycle against WHOOP's actual API; the exact response field
+nesting (`score.recovery_score` etc.) `web/app/api/whoop/sync/route.ts`
+assumes, based on this session's reading of WHOOP's public v2 docs rather
+than a live payload; the workout-correlation time-overlap matching against
+a real WHOOP workout entry.

@@ -3,8 +3,17 @@
 Companion to `whoop-integration-plan.md`. Implements issue
 [#39](https://github.com/macken04/skill-cycling-plan-coach-dm/issues/39).
 Each task is independently implementable and testable; sequenced so every
-task can be verified before the next depends on it. None of this is built
-yet — all tasks below are `[ ]`.
+task can be verified before the next depends on it.
+
+**Status:** `W-A` through `W-E` are built and verified with dummy data
+server-side (schema/RLS/Vault functions applied and tested via the Supabase
+MCP connector; `npm run build`/`npm run lint` pass in `web/`) — see
+`docs/infra.md`'s "WHOOP integration" section for the full verification
+notes. **`WA1` is the one item still genuinely open**: it's a manual,
+user-side step (register a WHOOP developer application, set the resulting
+secrets as Vercel/Claude Code environment variables) that nothing else can
+be tested live against until it's done. `W-F` remains fully optional/
+deferred, as originally scoped.
 
 ## Decisions locked in (see the plan doc's "Resolved decisions" for the full rationale)
 
@@ -46,7 +55,7 @@ yet — all tasks below are `[ ]`.
   - Depends on: none (blocked on user action for the WHOOP app + Vercel
     dashboard edits).
 
-- [ ] **WA2. `integration_connections` schema + RLS**
+- [x] **WA2. `integration_connections` schema + RLS**
   - New migration creating `integration_connections`: `id`, `athlete_id
     references athletes(id) on delete cascade`, `provider text not null
     check (provider = 'whoop')` (future-proofs the column without building
@@ -73,7 +82,7 @@ yet — all tasks below are `[ ]`.
 
 ## Milestone W-B — OAuth connect/disconnect flow (web UI)
 
-- [ ] **WB1. Route handlers: authorize / callback / disconnect**
+- [x] **WB1. Route handlers: authorize / callback / disconnect**
   - `web/app/api/whoop/authorize/route.ts`: requires an authenticated
     Supabase session (reject otherwise); builds the WHOOP authorization URL
     (`https://api.prod.whoop.com/oauth/oauth2/auth`) with the required
@@ -102,7 +111,7 @@ yet — all tasks below are `[ ]`.
     service_role and confirm the row is gone).
   - Depends on: WA1, WA2.
 
-- [ ] **WB2. "Connect WHOOP" UI**
+- [x] **WB2. "Connect WHOOP" UI**
   - New page `web/app/connections/page.tsx`, linked from
     `web/app/components/AppShell.tsx`'s nav alongside the existing
     `/plan`/`/nutrition`/`/strength`/`/season`/`/compliance` links.
@@ -129,7 +138,7 @@ yet — all tasks below are `[ ]`.
 
 ## Milestone W-C — Daily/cycle readiness pull
 
-- [ ] **WC1. `whoop_daily_metrics` schema**
+- [x] **WC1. `whoop_daily_metrics` schema**
   - New migration: `whoop_daily_metrics` (`athlete_id`, `cycle_date date`,
     `recovery_score`, `hrv_rmssd_milli`, `resting_heart_rate`,
     `sleep_performance_percentage`, `day_strain`, `pulled_at timestamptz
@@ -141,7 +150,7 @@ yet — all tasks below are `[ ]`.
     direct authenticated insert attempt is rejected (no policy permits it).
   - Depends on: none (parallel to WB).
 
-- [ ] **WC2. `/api/whoop/sync` route handler — daily pull**
+- [x] **WC2. `/api/whoop/sync` route handler — daily pull**
   - Accepts either an authenticated Supabase session (browser call) or a
     `WHOOP_INTERNAL_SYNC_SECRET` bearer header + explicit `athlete_id` body
     param (skill call, `WC5`) — reject any request satisfying neither.
@@ -162,7 +171,7 @@ yet — all tasks below are `[ ]`.
     second call doesn't duplicate rows (upsert, not insert).
   - Depends on: WA2, WB1, WC1.
 
-- [ ] **WC3. `/plan` page triggers sync on load**
+- [x] **WC3. `/plan` page triggers sync on load**
   - `web/app/plan/page.tsx`: when the athlete has an active WHOOP
     connection (from `WB2`'s connection state), call `/api/whoop/sync` with
     the browser's own session on mount, non-blocking (the page still
@@ -175,7 +184,7 @@ yet — all tasks below are `[ ]`.
     non-goals).
   - Depends on: WC2.
 
-- [ ] **WC4. `references/whoop-data.md`**
+- [x] **WC4. `references/whoop-data.md`**
   - New reference file mirroring `garmin-data.md`'s structure: how the
     connect flow works from the athlete's perspective (link to
     `/connections`, no manual export needed unlike Garmin), the field
@@ -195,7 +204,7 @@ yet — all tasks below are `[ ]`.
     (or explicit "no adjustment") and confirm it's unambiguous.
   - Depends on: none (documentation, can be written in parallel with WC1-3).
 
-- [ ] **WC5. `SKILL.md` Step 1: WHOOP pull + Readiness line**
+- [x] **WC5. `SKILL.md` Step 1: WHOOP pull + Readiness line**
   - Edit Step 1 (`references/strava-pull.md`/`garmin-data.md`'s existing
     sibling step): when `supabaseAthleteId` is set, check for an active
     WHOOP connection (via `execute_sql` against `integration_connections`,
@@ -216,7 +225,7 @@ yet — all tasks below are `[ ]`.
 
 ## Milestone W-D — Per-workout sync
 
-- [ ] **WD1. Workout correlation in `/api/whoop/sync`**
+- [x] **WD1. Workout correlation in `/api/whoop/sync`**
   - Extend `WC2`'s handler: also pull the WHOOP Workout collection for the
     sync window; for each `workouts` row without an existing `workout_logs`
     row where `source = 'whoop'`, look for a WHOOP workout whose `start`/
@@ -235,7 +244,7 @@ yet — all tasks below are `[ ]`.
     untouched.
   - Depends on: WC2.
 
-- [ ] **WD2. Extend logged-outcome rules for WHOOP strain/HR**
+- [x] **WD2. Extend logged-outcome rules for WHOOP strain/HR**
   - Edit `references/workout-library.md`'s existing "Logged-outcome rules"
     table (A8/B8's table): add a rule for a WHOOP-sourced log where
     strain/HR reads meaningfully harder than the session's planned
@@ -251,7 +260,7 @@ yet — all tasks below are `[ ]`.
     the rule table gives an unambiguous resulting status.
   - Depends on: WD1.
 
-- [ ] **WD3. Confirm Step 1's existing read-back covers `source='whoop'`**
+- [x] **WD3. Confirm Step 1's existing read-back covers `source='whoop'`**
   - `SKILL.md` Step 1's B8-era `workout_logs` read-back should already
     include WHOOP-sourced rows (it isn't filtered by `source` today) — this
     task is a verification pass, not new logic: confirm the query and the
@@ -266,7 +275,7 @@ yet — all tasks below are `[ ]`.
 
 ## Milestone W-E — Docs, version bump, changelog
 
-- [ ] **WE1. Version bump + changelog**
+- [x] **WE1. Version bump + changelog**
   - Bump `package.json`/`SKILL.md` version (additive feature → minor bump,
     e.g. current version + 1 minor).
   - Add a `CHANGELOG.md` entry describing optional WHOOP support: connect

@@ -186,6 +186,36 @@ export default function PlanPage() {
     setLoadState("ready");
   }, []);
 
+  // WC3: opening the web app is itself an athlete-triggered moment (per
+  // whoop-integration-plan.md's non-goals), so a WHOOP sync fires here when
+  // a connection exists -- non-blocking, and only ever fired for an athlete
+  // who has actually connected WHOOP (no behavior change otherwise).
+  const triggerWhoopSyncIfConnected = useCallback(
+    async (athleteId: string, accessToken: string) => {
+      const { data: connection } = await supabase
+        .from("integration_connections")
+        .select("id")
+        .eq("athlete_id", athleteId)
+        .eq("provider", "whoop")
+        .is("revoked_at", null)
+        .maybeSingle();
+
+      if (!connection) return;
+
+      try {
+        await fetch("/api/whoop/sync", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+      } catch {
+        // Non-blocking: today's plan is already rendered from data already
+        // loaded; a sync failure here just means the WHOOP-sourced rows
+        // stay as fresh as the last successful sync.
+      }
+    },
+    []
+  );
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       if (!data.session) {
@@ -194,6 +224,7 @@ export default function PlanPage() {
       }
       setSession(data.session);
       loadPlan(data.session.user.id);
+      triggerWhoopSyncIfConnected(data.session.user.id, data.session.access_token);
     });
 
     const { data: subscription } = supabase.auth.onAuthStateChange(
@@ -201,6 +232,7 @@ export default function PlanPage() {
         setSession(newSession);
         if (newSession) {
           loadPlan(newSession.user.id);
+          triggerWhoopSyncIfConnected(newSession.user.id, newSession.access_token);
         } else {
           setLoadState("no-session");
         }
@@ -208,7 +240,7 @@ export default function PlanPage() {
     );
 
     return () => subscription.subscription.unsubscribe();
-  }, [loadPlan]);
+  }, [loadPlan, triggerWhoopSyncIfConnected]);
 
   async function logWorkout(workoutId: string, status: SessionStatus) {
     if (!session) return;

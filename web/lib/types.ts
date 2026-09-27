@@ -251,6 +251,35 @@ export interface TrialEvent {
   outcome: TrialEventOutcome | null;
 }
 
+// WB2: mirrors supabase/migrations/20260927120000_integration_connections.sql.
+// Only ever selected client-side (RLS grants select only, per WA2) -- token
+// fields don't exist on this table at all, only Vault secret ids, so there
+// is nothing sensitive in a row the browser can read.
+export type IntegrationProvider = "whoop";
+
+export interface IntegrationConnection {
+  id: string;
+  athlete_id: string;
+  provider: IntegrationProvider;
+  whoop_user_id: string | null;
+  expires_at: string;
+  connected_at: string;
+  revoked_at: string | null;
+}
+
+// WC1: mirrors supabase/migrations/20260927120100_whoop_daily_metrics.sql.
+export interface WhoopDailyMetric {
+  id: string;
+  athlete_id: string;
+  cycle_date: string;
+  recovery_score: number | null;
+  hrv_rmssd_milli: number | null;
+  resting_heart_rate: number | null;
+  sleep_performance_percentage: number | null;
+  day_strain: number | null;
+  pulled_at: string;
+}
+
 export type AgeBand = "under40" | "masters40to49" | "senior50plus";
 
 export interface SeasonPlan {

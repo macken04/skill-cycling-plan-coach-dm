@@ -1,6 +1,7 @@
 import Link from "next/link";
 import {
   IconCompliance,
+  IconConnections,
   IconNutrition,
   IconPlan,
   IconSeason,
@@ -8,7 +9,13 @@ import {
   IconStrength,
 } from "./icons";
 
-export type NavKey = "plan" | "season" | "nutrition" | "strength" | "compliance";
+export type NavKey =
+  | "plan"
+  | "season"
+  | "nutrition"
+  | "strength"
+  | "compliance"
+  | "connections";
 
 const NAV_ITEMS: {
   key: NavKey;
@@ -39,6 +46,13 @@ const NAV_ITEMS: {
     label: "Compliance",
     tabLabel: "Trends",
     icon: IconCompliance,
+  },
+  {
+    key: "connections",
+    href: "/connections",
+    label: "Connections",
+    tabLabel: "Connect",
+    icon: IconConnections,
   },
 ];
 

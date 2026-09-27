@@ -46,6 +46,14 @@ Once an athlete logs a session's outcome (web UI, per `documents/multi-event-and
 | `skipped` (first occurrence) | No adjustment — reschedule at the athlete's last-completed step, its normal next slot in the rotation. |
 | `skipped` (this archetype skipped twice or more in a row) | Reset to Step 1 next time scheduled, same as after a rest/recovery week. State this explicitly in the next plan's summary rather than silently re-offering the same step. |
 
+**WHOOP objective cross-check (WD2, additive to the table above, not a parallel system).** When a `workout_logs` row has `source = 'whoop'` (per `documents/whoop-integration-tasks.md` WD1: WHOOP's per-workout strain/HR matched back to the scheduled session by time overlap), its `status` was already mechanically inferred from WHOOP's strain reading against the archetype's expected intensity:
+
+- An archetype scheduled as an easy/endurance/recovery session (Z2, endurance, recovery) whose WHOOP-sourced strain reads in the strenuous-or-higher band (≥14 on WHOOP's 0–21 strain scale — the single workout's own strain score, same numeric bands `references/whoop-data.md` defines for the whole day's strain) is logged as `completed_harder_than_planned` — even absent a separate athlete-entered RPE for that session.
+- An archetype scheduled as a hard session (VO2max/30-15s/40-20s/over-unders/threshold/sweet spot/stomps) whose WHOOP-sourced strain reads in the light band (≤9) is logged as `completed_easier_than_planned`.
+- Otherwise it is logged as `completed_as_planned` — a WHOOP-sourced log is not a license to guess at a status the strain reading doesn't clearly support.
+
+**When both a `web-ui` (athlete-entered RPE) log and a `whoop`-sourced log exist for the same `workout_id`:** the more severe of the two status classifications wins, using this severity order (mildest to most severe): `completed_easier_than_planned` < `completed_as_planned` < `completed_harder_than_planned` < `failed_too_hard` < `skipped`. This is stated explicitly so the two logs are never silently averaged or arbitrarily one preferred — e.g. an athlete-entered `completed_as_planned` alongside a WHOOP-sourced `completed_harder_than_planned` for the same session resolves to `completed_harder_than_planned` and applies that row's adjustment above.
+
 ## Bike - hard sessions (pick 2/week)
 
 ### VO2max
