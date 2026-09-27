@@ -11,6 +11,10 @@ import {
   type SessionStatus,
   type StrengthLog,
 } from "@/lib/types";
+import { AppShell } from "../components/AppShell";
+import { Centered } from "../components/Centered";
+import { StatusBadge } from "../components/StatusBadge";
+import { IconPlus, IconTrash } from "../components/icons";
 
 type LoadState = "loading" | "no-session" | "ready" | "error";
 
@@ -147,16 +151,16 @@ export default function StrengthPage() {
   }
 
   if (loadState === "loading") {
-    return <Centered>Loading...</Centered>;
+    return <Centered>Loading…</Centered>;
   }
 
   if (loadState === "no-session") {
     return (
       <Centered>
         <p>You&apos;re not signed in.</p>
-        <p>
-          <Link href="/login">Sign in</Link>
-        </p>
+        <Link href="/login" className="btn btn-primary justify-self-center">
+          Sign in
+        </Link>
       </Centered>
     );
   }
@@ -164,62 +168,42 @@ export default function StrengthPage() {
   if (loadState === "error") {
     return (
       <Centered>
-        <p style={{ color: "#b00020" }}>Something went wrong: {errorMessage}</p>
+        <p style={{ color: "var(--critical)" }}>Something went wrong: {errorMessage}</p>
       </Centered>
     );
   }
 
   return (
-    <main style={{ maxWidth: 720, margin: "2rem auto", padding: "0 1rem" }}>
-      <header
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "baseline",
-          marginBottom: "1.5rem",
-        }}
-      >
-        <h1 style={{ fontSize: "1.5rem" }}>Strength log</h1>
-        <nav style={{ display: "flex", gap: "1rem", alignItems: "baseline" }}>
-          <Link href="/plan">This week&apos;s plan</Link>
-          <Link href="/nutrition">Nutrition log</Link>
-          <Link href="/compliance">Compliance</Link>
-          <button onClick={signOut}>Sign out</button>
-        </nav>
-      </header>
+    <AppShell active="strength" athleteEmail={session?.user.email ?? ""} onSignOut={signOut}>
+      <div className="mb-5">
+        <div className="eyebrow">Gym sessions</div>
+        <h1 className="page-title">Strength log</h1>
+        <p className="page-sub">
+          Log sets, reps and load for each prescribed strength session.
+        </p>
+      </div>
 
-      <form
-        onSubmit={handleSubmit}
-        style={{
-          display: "grid",
-          gap: "0.75rem",
-          border: "1px solid #ddd",
-          borderRadius: 8,
-          padding: "1rem",
-          marginBottom: "2rem",
-        }}
-      >
-        <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
-          <label style={{ display: "grid", gap: "0.25rem", flex: 1 }}>
-            Session name
+      <form onSubmit={handleSubmit} className="card mb-7 p-5 nav:p-6">
+        <div className="mb-4 grid grid-cols-1 gap-3.5 nav:grid-cols-[2fr_1fr]">
+          <div className="field">
+            <label htmlFor="session-name">Session name</label>
             <input
+              id="session-name"
+              className="input"
               type="text"
               placeholder="e.g. Max-strength lower body"
               value={sessionName}
               onChange={(event) => setSessionName(event.target.value)}
               required
-              style={{ padding: "0.4rem" }}
             />
-          </label>
-
-          <label style={{ display: "grid", gap: "0.25rem" }}>
-            Status
+          </div>
+          <div className="field">
+            <label htmlFor="status">Status</label>
             <select
+              id="status"
+              className="select"
               value={status}
-              onChange={(event) =>
-                setStatus(event.target.value as SessionStatus)
-              }
-              style={{ padding: "0.4rem" }}
+              onChange={(event) => setStatus(event.target.value as SessionStatus)}
             >
               {SESSION_STATUSES.map((s) => (
                 <option key={s} value={s}>
@@ -227,148 +211,118 @@ export default function StrengthPage() {
                 </option>
               ))}
             </select>
-          </label>
+          </div>
         </div>
 
-        <div style={{ display: "grid", gap: "0.5rem" }}>
-          <span>Exercises</span>
+        <div className="mb-2 text-xs font-semibold text-[var(--ink-soft)]">Exercises</div>
+        <div className="mb-3 flex flex-col gap-2">
           {exercises.map((entry, index) => (
-            <div
-              key={index}
-              style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}
-            >
+            <div key={index} className="exercise-row">
               <input
                 type="text"
                 placeholder="Exercise"
+                className="input"
                 value={entry.exercise}
-                onChange={(event) =>
-                  updateExercise(index, "exercise", event.target.value)
-                }
-                style={{ padding: "0.4rem", flex: 2, minWidth: "10rem" }}
+                onChange={(event) => updateExercise(index, "exercise", event.target.value)}
               />
               <input
                 type="number"
                 min="0"
                 placeholder="Sets"
+                className="input"
                 value={entry.sets ?? ""}
-                onChange={(event) =>
-                  updateExercise(index, "sets", event.target.value)
-                }
-                style={{ padding: "0.4rem", width: "5rem" }}
+                onChange={(event) => updateExercise(index, "sets", event.target.value)}
               />
               <input
                 type="number"
                 min="0"
                 placeholder="Reps"
+                className="input"
                 value={entry.reps ?? ""}
-                onChange={(event) =>
-                  updateExercise(index, "reps", event.target.value)
-                }
-                style={{ padding: "0.4rem", width: "5rem" }}
+                onChange={(event) => updateExercise(index, "reps", event.target.value)}
               />
               <input
                 type="number"
                 min="0"
                 step="0.5"
-                placeholder="Load (kg)"
+                placeholder="kg"
+                className="input"
                 value={entry.load_kg ?? ""}
-                onChange={(event) =>
-                  updateExercise(index, "load_kg", event.target.value)
-                }
-                style={{ padding: "0.4rem", width: "7rem" }}
+                onChange={(event) => updateExercise(index, "load_kg", event.target.value)}
               />
               <button
                 type="button"
+                className="btn-icon"
                 onClick={() => removeExerciseRow(index)}
                 disabled={exercises.length === 1}
+                title="Remove"
               >
-                Remove
+                <IconTrash />
               </button>
             </div>
           ))}
-          <button type="button" onClick={addExerciseRow} style={{ justifySelf: "start" }}>
-            Add exercise
-          </button>
         </div>
+        <button type="button" onClick={addExerciseRow} className="btn btn-ghost btn-sm mb-4">
+          <IconPlus />
+          Add exercise
+        </button>
 
-        <label style={{ display: "grid", gap: "0.25rem" }}>
-          Notes
+        <div className="field mb-4">
+          <label htmlFor="notes">Notes</label>
           <textarea
+            id="notes"
+            className="input"
             value={notes}
             onChange={(event) => setNotes(event.target.value)}
             rows={2}
-            style={{ padding: "0.4rem", fontFamily: "inherit" }}
+            placeholder="How did it feel?"
           />
-        </label>
+        </div>
 
-        <button type="submit" disabled={saving} style={{ padding: "0.5rem" }}>
-          {saving ? "Saving..." : "Log session"}
+        <button type="submit" disabled={saving} className="btn btn-primary">
+          {saving ? "Saving…" : "Log session"}
         </button>
-        {errorMessage && <p style={{ color: "#b00020" }}>{errorMessage}</p>}
+        {errorMessage && (
+          <p className="mt-3 text-sm" style={{ color: "var(--critical)" }}>
+            {errorMessage}
+          </p>
+        )}
       </form>
 
-      <h2 style={{ fontSize: "1.1rem", marginBottom: "0.75rem" }}>History</h2>
-      <div style={{ display: "grid", gap: "0.75rem" }}>
+      <h2 className="mb-2.5 text-[15px] font-bold">History</h2>
+      <div className="flex flex-col gap-2.5">
         {logs.map((log) => (
           <StrengthLogCard key={log.id} log={log} />
         ))}
-        {logs.length === 0 && <p>No strength sessions logged yet.</p>}
+        {logs.length === 0 && <p className="page-sub">No strength sessions logged yet.</p>}
       </div>
-    </main>
+    </AppShell>
   );
 }
 
 function StrengthLogCard({ log }: { log: StrengthLog }) {
   return (
-    <div
-      style={{
-        border: "1px solid #ddd",
-        borderRadius: 8,
-        padding: "0.75rem 1rem",
-      }}
-    >
-      <div style={{ display: "flex", justifyContent: "space-between" }}>
-        <strong>{log.session_name}</strong>
-        <span
-          style={{
-            color: log.status === "failed_too_hard" ? "#b00020" : "#2a7d2a",
-            fontSize: "0.875rem",
-          }}
-        >
-          {SESSION_STATUS_LABELS[log.status]}
-        </span>
+    <div className="card p-3.5 px-4.5">
+      <div className="mb-2 flex items-baseline justify-between">
+        <strong className="text-sm">{log.session_name}</strong>
+        <StatusBadge status={log.status} />
       </div>
       {log.sets_reps_load.exercises.length > 0 && (
-        <ul style={{ margin: "0.4rem 0", paddingLeft: "1.2rem", fontSize: "0.9rem" }}>
+        <div className="flex flex-wrap gap-2">
           {log.sets_reps_load.exercises.map((entry, index) => (
-            <li key={index}>
+            <span key={index} className="tag">
               {entry.exercise}
-              {entry.sets !== null ? ` - ${entry.sets}x` : ""}
-              {entry.reps !== null ? `${entry.reps}` : ""}
+              {entry.sets !== null ? ` · ${entry.sets}×${entry.reps ?? ""}` : ""}
               {entry.load_kg !== null ? ` @ ${entry.load_kg} kg` : ""}
-            </li>
+            </span>
           ))}
-        </ul>
+        </div>
       )}
       {log.notes && (
-        <p style={{ margin: "0.2rem 0", fontSize: "0.9rem" }}>{log.notes}</p>
+        <p className="mt-2 text-[12.5px]" style={{ color: "var(--ink-soft)" }}>
+          {log.notes}
+        </p>
       )}
     </div>
-  );
-}
-
-function Centered({ children }: { children: React.ReactNode }) {
-  return (
-    <main
-      style={{
-        maxWidth: 420,
-        margin: "4rem auto",
-        padding: "0 1rem",
-        display: "grid",
-        gap: "0.75rem",
-      }}
-    >
-      {children}
-    </main>
   );
 }

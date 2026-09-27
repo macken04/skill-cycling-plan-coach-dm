@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import Link from "next/link";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabaseClient";
@@ -10,6 +10,8 @@ import {
   type CarbTargetStatus,
   type NutritionLog,
 } from "@/lib/types";
+import { AppShell } from "../components/AppShell";
+import { Centered } from "../components/Centered";
 
 type LoadState = "loading" | "no-session" | "ready" | "error";
 
@@ -75,6 +77,26 @@ export default function NutritionPage() {
     return () => subscription.subscription.unsubscribe();
   }, [loadLogs]);
 
+  const stats = useMemo(() => {
+    const recent = logs.slice(0, 7);
+    const withCarbs = recent.filter((l) => l.carbs_g !== null);
+    const avgCarbs =
+      withCarbs.length > 0
+        ? Math.round(
+            withCarbs.reduce((sum, l) => sum + (l.carbs_g ?? 0), 0) / withCarbs.length
+          )
+        : null;
+    const withTarget = recent.filter((l) => l.carb_target_status !== null);
+    const hitCount = withTarget.filter((l) => l.carb_target_status === "hit").length;
+    const latestWeight = logs.find((l) => l.body_weight_kg !== null)?.body_weight_kg ?? null;
+
+    return {
+      avgCarbs,
+      hitRate: withTarget.length > 0 ? `${hitCount} / ${withTarget.length} days` : "—",
+      latestWeight,
+    };
+  }, [logs]);
+
   function resetForm() {
     setLogDate(today());
     setCarbsG("");
@@ -133,16 +155,16 @@ export default function NutritionPage() {
   }
 
   if (loadState === "loading") {
-    return <Centered>Loading...</Centered>;
+    return <Centered>Loading…</Centered>;
   }
 
   if (loadState === "no-session") {
     return (
       <Centered>
         <p>You&apos;re not signed in.</p>
-        <p>
-          <Link href="/login">Sign in</Link>
-        </p>
+        <Link href="/login" className="btn btn-primary justify-self-center">
+          Sign in
+        </Link>
       </Centered>
     );
   }
@@ -150,197 +172,190 @@ export default function NutritionPage() {
   if (loadState === "error") {
     return (
       <Centered>
-        <p style={{ color: "#b00020" }}>Something went wrong: {errorMessage}</p>
+        <p style={{ color: "var(--critical)" }}>Something went wrong: {errorMessage}</p>
       </Centered>
     );
   }
 
   return (
-    <main style={{ maxWidth: 720, margin: "2rem auto", padding: "0 1rem" }}>
-      <header
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "baseline",
-          marginBottom: "1.5rem",
-        }}
-      >
-        <h1 style={{ fontSize: "1.5rem" }}>Nutrition log</h1>
-        <nav style={{ display: "flex", gap: "1rem", alignItems: "baseline" }}>
-          <Link href="/plan">This week&apos;s plan</Link>
-          <Link href="/strength">Strength log</Link>
-          <Link href="/compliance">Compliance</Link>
-          <button onClick={signOut}>Sign out</button>
-        </nav>
-      </header>
+    <AppShell active="nutrition" athleteEmail={session?.user.email ?? ""} onSignOut={signOut}>
+      <div className="mb-5">
+        <div className="eyebrow">Daily fueling</div>
+        <h1 className="page-title">Nutrition log</h1>
+        <p className="page-sub">
+          Carbs, calories, hydration and body weight — the fueling ramp the
+          coach reads back into your plan.
+        </p>
+      </div>
 
-      <form
-        onSubmit={handleSubmit}
-        style={{
-          display: "grid",
-          gap: "0.75rem",
-          border: "1px solid #ddd",
-          borderRadius: 8,
-          padding: "1rem",
-          marginBottom: "2rem",
-        }}
-      >
-        <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
-          <label style={{ display: "grid", gap: "0.25rem" }}>
-            Date
+      <div className="mb-6 flex flex-wrap gap-3.5">
+        <div className="stat">
+          <div className="stat-label">7-day avg carbs</div>
+          <div className="stat-value mono">
+            {stats.avgCarbs !== null ? `${stats.avgCarbs} g` : "—"}
+          </div>
+        </div>
+        <div className="stat">
+          <div className="stat-label">Target hit rate</div>
+          <div className="stat-value mono">{stats.hitRate}</div>
+        </div>
+        <div className="stat">
+          <div className="stat-label">Latest weight</div>
+          <div className="stat-value mono">
+            {stats.latestWeight !== null ? `${stats.latestWeight} kg` : "—"}
+          </div>
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit} className="card mb-7 p-5 nav:p-6">
+        <h2 className="mb-3.5 text-[14.5px] font-bold">Log today</h2>
+        <div className="mb-3.5 grid grid-cols-2 gap-3.5 nav:grid-cols-5">
+          <div className="field">
+            <label htmlFor="log-date">Date</label>
             <input
+              id="log-date"
+              className="input"
               type="date"
               value={logDate}
               max={today()}
               onChange={(event) => setLogDate(event.target.value)}
               required
-              style={{ padding: "0.4rem" }}
             />
-          </label>
-
-          <label style={{ display: "grid", gap: "0.25rem" }}>
-            Carb target
-            <select
-              value={carbTargetStatus}
-              onChange={(event) =>
-                setCarbTargetStatus(event.target.value as CarbTargetStatus)
-              }
-              style={{ padding: "0.4rem" }}
-            >
+          </div>
+          <div className="field nav:col-span-2">
+            <label>Carb target</label>
+            <div className="seg">
               {CARB_TARGET_STATUSES.map((status) => (
-                <option key={status} value={status}>
-                  {CARB_TARGET_STATUS_LABELS[status]}
-                </option>
+                <button
+                  key={status}
+                  type="button"
+                  className={carbTargetStatus === status ? "on" : ""}
+                  onClick={() => setCarbTargetStatus(status)}
+                >
+                  {CARB_TARGET_STATUS_LABELS[status].replace(" carb target", "")}
+                </button>
               ))}
-            </select>
-          </label>
-
-          <label style={{ display: "grid", gap: "0.25rem" }}>
-            Carbs (g)
+            </div>
+          </div>
+          <div className="field">
+            <label htmlFor="carbs">Carbs (g)</label>
             <input
+              id="carbs"
+              className="input"
               type="number"
               min="0"
               value={carbsG}
               onChange={(event) => setCarbsG(event.target.value)}
-              style={{ padding: "0.4rem", width: "8rem" }}
+              placeholder="0"
             />
-          </label>
-
-          <label style={{ display: "grid", gap: "0.25rem" }}>
-            Calories
+          </div>
+          <div className="field">
+            <label htmlFor="calories">Calories</label>
             <input
+              id="calories"
+              className="input"
               type="number"
               min="0"
               value={calories}
               onChange={(event) => setCalories(event.target.value)}
-              style={{ padding: "0.4rem", width: "8rem" }}
+              placeholder="0"
             />
-          </label>
+          </div>
+        </div>
 
-          <label style={{ display: "grid", gap: "0.25rem" }}>
-            Body weight (kg)
+        <div className="mb-3.5 grid grid-cols-1 gap-3.5 nav:grid-cols-[2fr_1fr]">
+          <div className="field">
+            <label htmlFor="hydration">Hydration note</label>
             <input
+              id="hydration"
+              className="input"
+              type="text"
+              placeholder="e.g. felt dehydrated by the last hour"
+              value={hydrationNote}
+              onChange={(event) => setHydrationNote(event.target.value)}
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="weight">Body weight (kg)</label>
+            <input
+              id="weight"
+              className="input"
               type="number"
               min="0"
               step="0.1"
               value={bodyWeightKg}
               onChange={(event) => setBodyWeightKg(event.target.value)}
-              style={{ padding: "0.4rem", width: "8rem" }}
             />
-          </label>
+          </div>
         </div>
 
-        <label style={{ display: "grid", gap: "0.25rem" }}>
-          Hydration note
-          <input
-            type="text"
-            placeholder="e.g. felt dehydrated by the last hour"
-            value={hydrationNote}
-            onChange={(event) => setHydrationNote(event.target.value)}
-            style={{ padding: "0.4rem" }}
-          />
-        </label>
-
-        <label style={{ display: "grid", gap: "0.25rem" }}>
-          Notes
+        <div className="field mb-4">
+          <label htmlFor="notes">Notes</label>
           <textarea
+            id="notes"
+            className="input"
             value={notes}
             onChange={(event) => setNotes(event.target.value)}
             rows={2}
-            style={{ padding: "0.4rem", fontFamily: "inherit" }}
+            placeholder="Anything the coach should know"
           />
-        </label>
+        </div>
 
-        <button type="submit" disabled={saving} style={{ padding: "0.5rem" }}>
-          {saving ? "Saving..." : "Log day"}
+        <button type="submit" disabled={saving} className="btn btn-primary">
+          {saving ? "Saving…" : "Log day"}
         </button>
         {errorMessage && (
-          <p style={{ color: "#b00020" }}>{errorMessage}</p>
+          <p className="mt-3 text-sm" style={{ color: "var(--critical)" }}>
+            {errorMessage}
+          </p>
         )}
       </form>
 
-      <h2 style={{ fontSize: "1.1rem", marginBottom: "0.75rem" }}>History</h2>
-      <div style={{ display: "grid", gap: "0.75rem" }}>
-        {logs.map((log) => (
-          <NutritionLogCard key={log.id} log={log} />
-        ))}
-        {logs.length === 0 && <p>No nutrition entries logged yet.</p>}
-      </div>
-    </main>
-  );
-}
-
-function NutritionLogCard({ log }: { log: NutritionLog }) {
-  return (
-    <div
-      style={{
-        border: "1px solid #ddd",
-        borderRadius: 8,
-        padding: "0.75rem 1rem",
-      }}
-    >
-      <div style={{ display: "flex", justifyContent: "space-between" }}>
-        <strong>{log.log_date}</strong>
-        <span
-          style={{
-            color: log.carb_target_status === "missed" ? "#b00020" : "#2a7d2a",
-            fontSize: "0.875rem",
-          }}
-        >
-          {log.carb_target_status
-            ? CARB_TARGET_STATUS_LABELS[log.carb_target_status]
-            : "No target status"}
-        </span>
-      </div>
-      <p style={{ margin: "0.4rem 0", color: "#555", fontSize: "0.9rem" }}>
-        {log.carbs_g !== null ? `${log.carbs_g} g carbs` : "Carbs not logged"}
-        {log.calories !== null ? ` - ${log.calories} kcal` : ""}
-        {log.body_weight_kg !== null ? ` - ${log.body_weight_kg} kg` : ""}
-      </p>
-      {log.hydration_note && (
-        <p style={{ margin: "0.2rem 0", fontSize: "0.9rem" }}>
-          Hydration: {log.hydration_note}
-        </p>
+      <h2 className="mb-2.5 text-[15px] font-bold">History</h2>
+      {logs.length === 0 ? (
+        <p className="page-sub">No nutrition entries logged yet.</p>
+      ) : (
+        <div className="card overflow-x-auto p-4">
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Carbs</th>
+                <th>Calories</th>
+                <th>Weight</th>
+                <th>Target</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              {logs.map((log) => (
+                <tr key={log.id}>
+                  <td className="mono">{log.log_date}</td>
+                  <td>{log.carbs_g !== null ? `${log.carbs_g} g` : "—"}</td>
+                  <td>{log.calories !== null ? `${log.calories} kcal` : "—"}</td>
+                  <td>{log.body_weight_kg !== null ? `${log.body_weight_kg} kg` : "—"}</td>
+                  <td>
+                    {log.carb_target_status ? (
+                      <span
+                        className={`badge badge-${
+                          log.carb_target_status === "hit" ? "good" : "critical"
+                        }`}
+                      >
+                        {log.carb_target_status === "hit" ? "Hit" : "Missed"}
+                      </span>
+                    ) : (
+                      "—"
+                    )}
+                  </td>
+                  <td style={{ color: "var(--ink-soft)" }}>
+                    {[log.hydration_note, log.notes].filter(Boolean).join(" · ") || "—"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
-      {log.notes && (
-        <p style={{ margin: "0.2rem 0", fontSize: "0.9rem" }}>{log.notes}</p>
-      )}
-    </div>
-  );
-}
-
-function Centered({ children }: { children: React.ReactNode }) {
-  return (
-    <main
-      style={{
-        maxWidth: 420,
-        margin: "4rem auto",
-        padding: "0 1rem",
-        display: "grid",
-        gap: "0.75rem",
-      }}
-    >
-      {children}
-    </main>
+    </AppShell>
   );
 }

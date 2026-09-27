@@ -5,7 +5,6 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import {
   SESSION_STATUSES,
-  SESSION_STATUS_LABELS,
   STATUS_ROLE,
   STATUS_ROLE_COLOR,
   STATUS_ROLE_LABELS,
@@ -13,6 +12,8 @@ import {
   type SessionStatus,
   type StatusRole,
 } from "@/lib/types";
+import { AppShell } from "../components/AppShell";
+import { Centered } from "../components/Centered";
 
 type LoadState = "loading" | "no-session" | "ready" | "error";
 
@@ -74,6 +75,7 @@ interface LoggedEntry {
 export default function CompliancePage() {
   const [loadState, setLoadState] = useState<LoadState>("loading");
   const [errorMessage, setErrorMessage] = useState("");
+  const [athleteEmail, setAthleteEmail] = useState("");
   const [byArchetype, setByArchetype] = useState<Map<string, StatusCounts>>(
     new Map()
   );
@@ -158,12 +160,14 @@ export default function CompliancePage() {
         setLoadState("no-session");
         return;
       }
+      setAthleteEmail(data.session.user.email ?? "");
       loadCompliance(data.session.user.id);
     });
 
     const { data: subscription } = supabase.auth.onAuthStateChange(
       (_event, newSession) => {
         if (newSession) {
+          setAthleteEmail(newSession.user.email ?? "");
           loadCompliance(newSession.user.id);
         } else {
           setLoadState("no-session");
@@ -180,16 +184,16 @@ export default function CompliancePage() {
   }
 
   if (loadState === "loading") {
-    return <Centered>Loading...</Centered>;
+    return <Centered>Loading…</Centered>;
   }
 
   if (loadState === "no-session") {
     return (
       <Centered>
         <p>You&apos;re not signed in.</p>
-        <p>
-          <Link href="/login">Sign in</Link>
-        </p>
+        <Link href="/login" className="btn btn-primary justify-self-center">
+          Sign in
+        </Link>
       </Centered>
     );
   }
@@ -197,7 +201,7 @@ export default function CompliancePage() {
   if (loadState === "error") {
     return (
       <Centered>
-        <p style={{ color: "#b00020" }}>Something went wrong: {errorMessage}</p>
+        <p style={{ color: "var(--critical)" }}>Something went wrong: {errorMessage}</p>
       </Centered>
     );
   }
@@ -205,243 +209,123 @@ export default function CompliancePage() {
   const hasData = byArchetype.size > 0 || byExercise.size > 0;
 
   return (
-    <main style={{ maxWidth: 720, margin: "2rem auto", padding: "0 1rem" }}>
-      <header
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "baseline",
-          marginBottom: "1.5rem",
-        }}
-      >
-        <h1 style={{ fontSize: "1.5rem" }}>Compliance</h1>
-        <nav style={{ display: "flex", gap: "1rem", alignItems: "baseline" }}>
-          <Link href="/plan">This week&apos;s plan</Link>
-          <Link href="/nutrition">Nutrition log</Link>
-          <Link href="/strength">Strength log</Link>
-          <button onClick={signOut}>Sign out</button>
-        </nav>
-      </header>
+    <AppShell active="compliance" athleteEmail={athleteEmail} onSignOut={signOut}>
+      <div className="mb-4">
+        <div className="eyebrow">Season to date</div>
+        <h1 className="page-title">Compliance &amp; trends</h1>
+        <p className="page-sub">How sessions actually went, by session type and by week.</p>
+      </div>
 
       {!hasData && (
-        <p>No logged sessions yet -- log a workout or strength session first.</p>
+        <p className="page-sub">No logged sessions yet — log a workout or strength session first.</p>
       )}
 
       {hasData && (
         <>
           <StatusLegend />
 
-          <Section title="By bike archetype">
-            {byArchetype.size === 0 ? (
-              <p style={{ color: "#777" }}>No bike sessions logged yet.</p>
-            ) : (
-              [...byArchetype.entries()].map(([archetype, counts]) => (
-                <NamedBar key={archetype} name={archetype} counts={counts} />
-              ))
-            )}
-            <StatusTable rows={[...byArchetype.entries()]} firstColumnLabel="Archetype" />
-          </Section>
+          <div className="mb-6 grid grid-cols-1 gap-5 nav:grid-cols-2">
+            <div className="card p-5">
+              <h2 className="mb-3.5 text-sm font-bold">By bike archetype</h2>
+              {byArchetype.size === 0 ? (
+                <p className="page-sub">No bike sessions logged yet.</p>
+              ) : (
+                <div className="flex flex-col gap-3.5">
+                  {[...byArchetype.entries()].map(([archetype, counts]) => (
+                    <NamedBar key={archetype} name={archetype} counts={counts} />
+                  ))}
+                </div>
+              )}
+            </div>
 
-          <Section title="By strength session">
-            {byExercise.size === 0 ? (
-              <p style={{ color: "#777" }}>No strength sessions logged yet.</p>
-            ) : (
-              [...byExercise.entries()].map(([name, counts]) => (
-                <NamedBar key={name} name={name} counts={counts} />
-              ))
-            )}
-            <StatusTable rows={[...byExercise.entries()]} firstColumnLabel="Session" />
-          </Section>
+            <div className="card p-5">
+              <h2 className="mb-3.5 text-sm font-bold">By strength session</h2>
+              {byExercise.size === 0 ? (
+                <p className="page-sub">No strength sessions logged yet.</p>
+              ) : (
+                <div className="flex flex-col gap-3.5">
+                  {[...byExercise.entries()].map(([name, counts]) => (
+                    <NamedBar key={name} name={name} counts={counts} />
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
 
-          <Section title="Trend by week (bike + strength combined)">
+          <div className="card p-5">
+            <h2 className="mb-3.5 text-sm font-bold">
+              Trend by week — bike + strength combined
+            </h2>
             {byWeek.size === 0 ? (
-              <p style={{ color: "#777" }}>Not enough logged data yet.</p>
+              <p className="page-sub">Not enough logged data yet.</p>
             ) : (
-              [...byWeek.entries()].map(([week, counts]) => (
-                <NamedBar key={week} name={week} counts={counts} />
-              ))
+              <div className="flex flex-col gap-2.5">
+                {[...byWeek.entries()].map(([week, counts]) => (
+                  <NamedBar key={week} name={week} counts={counts} mono showNote={false} />
+                ))}
+              </div>
             )}
-            <StatusTable rows={[...byWeek.entries()]} firstColumnLabel="Week" />
-          </Section>
+          </div>
         </>
       )}
-    </main>
-  );
-}
-
-function Section({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section style={{ marginBottom: "2.5rem" }}>
-      <h2 style={{ fontSize: "1.1rem", marginBottom: "0.75rem" }}>{title}</h2>
-      <div style={{ display: "grid", gap: "0.5rem", marginBottom: "1rem" }}>
-        {children}
-      </div>
-    </section>
+    </AppShell>
   );
 }
 
 function StatusLegend() {
   return (
-    <div
-      style={{
-        display: "flex",
-        flexWrap: "wrap",
-        gap: "1rem",
-        marginBottom: "1.5rem",
-        fontSize: "0.85rem",
-      }}
-    >
+    <div className="card mb-6 flex flex-wrap gap-5 p-3 px-4.5">
       {STATUS_ROLE_ORDER.map((role) => (
-        <div key={role} style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-          <span
-            style={{
-              width: 10,
-              height: 10,
-              borderRadius: 2,
-              background: STATUS_ROLE_COLOR[role],
-              display: "inline-block",
-            }}
-          />
-          <span>{STATUS_ROLE_LABELS[role]}</span>
-        </div>
+        <span key={role} className="legend-pill">
+          <span className="dot" style={{ background: STATUS_ROLE_COLOR[role] }} />
+          {STATUS_ROLE_LABELS[role]}
+        </span>
       ))}
     </div>
   );
 }
 
-function NamedBar({ name, counts }: { name: string; counts: StatusCounts }) {
+function NamedBar({
+  name,
+  counts,
+  mono = false,
+  showNote = true,
+}: {
+  name: string;
+  counts: StatusCounts;
+  mono?: boolean;
+  showNote?: boolean;
+}) {
   const roles = roleCounts(counts);
   const totalCount = total(counts);
 
+  const note = STATUS_ROLE_ORDER.filter((role) => roles[role] > 0)
+    .map((role) => `${roles[role]} ${STATUS_ROLE_LABELS[role].toLowerCase()}`)
+    .join(" · ");
+
   return (
     <div>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          fontSize: "0.85rem",
-          marginBottom: "0.25rem",
-        }}
-      >
-        <span>{name}</span>
-        <span style={{ color: "#777" }}>
-          {totalCount} session{totalCount === 1 ? "" : "s"}
+      <div className="bar-row-label">
+        <span className={mono ? "mono" : undefined}>{name}</span>
+        <span className="mono" style={{ color: "var(--ink-faint)" }}>
+          {totalCount}
         </span>
       </div>
-      <div
-        style={{
-          display: "flex",
-          height: 24,
-          borderRadius: "0 4px 4px 0",
-          overflow: "hidden",
-          background: "#eee",
-        }}
-      >
-        {STATUS_ROLE_ORDER.map((role, index) => {
+      <div className="segbar">
+        {STATUS_ROLE_ORDER.map((role) => {
           const count = roles[role];
           if (count === 0) return null;
           const pct = (count / totalCount) * 100;
-          const isLast = STATUS_ROLE_ORDER.slice(index + 1).every(
-            (r) => roles[r] === 0
-          );
           return (
             <div
               key={role}
               title={`${STATUS_ROLE_LABELS[role]}: ${count} (${pct.toFixed(0)}%)`}
-              style={{
-                width: `${pct}%`,
-                background: STATUS_ROLE_COLOR[role],
-                marginRight: isLast ? 0 : 2,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: role === "warning" ? "#3a2c00" : "#fff",
-                fontSize: "0.75rem",
-              }}
-            >
-              {pct >= 15 ? count : ""}
-            </div>
+              style={{ width: `${pct}%`, background: STATUS_ROLE_COLOR[role] }}
+            />
           );
         })}
       </div>
+      {showNote && note && <div className="seg-note">{note}</div>}
     </div>
-  );
-}
-
-function StatusTable({
-  rows,
-  firstColumnLabel,
-}: {
-  rows: [string, StatusCounts][];
-  firstColumnLabel: string;
-}) {
-  if (rows.length === 0) return null;
-  return (
-    <table
-      style={{
-        width: "100%",
-        borderCollapse: "collapse",
-        fontSize: "0.8rem",
-        marginTop: "0.5rem",
-      }}
-    >
-      <thead>
-        <tr>
-          <th style={thStyle}>{firstColumnLabel}</th>
-          {SESSION_STATUSES.map((status) => (
-            <th key={status} style={thStyle}>
-              {SESSION_STATUS_LABELS[status]}
-            </th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        {rows.map(([name, counts]) => (
-          <tr key={name}>
-            <td style={tdStyle}>{name}</td>
-            {SESSION_STATUSES.map((status) => (
-              <td key={status} style={tdStyle}>
-                {counts[status]}
-              </td>
-            ))}
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  );
-}
-
-const thStyle: React.CSSProperties = {
-  textAlign: "left",
-  padding: "0.35rem",
-  borderBottom: "1px solid #ddd",
-  color: "#777",
-  fontWeight: 500,
-};
-
-const tdStyle: React.CSSProperties = {
-  padding: "0.35rem",
-  borderBottom: "1px solid #eee",
-};
-
-function Centered({ children }: { children: React.ReactNode }) {
-  return (
-    <main
-      style={{
-        maxWidth: 420,
-        margin: "4rem auto",
-        padding: "0 1rem",
-        display: "grid",
-        gap: "0.75rem",
-      }}
-    >
-      {children}
-    </main>
   );
 }

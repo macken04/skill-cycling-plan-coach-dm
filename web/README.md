@@ -12,8 +12,9 @@ adds a strength-session entry form (session name, the five-way status,
 repeatable exercise/sets/reps/load rows, notes) plus a history view,
 writing to `strength_logs`.
 
-This is intentionally not a product — no styling system, no routing beyond
-`/login`, `/plan`, `/nutrition`, and `/strength`. Onboarding, plan
+This isn't a full product surface — routing stays limited to `/login`,
+`/plan`, `/nutrition`, `/strength`, `/compliance`, and `/season` (styling
+follows the design system in `documents/ui-redesign/`). Onboarding, plan
 generation, and config changes stay chat-driven (Claude Code); this app is
 only for viewing the current week and logging data day to day, per
 `documents/multi-event-and-webui-plan.md`.

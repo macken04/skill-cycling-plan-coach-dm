@@ -36,12 +36,13 @@ export const STATUS_ROLE: Record<SessionStatus, StatusRole> = {
 };
 
 // Fixed status scale (light-surface steps), per the dataviz skill's palette
-// reference -- never themed, always paired with the icon/label below.
+// reference -- never themed, always paired with the icon/label below. Values
+// match the --good/--warning/--serious/--critical tokens in globals.css.
 export const STATUS_ROLE_COLOR: Record<StatusRole, string> = {
-  good: "#0ca30c",
-  warning: "#fab219",
-  serious: "#ec835a",
-  critical: "#d03b3b",
+  good: "#1F8A57",
+  warning: "#B9790A",
+  serious: "#C2542E",
+  critical: "#C22B2B",
 };
 
 export const STATUS_ROLE_LABELS: Record<StatusRole, string> = {
