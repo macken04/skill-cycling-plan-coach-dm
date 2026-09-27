@@ -1,8 +1,10 @@
 # Web UI redesign — briefing folder
 
-Status: **proposal only, not implemented.** Nothing in `web/app/*.tsx` has
-changed. This folder exists so the implementation work can be picked up in a
-fresh session without re-doing the review or the design pass.
+Status: **implemented.** `web/app/*` now uses the design system, sidebar/tab-bar
+shell and per-screen layouts described below (Tailwind CSS, per the styling
+decision in `implementation-notes.md`). This folder is kept as the design
+record — the mockups are still the visual reference if the UI needs further
+work, and the audit in `design-brief.md` documents why the change was made.
 
 ## Start here
 

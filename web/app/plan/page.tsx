@@ -15,6 +15,9 @@ import {
   type Workout,
   type WorkoutLog,
 } from "@/lib/types";
+import { AppShell } from "../components/AppShell";
+import { Centered } from "../components/Centered";
+import { StatusBadge } from "../components/StatusBadge";
 
 function daysUntil(dateStr: string): number {
   const today = new Date(new Date().toISOString().slice(0, 10));
@@ -22,57 +25,43 @@ function daysUntil(dateStr: string): number {
   return Math.round((target.getTime() - today.getTime()) / 86_400_000);
 }
 
-// B7 event countdown view.
-function EventCountdownCard({
-  event,
-  plan,
-}: {
-  event: Event;
-  plan: Plan | null;
-}) {
+function isToday(day: Workout["day"]): boolean {
+  const jsDay = new Date().getDay();
+  const dayIndex = jsDay === 0 ? 6 : jsDay - 1;
+  return DAY_ORDER[dayIndex] === day;
+}
+
+function dateForDay(weekStartDate: string, day: Workout["day"]): Date {
+  const start = new Date(weekStartDate);
+  const date = new Date(start);
+  date.setDate(start.getDate() + DAY_ORDER.indexOf(day));
+  return date;
+}
+
+function phaseLabel(plan: Plan): string {
+  if (!plan.phase) return "";
+  const label = plan.phase[0].toUpperCase() + plan.phase.slice(1);
+  return plan.deload ? `${label} · Deload` : label;
+}
+
+function EventCountdownCard({ event, plan }: { event: Event; plan: Plan | null }) {
   const days = daysUntil(event.event_date);
   const name = event.event_name ?? event.event_key ?? "your event";
 
   return (
-    <div
-      style={{
-        border: "1px solid #ddd",
-        borderRadius: 8,
-        padding: "1rem",
-        marginBottom: "1.5rem",
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        flexWrap: "wrap",
-        gap: "0.5rem",
-      }}
-    >
-      <div>
-        <div style={{ fontSize: "1.5rem", fontWeight: 700, lineHeight: 1 }}>
+    <div className="card mb-5 flex flex-wrap items-center justify-between gap-5 p-5 nav:p-6">
+      <div className="flex items-baseline gap-3.5">
+        <span className="mono text-4xl leading-none font-semibold">
           {days >= 0 ? days : 0}
-          <span style={{ fontSize: "0.9rem", fontWeight: 400, color: "#777" }}>
-            {" "}
-            days to go
-          </span>
-        </div>
-        <div style={{ fontSize: "0.9rem", color: "#555" }}>{name}</div>
-      </div>
-      {plan?.phase && (
-        <span
-          style={{
-            padding: "0.3rem 0.6rem",
-            borderRadius: 999,
-            background: "#eef2ff",
-            color: "#3730a3",
-            fontSize: "0.8rem",
-            fontWeight: 600,
-          }}
-        >
-          {plan.phase[0].toUpperCase()}
-          {plan.phase.slice(1)}
-          {plan.deload ? " · Deload" : ""}
         </span>
-      )}
+        <div className="flex flex-col">
+          <span className="text-sm font-semibold">days to {name}</span>
+          {event.notes && (
+            <span className="text-[12.5px] text-[var(--ink-soft)]">{event.notes}</span>
+          )}
+        </div>
+      </div>
+      {plan?.phase && <span className="badge badge-brand">{phaseLabel(plan)}</span>}
     </div>
   );
 }
@@ -91,17 +80,16 @@ function TaperBanner({ event }: { event: Event }) {
 
   return (
     <div
+      className="card mb-4 p-3.5"
       style={{
-        border: `1px solid ${isRaceWeek ? "#d03b3b" : "#fab219"}`,
-        background: isRaceWeek ? "#fdecec" : "#fff8e6",
-        borderRadius: 8,
-        padding: "0.75rem 1rem",
-        marginBottom: "1rem",
-        fontSize: "0.9rem",
+        borderColor: isRaceWeek ? "var(--critical)" : "var(--warning)",
+        background: isRaceWeek ? "var(--critical-tint)" : "var(--warning-tint)",
       }}
     >
-      <strong>{isRaceWeek ? "Race week" : "Taper"}</strong> — {days} day
-      {days === 1 ? "" : "s"} to {name}.{" "}
+      <strong style={{ color: isRaceWeek ? "var(--critical)" : "var(--warning)" }}>
+        {isRaceWeek ? "Race week" : "Taper"}
+      </strong>{" "}
+      — {days} day{days === 1 ? "" : "s"} to {name}.{" "}
       {isRaceWeek
         ? "Final rest and fueling prep — this is not a training week."
         : "Reduce volume and back-to-back load while keeping one shorter sharpening session."}
@@ -254,16 +242,16 @@ export default function PlanPage() {
   }
 
   if (loadState === "loading") {
-    return <Centered>Loading...</Centered>;
+    return <Centered>Loading…</Centered>;
   }
 
   if (loadState === "no-session") {
     return (
       <Centered>
         <p>You&apos;re not signed in.</p>
-        <p>
-          <Link href="/login">Sign in</Link>
-        </p>
+        <Link href="/login" className="btn btn-primary justify-self-center">
+          Sign in
+        </Link>
       </Centered>
     );
   }
@@ -271,7 +259,7 @@ export default function PlanPage() {
   if (loadState === "error") {
     return (
       <Centered>
-        <p style={{ color: "#b00020" }}>Something went wrong: {errorMessage}</p>
+        <p style={{ color: "var(--critical)" }}>Something went wrong: {errorMessage}</p>
       </Centered>
     );
   }
@@ -280,102 +268,103 @@ export default function PlanPage() {
     return (
       <Centered>
         <p>
-          No plan has been generated yet for this week. Run a planning
-          session with your coach first.
+          No plan has been generated yet for this week. Run a planning session
+          with your coach first.
         </p>
-        <button onClick={signOut}>Sign out</button>
+        <button onClick={signOut} className="btn btn-ghost justify-self-center">
+          Sign out
+        </button>
       </Centered>
     );
   }
 
+  const athleteSub =
+    plan?.rider_type || plan?.ftp_used
+      ? [
+          plan.rider_type ? plan.rider_type[0].toUpperCase() + plan.rider_type.slice(1) : null,
+          plan.ftp_used ? `FTP ${plan.ftp_used}W` : null,
+        ]
+          .filter(Boolean)
+          .join(" · ")
+      : undefined;
+
   return (
-    <main style={{ maxWidth: 720, margin: "2rem auto", padding: "0 1rem" }}>
-      <header
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "baseline",
-          marginBottom: "1.5rem",
-        }}
-      >
-        <h1 style={{ fontSize: "1.5rem" }}>This week&apos;s plan</h1>
-        <nav style={{ display: "flex", gap: "1rem", alignItems: "baseline" }}>
-          {event && <Link href="/season">Season plan</Link>}
-          <Link href="/nutrition">Nutrition log</Link>
-          <Link href="/strength">Strength log</Link>
-          <Link href="/compliance">Compliance</Link>
-          <button onClick={signOut}>Sign out</button>
-        </nav>
-      </header>
+    <AppShell
+      active="plan"
+      athleteEmail={session?.user.email ?? ""}
+      athleteSub={athleteSub}
+      brandSub={event ? `${event.event_name ?? event.event_key} · ${event.event_date}` : undefined}
+      onSignOut={signOut}
+    >
+      <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <div className="eyebrow">Week of {plan?.week_start_date}</div>
+          <h1 className="page-title">This week&apos;s plan</h1>
+          {plan?.focus && <p className="page-sub">{plan.focus}</p>}
+        </div>
+      </div>
 
       {event && <TaperBanner event={event} />}
-
       {event && <EventCountdownCard event={event} plan={plan} />}
 
-      {plan && (
-        <p style={{ marginBottom: "1.5rem", color: "#555" }}>
-          Week of {plan.week_start_date}
-          {!event && plan.phase ? ` - ${plan.phase} phase` : ""}
-          {!event && plan.deload ? " (deload)" : ""}
-          {plan.focus ? ` - ${plan.focus}` : ""}
+      {!event && plan && (
+        <p className="page-sub mb-5">
+          {!plan.phase ? "" : `${plan.phase} phase`}
+          {plan.deload ? " (deload)" : ""}
         </p>
       )}
 
-      <div style={{ display: "grid", gap: "1rem" }}>
+      <div className="flex flex-col gap-2.5">
         {workouts.map((workout) => (
-          <WorkoutCard
+          <WorkoutRow
             key={workout.id}
             workout={workout}
+            weekStartDate={plan?.week_start_date ?? ""}
             latestLog={latestLogByWorkout[workout.id]}
             saving={savingWorkoutId === workout.id}
             onLog={(status) => logWorkout(workout.id, status)}
           />
         ))}
-        {workouts.length === 0 && <p>No workouts scheduled this week.</p>}
+        {workouts.length === 0 && (
+          <p className="page-sub">No workouts scheduled this week.</p>
+        )}
       </div>
 
       {coachNotes.length > 0 && (
-        <section style={{ marginTop: "2rem" }}>
-          <h2 style={{ fontSize: "1.1rem", marginBottom: "0.75rem" }}>
-            Coach notes
-          </h2>
-          <div style={{ display: "grid", gap: "0.5rem" }}>
+        <section className="mt-7">
+          <h2 className="mb-3 text-[15px] font-bold">Coach notes</h2>
+          <div className="flex flex-col gap-2">
             {coachNotes.map((note) => (
               <CoachNoteCard key={note.id} note={note} />
             ))}
           </div>
         </section>
       )}
-    </main>
+    </AppShell>
   );
 }
 
 function CoachNoteCard({ note }: { note: CoachNote }) {
   return (
-    <div
-      style={{
-        border: "1px solid #ddd",
-        borderRadius: 8,
-        padding: "0.75rem 1rem",
-        background: "#fafafa",
-      }}
-    >
-      <div style={{ fontSize: "0.75rem", color: "#777", marginBottom: "0.25rem" }}>
+    <div className="card p-3 px-4">
+      <div className="mb-1 text-[11.5px] text-[var(--ink-faint)]">
         {note.workout_log_id ? "Bike session" : "Strength session"} ·{" "}
         {new Date(note.created_at).toLocaleDateString()}
       </div>
-      <p style={{ margin: 0 }}>{note.note}</p>
+      <p className="m-0 text-[13.5px] leading-relaxed">{note.note}</p>
     </div>
   );
 }
 
-function WorkoutCard({
+function WorkoutRow({
   workout,
+  weekStartDate,
   latestLog,
   saving,
   onLog,
 }: {
   workout: Workout;
+  weekStartDate: string;
   latestLog: WorkoutLog | undefined;
   saving: boolean;
   onLog: (status: SessionStatus) => void;
@@ -383,33 +372,30 @@ function WorkoutCard({
   const [selected, setSelected] = useState<SessionStatus>(
     latestLog?.status ?? "completed_as_planned"
   );
+  const today = isToday(workout.day);
 
   return (
-    <div
-      style={{
-        border: "1px solid #ddd",
-        borderRadius: 8,
-        padding: "1rem",
-      }}
-    >
-      <div style={{ display: "flex", justifyContent: "space-between" }}>
-        <strong>
-          {workout.day} - {workout.archetype}
-        </strong>
+    <div className={`workout-row flex items-center gap-3.5${today ? " today" : ""}`}>
+      <div className={`day-chip${today ? " today" : ""}`}>
+        <span className="d">{workout.day}</span>
+        <span className="n">{dateForDay(weekStartDate, workout.day).getDate()}</span>
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <span className="text-[14.5px] font-semibold">{workout.archetype}</span>
+          {today && <span className="badge badge-brand px-2 py-0.5">Today</span>}
+        </div>
         {latestLog && (
-          <span style={{ color: "#2a7d2a", fontSize: "0.875rem" }}>
-            Logged: {SESSION_STATUS_LABELS[latestLog.status]}
-          </span>
+          <div className="mt-1.5">
+            <StatusBadge status={latestLog.status} />
+          </div>
         )}
       </div>
-
-      <div style={{ marginTop: "0.75rem", display: "flex", gap: "0.5rem" }}>
+      <div className="flex shrink-0 items-center gap-2">
         <select
+          className="select"
           value={selected}
-          onChange={(event) =>
-            setSelected(event.target.value as SessionStatus)
-          }
-          style={{ flex: 1, padding: "0.4rem" }}
+          onChange={(event) => setSelected(event.target.value as SessionStatus)}
         >
           {SESSION_STATUSES.map((status) => (
             <option key={status} value={status}>
@@ -417,26 +403,14 @@ function WorkoutCard({
             </option>
           ))}
         </select>
-        <button disabled={saving} onClick={() => onLog(selected)}>
-          {saving ? "Saving..." : latestLog ? "Update" : "Log"}
+        <button
+          disabled={saving}
+          onClick={() => onLog(selected)}
+          className="btn btn-primary btn-sm"
+        >
+          {saving ? "Saving…" : latestLog ? "Update" : "Log"}
         </button>
       </div>
     </div>
-  );
-}
-
-function Centered({ children }: { children: React.ReactNode }) {
-  return (
-    <main
-      style={{
-        maxWidth: 420,
-        margin: "4rem auto",
-        padding: "0 1rem",
-        display: "grid",
-        gap: "0.75rem",
-      }}
-    >
-      {children}
-    </main>
   );
 }
