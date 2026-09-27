@@ -4,7 +4,7 @@ description: Plan a cyclist's training week as a standalone coaching package wit
 metadata:
   author: Elio Struyf <elio@struyfconsulting.be>
   license: MIT
-  version: 3.2.0
+  version: 3.3.0
 ---
 
 # Cycling plan coach
@@ -78,6 +78,8 @@ Retrieve the athlete's current numbers and recent history. Use whichever sources
 **When neither is available:** Use `fallbackFtp` and continue — age and gender come from the config.
 
 Summarise last week and the readiness state back to the athlete in their language in one or two sentences. If readiness data triggers a plan adjustment, state it explicitly.
+
+**FatSecret (if connected):** Tool calls and the actual-vs-target comparison method are in `references/fatsecret-data.md`. This is a local, per-athlete connector the athlete configures in their own Claude client — no `supabaseAthleteId`, Supabase flag, or connection row involved, the same shape as Strava. When available, call `get_user_food_entries` for the recent window and fold the actual-vs-target fueling comparison into this run's fueling guidance (`references/nutrition.md`'s day-type carb targets). If it isn't configured this session, or a call fails, skip silently and continue — behavior is then unchanged from today.
 
 **When `athlete.json`'s `supabaseAthleteId` is set** (per Step 7): also read back the most recent 7-14 days of `nutrition_logs` for that athlete (project `gurxzxcdxxxezwyatwlf`, per `docs/infra.md`; `execute_sql` via the Supabase MCP connector, same approach as Step 7). Summarise the `carb_target_status` split (e.g. "hit target 4 of 7 days") and any non-empty `hydration_note`/`notes` into the fueling guidance this run produces (`references/nutrition.md`'s per-day-type targets) — a repeated `missed` pattern or recurring hydration complaint is worth calling out explicitly to the athlete, not silently absorbed. Skip this read entirely when `supabaseAthleteId` is `null` — there's nothing logged yet.
 
