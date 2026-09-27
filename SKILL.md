@@ -4,7 +4,7 @@ description: Plan a cyclist's training week as a standalone coaching package wit
 metadata:
   author: Elio Struyf <elio@struyfconsulting.be>
   license: MIT
-  version: 3.1.1
+  version: 3.2.0
 ---
 
 # Cycling plan coach
@@ -81,7 +81,18 @@ Summarise last week and the readiness state back to the athlete in their languag
 
 **When `athlete.json`'s `supabaseAthleteId` is set** (per Step 7): also read back the most recent 7-14 days of `nutrition_logs` for that athlete (project `gurxzxcdxxxezwyatwlf`, per `docs/infra.md`; `execute_sql` via the Supabase MCP connector, same approach as Step 7). Summarise the `carb_target_status` split (e.g. "hit target 4 of 7 days") and any non-empty `hydration_note`/`notes` into the fueling guidance this run produces (`references/nutrition.md`'s per-day-type targets) — a repeated `missed` pattern or recurring hydration complaint is worth calling out explicitly to the athlete, not silently absorbed. Skip this read entirely when `supabaseAthleteId` is `null` — there's nothing logged yet.
 
-**Also when `supabaseAthleteId` is set (per task B8, agentic-coach PRD FR4/FR8):** read back the last 3-4 weeks of `workout_logs` (joined to their `workouts` row, for `archetype`/`day`/`target`) and `strength_logs` for this athlete. For each archetype (bike) or exercise (strength) whose most recent occurrence carries a logged `status`, apply `references/workout-library.md`'s or `references/strength-library.md`'s "Logged-outcome rules" table to determine the adjustment at its next scheduled occurrence — this overrides the plain "advance by one step"/"progress by load" default those files otherwise use, and is what Step 3 and Step 5 apply below. State every resulting adjustment, and why, explicitly in this run's last-week summary line (e.g. "Sweet spot held at Step 2 — last occurrence logged `failed_too_hard`") — never left implicit in "factor last week's load." When an archetype/exercise's last occurrence has no logged status, its plain default rule stands and nothing needs stating. Skip this read entirely when `supabaseAthleteId` is `null`.
+**Also when `supabaseAthleteId` is set** (per `documents/whoop-integration-tasks.md` WC5): check for an active WHOOP connection first — `select 1 from integration_connections where athlete_id = '<supabaseAthleteId>' and provider = 'whoop' and revoked_at is null` (same project, via `execute_sql`). When one exists, trigger a fresh pull before reading anything back:
+
+```
+curl -X POST https://cycling-plan-coach.vercel.app/api/whoop/sync \
+  -H "Authorization: Bearer $WHOOP_INTERNAL_SYNC_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{"athlete_id": "<supabaseAthleteId>"}'
+```
+
+(`WHOOP_INTERNAL_SYNC_SECRET` is a Claude Code environment variable per `docs/infra.md`'s WHOOP section — the skill never holds a WHOOP token itself, only this shared secret to trigger the sync the web app's route handler actually performs.) Then read back the most recent `whoop_daily_metrics` row for this athlete via `execute_sql`. Apply `references/whoop-data.md`'s field mapping, decision tables, and worked-example method to determine any adjustment. When a Garmin export was also provided this run, apply `whoop-data.md`'s conflict-resolution precedence: WHOOP governs recovery/HRV/sleep-derived adjustments; Garmin remains the sole source for FTP/power-zone/ACWR-load decisions regardless. Render the Readiness line per `whoop-data.md`'s format (`**Readiness (WHOOP):** …`, or both sources explicitly labeled when both are connected) in place of, or alongside, the Garmin-sourced Readiness line above. Skip this entire paragraph when no active WHOOP connection exists — behavior is then byte-for-byte unchanged from today.
+
+**Also when `supabaseAthleteId` is set (per task B8, agentic-coach PRD FR4/FR8):** read back the last 3-4 weeks of `workout_logs` (joined to their `workouts` row, for `archetype`/`day`/`target`) and `strength_logs` for this athlete. This read is not filtered by `source` — a WHOOP-sourced row (`source = 'whoop'`, written by `/api/whoop/sync`'s per-workout correlation, per `whoop-integration-tasks.md` WD1) is read back and interpreted exactly the same as an athlete-entered `web-ui` row (`whoop-integration-tasks.md` WD3). When a `workout_id` has both a `web-ui` and a `whoop` row (the sync handler never overwrites or skips inserting its own row just because a `web-ui` one already exists for that session), apply `workout-library.md`'s WD2 severity-precedence rule at this read-back step — the more severe of the two statuses is the one whose adjustment applies, never the two averaged or the more recent one preferred by default. For each archetype (bike) or exercise (strength) whose most recent occurrence carries a logged `status`, apply `references/workout-library.md`'s or `references/strength-library.md`'s "Logged-outcome rules" table to determine the adjustment at its next scheduled occurrence — this overrides the plain "advance by one step"/"progress by load" default those files otherwise use, and is what Step 3 and Step 5 apply below. State every resulting adjustment, and why, explicitly in this run's last-week summary line (e.g. "Sweet spot held at Step 2 — last occurrence logged `failed_too_hard`") — never left implicit in "factor last week's load." When an archetype/exercise's last occurrence has no logged status, its plain default rule stands and nothing needs stating. Skip this read entirely when `supabaseAthleteId` is `null`.
 
 ### Step 2 - classify rider type (data-driven)
 

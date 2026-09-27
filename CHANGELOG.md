@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.0] - 2026-09-27
+
+### Added
+
+- **Optional WHOOP integration** (`documents/whoop-integration-plan.md`/`-tasks.md`, resolving issue #39): athletes who wear a WHOOP can connect their account from the web dashboard (`/connections`, no manual export) to have daily recovery/HRV/sleep/strain feed the same readiness decision logic Garmin already drives, and per-workout strain/HR correlated back to the specific logged session as an objective cross-check alongside RPE. When both Garmin and WHOOP are connected, WHOOP governs recovery/HRV/sleep-derived plan adjustments while Garmin remains the sole source for FTP/power-zone/ACWR load decisions; both are shown, explicitly labeled by source, on the plan's Readiness line.
+  - New Supabase tables: `integration_connections` (OAuth connection state, `select`-only RLS — no client-side write grant) and `whoop_daily_metrics` (one row per WHOOP cycle-day). WHOOP OAuth tokens are stored in Supabase Vault via three `service_role`-only RPC functions, never in a plain table column.
+  - New Next.js route handlers under `web/app/api/whoop/` (`authorize`/`callback`/`disconnect`/`sync`) — the first feature in this codebase needing a server-side secret (the WHOOP client secret) and a service-role Supabase key inside the deployed web app.
+  - `SKILL.md` Step 1 triggers a sync and reads WHOOP data back when `supabaseAthleteId` is set and a connection is active; `references/whoop-data.md` documents the full field mapping and decision tables (mirrors `references/garmin-data.md`'s structure); `references/workout-library.md`'s logged-outcome rules gained the WHOOP objective-cross-check rule.
+  - No scheduled/cron process introduced — every sync traces to an athlete action (opening `/plan`, or a "plan my week" run), per this project's existing non-goal. Athletes with no WHOOP connection see zero behavior change.
+  - **Not yet usable in production:** registering a WHOOP developer application and setting its resulting secrets as Vercel/Claude Code environment variables is a manual step not yet done (`docs/infra.md`'s WHOOP section) — the schema, Vault plumbing, and route handler code are complete and were verified with dummy data server-side, but the live OAuth flow against WHOOP's actual API has not been exercised end-to-end.
+
+### Changed
+
+- **Minor version bump** (`3.1.1` → `3.2.0`): additive — an athlete with no WHOOP connection sees no change in behavior.
+
 ## [3.1.1] - 2026-09-26
 
 ### Fixed

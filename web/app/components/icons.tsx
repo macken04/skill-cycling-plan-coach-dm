@@ -51,6 +51,16 @@ export function IconCompliance() {
   return base(<path d="M5 21V11M12 21V7M19 21v-5M3 21h18" />);
 }
 
+export function IconConnections() {
+  return base(
+    <>
+      <path d="M9 15 15 9" />
+      <path d="M11 5.5 12.5 4a3.5 3.5 0 0 1 5 5L16 10.5" />
+      <path d="M13 18.5 11.5 20a3.5 3.5 0 0 1-5-5L8 13.5" />
+    </>
+  );
+}
+
 export function IconSignOut() {
   return base(
     <>
