@@ -7,7 +7,11 @@ import { supabase } from "@/lib/supabaseClient";
 import {
   CARB_TARGET_STATUSES,
   CARB_TARGET_STATUS_LABELS,
+  DAY_ORDER,
+  MEAL_RATING_VALUES,
   type CarbTargetStatus,
+  type MealFeedback,
+  type MealRecommendation,
   type NutritionLog,
 } from "@/lib/types";
 import { AppShell } from "../components/AppShell";
@@ -25,6 +29,11 @@ export default function NutritionPage() {
   const [session, setSession] = useState<Session | null>(null);
   const [logs, setLogs] = useState<NutritionLog[]>([]);
   const [saving, setSaving] = useState(false);
+
+  const [mealItems, setMealItems] = useState<MealRecommendation[]>([]);
+  const [latestFeedbackByMeal, setLatestFeedbackByMeal] = useState<
+    Record<string, MealFeedback>
+  >({});
 
   const [logDate, setLogDate] = useState(today());
   const [carbsG, setCarbsG] = useState("");
@@ -53,6 +62,57 @@ export default function NutritionPage() {
     setLoadState("ready");
   }, []);
 
+  // Issue #45: this week's itemized meal recommendations (issue #46), when
+  // mealPlanEnabled produced any for the current plan, plus the latest
+  // feedback per item (same "latest wins" read-back as plan/page.tsx's
+  // workout_logs).
+  const loadMeals = useCallback(async (athleteId: string) => {
+    const today = new Date().toISOString().slice(0, 10);
+
+    const { data: plans } = await supabase
+      .from("plans")
+      .select("id")
+      .eq("athlete_id", athleteId)
+      .lte("week_start_date", today)
+      .order("week_start_date", { ascending: false })
+      .limit(1);
+
+    const planId = plans?.[0]?.id;
+    if (!planId) {
+      setMealItems([]);
+      return;
+    }
+
+    const { data: items } = await supabase
+      .from("meal_recommendations")
+      .select("*")
+      .eq("plan_id", planId)
+      .order("created_at", { ascending: true });
+
+    const sorted = [...(items ?? [])].sort(
+      (a, b) => DAY_ORDER.indexOf(a.day) - DAY_ORDER.indexOf(b.day)
+    );
+    setMealItems(sorted);
+
+    if (sorted.length === 0) return;
+
+    const { data: feedbackRows } = await supabase
+      .from("meal_feedback")
+      .select("*")
+      .in("meal_recommendation_id", sorted.map((item) => item.id))
+      .order("created_at", { ascending: false });
+
+    if (feedbackRows) {
+      const latest: Record<string, MealFeedback> = {};
+      for (const feedback of feedbackRows) {
+        if (!latest[feedback.meal_recommendation_id]) {
+          latest[feedback.meal_recommendation_id] = feedback;
+        }
+      }
+      setLatestFeedbackByMeal(latest);
+    }
+  }, []);
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       if (!data.session) {
@@ -61,6 +121,7 @@ export default function NutritionPage() {
       }
       setSession(data.session);
       loadLogs(data.session.user.id);
+      loadMeals(data.session.user.id);
     });
 
     const { data: subscription } = supabase.auth.onAuthStateChange(
@@ -68,6 +129,7 @@ export default function NutritionPage() {
         setSession(newSession);
         if (newSession) {
           loadLogs(newSession.user.id);
+          loadMeals(newSession.user.id);
         } else {
           setLoadState("no-session");
         }
@@ -75,7 +137,35 @@ export default function NutritionPage() {
     );
 
     return () => subscription.subscription.unsubscribe();
-  }, [loadLogs]);
+  }, [loadLogs, loadMeals]);
+
+  async function submitMealFeedback(
+    mealRecommendationId: string,
+    feedback: { rating: number; wantsChanged: boolean; comment: string }
+  ) {
+    if (!session) return;
+
+    const { data, error } = await supabase
+      .from("meal_feedback")
+      .insert({
+        athlete_id: session.user.id,
+        meal_recommendation_id: mealRecommendationId,
+        rating: feedback.rating,
+        wants_changed: feedback.wantsChanged,
+        comment: feedback.comment,
+        source: "web-ui",
+      })
+      .select()
+      .single();
+
+    if (error) {
+      setErrorMessage(error.message);
+      return;
+    }
+    if (data) {
+      setLatestFeedbackByMeal((prev) => ({ ...prev, [mealRecommendationId]: data }));
+    }
+  }
 
   const stats = useMemo(() => {
     const recent = logs.slice(0, 7);
@@ -187,6 +277,39 @@ export default function NutritionPage() {
           coach reads back into your plan.
         </p>
       </div>
+
+      {mealItems.length > 0 && (
+        <section className="mb-7">
+          <h2 className="mb-2.5 text-[15px] font-bold">This week&apos;s meals</h2>
+          <p className="page-sub mb-3">
+            Rate any item — the coach reads it back to swap out what didn&apos;t
+            work next time.
+          </p>
+          <div className="flex flex-col gap-4">
+            {DAY_ORDER.filter((day) =>
+              mealItems.some((item) => item.day === day)
+            ).map((day) => (
+              <div key={day}>
+                <div className="mb-1.5 text-[12.5px] font-bold text-[var(--ink-soft)]">
+                  {day}
+                </div>
+                <div className="flex flex-col gap-2">
+                  {mealItems
+                    .filter((item) => item.day === day)
+                    .map((item) => (
+                      <MealItemRow
+                        key={item.id}
+                        item={item}
+                        latestFeedback={latestFeedbackByMeal[item.id]}
+                        onSubmit={(feedback) => submitMealFeedback(item.id, feedback)}
+                      />
+                    ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       <div className="mb-6 flex flex-wrap gap-3.5">
         <div className="stat">
@@ -357,5 +480,111 @@ export default function NutritionPage() {
         </div>
       )}
     </AppShell>
+  );
+}
+
+function MealItemRow({
+  item,
+  latestFeedback,
+  onSubmit,
+}: {
+  item: MealRecommendation;
+  latestFeedback: MealFeedback | undefined;
+  onSubmit: (feedback: {
+    rating: number;
+    wantsChanged: boolean;
+    comment: string;
+  }) => Promise<void>;
+}) {
+  const [open, setOpen] = useState(false);
+  const [rating, setRating] = useState(latestFeedback?.rating ?? 4);
+  const [wantsChanged, setWantsChanged] = useState(latestFeedback?.wants_changed ?? false);
+  const [comment, setComment] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  async function handleSave() {
+    setSaving(true);
+    await onSubmit({ rating, wantsChanged, comment });
+    setSaving(false);
+    setComment("");
+    setOpen(false);
+  }
+
+  return (
+    <div className="card p-3 px-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="text-[11.5px] font-semibold text-[var(--ink-faint)]">
+            {item.slot}
+          </div>
+          <p className="m-0 text-[13.5px] leading-relaxed">{item.description}</p>
+          {latestFeedback && (
+            <div className="mt-1.5">
+              <span className={`badge badge-${latestFeedback.wants_changed ? "critical" : "good"}`}>
+                {latestFeedback.rating ? `${latestFeedback.rating}/5` : "Rated"} ·{" "}
+                {latestFeedback.wants_changed ? "Change next time" : "Keep"}
+              </span>
+            </div>
+          )}
+        </div>
+        <button
+          type="button"
+          className="btn btn-ghost btn-sm shrink-0"
+          onClick={() => setOpen((prev) => !prev)}
+        >
+          {latestFeedback ? "Update" : "Rate"}
+        </button>
+      </div>
+
+      {open && (
+        <div className="mt-3 border-t border-[var(--line)] pt-3">
+          <div className="mb-2.5 flex items-center gap-3">
+            <div className="seg">
+              {MEAL_RATING_VALUES.map((value) => (
+                <button
+                  key={value}
+                  type="button"
+                  className={rating === value ? "on" : ""}
+                  onClick={() => setRating(value)}
+                >
+                  {value}
+                </button>
+              ))}
+            </div>
+            <div className="seg">
+              <button
+                type="button"
+                className={!wantsChanged ? "on" : ""}
+                onClick={() => setWantsChanged(false)}
+              >
+                Keep
+              </button>
+              <button
+                type="button"
+                className={wantsChanged ? "on" : ""}
+                onClick={() => setWantsChanged(true)}
+              >
+                Change next time
+              </button>
+            </div>
+          </div>
+          <textarea
+            className="input mb-2.5"
+            rows={2}
+            placeholder="Optional: why (didn't sit well, too much prep, loved it)"
+            value={comment}
+            onChange={(event) => setComment(event.target.value)}
+          />
+          <button
+            type="button"
+            disabled={saving}
+            onClick={handleSave}
+            className="btn btn-primary btn-sm"
+          >
+            {saving ? "Saving…" : "Save feedback"}
+          </button>
+        </div>
+      )}
+    </div>
   );
 }

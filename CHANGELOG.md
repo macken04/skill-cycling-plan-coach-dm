@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.5.0] - 2026-09-28
+
+### Added
+
+- **Per-meal/snack feedback on the weekly meal plan** (resolving issue #45): athletes with `mealPlanEnabled` can now react to a *specific* recommended item rather than only the daily aggregate `nutrition_logs` already supported. This is the phase-2 structured feedback loop issue #46's itemized meal plan (`YYYY-Wnn-meals.md`) was built as a prerequisite for.
+  - Two new Supabase tables (`supabase/migrations/20260928090000_meal_recommendations_feedback.sql`): `meal_recommendations` (written only by the skill, one row per meal/snack item, mirroring `workouts`) and `meal_feedback` (rating 1-5, a keep/"change next time" toggle, and an optional comment; multiple rows per item allowed, same multiplicity as `workout_logs` — the latest one is what's read back). `coach_notes` gained a third optional trigger, `meal_feedback_id`, alongside the existing `workout_log_id`/`strength_log_id`.
+  - **Web UI:** `web/app/nutrition/page.tsx` gained a "This week's meals" section listing the current plan's itemized items grouped by day, each clickable to open a rating + keep/change + comment control (`source: 'web-ui'`).
+  - **Claude Code:** a new `/nutrition-feedback` command (`.claude/commands/nutrition-feedback.md`, the first slash command in this repo) lets the athlete give detailed written feedback on a specific item in their own words — matched to the right `meal_recommendations` row, categorized the same way the narrative weekly question already is, and stored as a `meal_feedback` row with `source: 'chat'`.
+  - `SKILL.md` Step 7 now writes `meal_recommendations` alongside `workouts` and Step 1 reads back recent `meal_feedback` (both sources, latest per item); `references/meal-library.md`'s Logged-feedback rules section now covers both the narrative and structured routes under one set of category rules (`disliked`, `giDistress`, `tooTimeConsuming`, `likedOrNoComplaint`), with the resulting swap stated explicitly in the next plan exactly as the narrative-only route already did. A `coach_notes` row is written for each interpreted `meal_feedback` row, same visibility pattern `workout_logs` interpretation already has.
+  - Same trust boundary as every other web-UI/chat write in this app — RLS-scoped to `auth.uid() = athlete_id`, no new external dependency. An athlete with `mealPlanEnabled` unset or `false` sees zero behavior change (no meal items exist to give feedback on).
+
+### Changed
+
+- **Minor version bump** (`3.4.0` → `3.5.0`): additive — an athlete with no itemized meal plan (or who never gives per-item feedback) sees no change in behavior.
+
 ## [3.4.0] - 2026-09-27
 
 ### Added

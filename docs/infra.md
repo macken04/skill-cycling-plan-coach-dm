@@ -394,3 +394,41 @@ nesting (`score.recovery_score` etc.) `web/app/api/whoop/sync/route.ts`
 assumes, based on this session's reading of WHOOP's public v2 docs rather
 than a live payload; the workout-correlation time-overlap matching against
 a real WHOOP workout entry.
+
+## Per-meal feedback (issue #45 — done)
+
+Two new tables, `meal_recommendations` and `meal_feedback`
+(`supabase/migrations/20260928090000_meal_recommendations_feedback.sql`),
+plus a third optional `coach_notes` trigger column, `meal_feedback_id`,
+alongside the existing `workout_log_id`/`strength_log_id` (the three-way
+"exactly one set" check constraint was dropped and recreated to cover all
+three). `meal_recommendations` is written only by the skill (Step 7,
+delete-and-reinsert per `plan_id`, same as `workouts`); `meal_feedback` is
+written by `web/app/nutrition/page.tsx`'s new per-item rating control
+(`source: 'web-ui'`) and the new `/nutrition-feedback` Claude Code command
+(`source: 'chat'`) — multiple rows per item allowed, same multiplicity as
+`workout_logs`, with the latest row per item read back.
+
+**Verified this session** (two dummy athletes, one plan + one meal item
+each, same pattern as B2-B9, cleaned up afterward): `meal_feedback.rating`
+rejects a value outside 1-5; `meal_feedback.source` rejects a value other
+than `web-ui`/`chat`; the rebuilt `coach_notes_one_trigger` constraint
+rejects a row with two triggers set (e.g. both `meal_feedback_id` and a
+fabricated `workout_log_id`) and a row with none set, and accepts a row
+with exactly `meal_feedback_id` set; an authenticated athlete A sees their
+own `meal_recommendations`/`meal_feedback`/meal-linked `coach_notes` rows;
+authenticated athlete B sees zero of them; an authenticated athlete B
+inserting a `meal_feedback` row against athlete A's `meal_recommendation_id`
+with athlete A's `athlete_id` is rejected `42501`. `get_advisors(type:
+security)` shows no new findings from this migration (the one existing
+WARN, leaked-password protection, predates this change). `npm run
+build`/`npm run lint` pass in `web/` (new `MealItemRow` component in
+`web/app/nutrition/page.tsx`, new `MealRecommendation`/`MealFeedback` types
+in `web/lib/types.ts`).
+
+**Not yet verified end-to-end with a real browser session** — same blocker
+as every other logging UI in this app: needs the linking bootstrap above
+(David signed in once, `supabaseAthleteId` set) and a real
+`mealPlanEnabled: true` weekly run to produce real `meal_recommendations`
+before a real per-item rating or `/nutrition-feedback` entry can be checked
+against a real next-week swap.
