@@ -8,10 +8,12 @@ import {
   DAY_ORDER,
   SESSION_STATUSES,
   SESSION_STATUS_LABELS,
+  isStrengthTarget,
   type CoachNote,
   type Event,
   type Plan,
   type SessionStatus,
+  type StrengthWorkoutTarget,
   type Workout,
   type WorkoutLog,
 } from "@/lib/types";
@@ -388,6 +390,75 @@ function CoachNoteCard({ note }: { note: CoachNote }) {
   );
 }
 
+function formatTargetKey(key: string): string {
+  return key
+    .replace(/_/g, " ")
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/^./, (c) => c.toUpperCase());
+}
+
+function formatTargetValue(value: unknown): string {
+  if (typeof value === "object" && value !== null) return JSON.stringify(value);
+  return String(value);
+}
+
+// Bike sessions carry freeform target JSON (no fixed schema, per SKILL.md
+// Step 7 item 5), so this renders whatever primitive keys the skill wrote
+// rather than assuming a specific set (% FTP, watts, duration, etc. all vary
+// by archetype).
+function BikeTargetChips({ target }: { target: Record<string, unknown> }) {
+  const entries = Object.entries(target).filter(([, value]) => {
+    if (value === null || value === undefined) return false;
+    if (typeof value === "string" && value.trim() === "") return false;
+    if (Array.isArray(value) && value.length === 0) return false;
+    return true;
+  });
+  if (entries.length === 0) return null;
+
+  return (
+    <div className="mt-2 flex flex-wrap gap-1.5">
+      {entries.map(([key, value]) => (
+        <span key={key} className="target-chip">
+          {formatTargetKey(key)}: {formatTargetValue(value)}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function StrengthExerciseTable({ target }: { target: StrengthWorkoutTarget }) {
+  if (target.exercises.length === 0) return null;
+  return (
+    <div className="mt-2">
+      <table className="table">
+        <thead>
+          <tr>
+            <th>Exercise</th>
+            <th>Sets × reps</th>
+            <th>Load / cue</th>
+            <th>Rest</th>
+          </tr>
+        </thead>
+        <tbody>
+          {target.exercises.map((entry, index) => (
+            <tr key={index}>
+              <td>{entry.exercise}</td>
+              <td>{entry.sets_reps}</td>
+              <td>{entry.load_cue}</td>
+              <td>{entry.rest}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {target.session_file && (
+        <p className="mt-1 text-[12px]" style={{ color: "var(--ink-faint)" }}>
+          Full session: {target.session_file}
+        </p>
+      )}
+    </div>
+  );
+}
+
 function WorkoutRow({
   workout,
   weekStartDate,
@@ -405,9 +476,10 @@ function WorkoutRow({
     latestLog?.status ?? "completed_as_planned"
   );
   const today = isToday(workout.day);
+  const strengthTarget = isStrengthTarget(workout.target) ? workout.target : null;
 
   return (
-    <div className={`workout-row flex items-center gap-3.5${today ? " today" : ""}`}>
+    <div className={`workout-row flex items-start gap-3.5${today ? " today" : ""}`}>
       <div className={`day-chip${today ? " today" : ""}`}>
         <span className="d">{workout.day}</span>
         <span className="n">{dateForDay(weekStartDate, workout.day).getDate()}</span>
@@ -417,6 +489,11 @@ function WorkoutRow({
           <span className="text-[14.5px] font-semibold">{workout.archetype}</span>
           {today && <span className="badge badge-brand px-2 py-0.5">Today</span>}
         </div>
+        {strengthTarget ? (
+          <StrengthExerciseTable target={strengthTarget} />
+        ) : (
+          <BikeTargetChips target={workout.target as Record<string, unknown>} />
+        )}
         {latestLog && (
           <div className="mt-1.5">
             <StatusBadge status={latestLog.status} />

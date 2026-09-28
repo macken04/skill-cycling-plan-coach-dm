@@ -5,11 +5,14 @@ import Link from "next/link";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabaseClient";
 import {
+  DAY_ORDER,
   SESSION_STATUSES,
   SESSION_STATUS_LABELS,
+  isStrengthTarget,
   type ExerciseEntry,
   type SessionStatus,
   type StrengthLog,
+  type Workout,
 } from "@/lib/types";
 import { AppShell } from "../components/AppShell";
 import { Centered } from "../components/Centered";
@@ -30,8 +33,10 @@ export default function StrengthPage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [session, setSession] = useState<Session | null>(null);
   const [logs, setLogs] = useState<StrengthLog[]>([]);
+  const [prescribed, setPrescribed] = useState<Workout[]>([]);
   const [saving, setSaving] = useState(false);
 
+  const [selectedWorkoutId, setSelectedWorkoutId] = useState<string | null>(null);
   const [sessionName, setSessionName] = useState("");
   const [status, setStatus] = useState<SessionStatus>("completed_as_planned");
   const [exercises, setExercises] = useState<ExerciseEntry[]>([
@@ -57,6 +62,38 @@ export default function StrengthPage() {
     setLoadState("ready");
   }, []);
 
+  // Surfaces what the coach actually prescribed for this week's strength/
+  // core day(s) -- without this, the log form below is blind: the athlete
+  // has to already know their exercises from elsewhere to fill it in.
+  const loadPrescribed = useCallback(async (athleteId: string) => {
+    const today = new Date().toISOString().slice(0, 10);
+
+    const { data: plans } = await supabase
+      .from("plans")
+      .select("id")
+      .eq("athlete_id", athleteId)
+      .lte("week_start_date", today)
+      .order("week_start_date", { ascending: false })
+      .limit(1);
+
+    const planId = plans?.[0]?.id;
+    if (!planId) {
+      setPrescribed([]);
+      return;
+    }
+
+    const { data: workoutRows } = await supabase
+      .from("workouts")
+      .select("*")
+      .eq("plan_id", planId)
+      .eq("target->>type", "strength");
+
+    const sorted = [...(workoutRows ?? [])].sort(
+      (a, b) => DAY_ORDER.indexOf(a.day) - DAY_ORDER.indexOf(b.day)
+    );
+    setPrescribed(sorted);
+  }, []);
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       if (!data.session) {
@@ -65,6 +102,7 @@ export default function StrengthPage() {
       }
       setSession(data.session);
       loadLogs(data.session.user.id);
+      loadPrescribed(data.session.user.id);
     });
 
     const { data: subscription } = supabase.auth.onAuthStateChange(
@@ -72,6 +110,7 @@ export default function StrengthPage() {
         setSession(newSession);
         if (newSession) {
           loadLogs(newSession.user.id);
+          loadPrescribed(newSession.user.id);
         } else {
           setLoadState("no-session");
         }
@@ -79,13 +118,42 @@ export default function StrengthPage() {
     );
 
     return () => subscription.subscription.unsubscribe();
-  }, [loadLogs]);
+  }, [loadLogs, loadPrescribed]);
 
   function resetForm() {
+    setSelectedWorkoutId(null);
     setSessionName("");
     setStatus("completed_as_planned");
     setExercises([{ ...EMPTY_EXERCISE }]);
     setNotes("");
+  }
+
+  // Parses a prescribed "4 x 5" / "3 x 8 / leg" string into starting
+  // sets/reps for the log form -- best-effort only; the athlete edits to
+  // reflect what they actually did. Left null when the shape doesn't match
+  // a plain "N x M" (e.g. a duration-based core hold like "3 x 45 s").
+  function parsePrescribedSetsReps(setsReps: string): { sets: number | null; reps: number | null } {
+    const match = setsReps.match(/^(\d+)\s*x\s*(\d+)/i);
+    if (!match) return { sets: null, reps: null };
+    return { sets: Number(match[1]), reps: Number(match[2]) };
+  }
+
+  function logAgainstPrescribed(workout: Workout) {
+    if (!isStrengthTarget(workout.target)) return;
+    setSelectedWorkoutId(workout.id);
+    setSessionName(workout.archetype);
+    setStatus("completed_as_planned");
+    setExercises(
+      workout.target.exercises.map((entry) => ({
+        exercise: entry.exercise,
+        load_kg: null,
+        ...parsePrescribedSetsReps(entry.sets_reps),
+      }))
+    );
+    setNotes("");
+    if (typeof window !== "undefined") {
+      document.getElementById("session-name")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
   }
 
   function updateExercise(
@@ -124,6 +192,7 @@ export default function StrengthPage() {
       .from("strength_logs")
       .insert({
         athlete_id: session.user.id,
+        workout_id: selectedWorkoutId,
         session_name: sessionName,
         status,
         sets_reps_load: { exercises: cleanedExercises },
@@ -182,6 +251,22 @@ export default function StrengthPage() {
           Log sets, reps and load for each prescribed strength session.
         </p>
       </div>
+
+      {prescribed.length > 0 && (
+        <section className="mb-6">
+          <h2 className="mb-2.5 text-[15px] font-bold">Prescribed this week</h2>
+          <div className="flex flex-col gap-2.5">
+            {prescribed.map((workout) => (
+              <PrescribedCard
+                key={workout.id}
+                workout={workout}
+                selected={selectedWorkoutId === workout.id}
+                onLog={() => logAgainstPrescribed(workout)}
+              />
+            ))}
+          </div>
+        </section>
+      )}
 
       <form onSubmit={handleSubmit} className="card mb-7 p-5 nav:p-6">
         <div className="mb-4 grid grid-cols-1 gap-3.5 nav:grid-cols-[2fr_1fr]">
@@ -297,6 +382,62 @@ export default function StrengthPage() {
         {logs.length === 0 && <p className="page-sub">No strength sessions logged yet.</p>}
       </div>
     </AppShell>
+  );
+}
+
+function PrescribedCard({
+  workout,
+  selected,
+  onLog,
+}: {
+  workout: Workout;
+  selected: boolean;
+  onLog: () => void;
+}) {
+  if (!isStrengthTarget(workout.target)) return null;
+  const { exercises, session_file } = workout.target;
+
+  return (
+    <div className={`card p-3.5 px-4.5${selected ? " ring-2 ring-[var(--brand)]" : ""}`}>
+      <div className="mb-2 flex items-baseline justify-between gap-3">
+        <div>
+          <span className="text-[11px] font-semibold uppercase tracking-wide text-[var(--ink-faint)]">
+            {workout.day}
+          </span>{" "}
+          <strong className="text-sm">{workout.archetype}</strong>
+        </div>
+        <button type="button" onClick={onLog} className="btn btn-primary btn-sm">
+          {selected ? "Editing below" : "Log this session"}
+        </button>
+      </div>
+      {exercises.length > 0 && (
+        <table className="table">
+          <thead>
+            <tr>
+              <th>Exercise</th>
+              <th>Sets × reps</th>
+              <th>Load / cue</th>
+              <th>Rest</th>
+            </tr>
+          </thead>
+          <tbody>
+            {exercises.map((entry, index) => (
+              <tr key={index}>
+                <td>{entry.exercise}</td>
+                <td>{entry.sets_reps}</td>
+                <td>{entry.load_cue}</td>
+                <td>{entry.rest}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+      {session_file && (
+        <p className="mt-1 text-[12px]" style={{ color: "var(--ink-faint)" }}>
+          Full session: {session_file}
+        </p>
+      )}
+    </div>
   );
 }
 
