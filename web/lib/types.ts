@@ -151,9 +151,40 @@ export interface CoachNote {
   athlete_id: string;
   workout_log_id: string | null;
   strength_log_id: string | null;
+  meal_feedback_id: string | null;
   note: string;
   created_at: string;
 }
+
+// Issue #45: per-meal/snack feedback on the week's itemized meal plan
+// (issue #46's `YYYY-Wnn-meals.md`), mirroring
+// supabase/migrations/20260928090000_meal_recommendations_feedback.sql.
+// `meal_recommendations` is written only by the skill (Step 7, alongside
+// `workouts`); `meal_feedback` allows multiple rows per item, same
+// multiplicity as `workout_logs` -- the latest one is what's shown/read back.
+
+export interface MealRecommendation {
+  id: string;
+  plan_id: string;
+  athlete_id: string;
+  day: Day;
+  slot: string;
+  description: string;
+  created_at: string;
+}
+
+export interface MealFeedback {
+  id: string;
+  athlete_id: string;
+  meal_recommendation_id: string;
+  rating: number | null;
+  wants_changed: boolean;
+  comment: string;
+  source: "web-ui" | "chat";
+  created_at: string;
+}
+
+export const MEAL_RATING_VALUES = [1, 2, 3, 4, 5] as const;
 
 // B9: season macrocycle persistence, mirroring
 // supabase/migrations/20260926210000_season_plans.sql and the file-based

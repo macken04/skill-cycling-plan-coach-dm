@@ -57,9 +57,13 @@ each day type's carb/protein/fat target from `references/nutrition.md`,
 respecting `dietaryRestrictions` and cooking-time/cuisine preferences
 gathered at onboarding. A narrative question each week ("how did last
 week's meals go?") feeds swaps back into the next plan, the same
-logged-feedback pattern already used for training. Skip the opt-in and
-nothing changes — you still get the existing fueling targets and on-bike
-guidance either way. See `documents/meal-plan-prd.md` for the full design.
+logged-feedback pattern already used for training. Once linked to the web
+dashboard, you can also rate any specific meal/snack from the web UI
+(1-5 + keep/change) or give detailed written feedback with
+`/nutrition-feedback` in a Claude Code session — both feed the same swap
+logic. Skip the opt-in and nothing changes — you still get the existing
+fueling targets and on-bike guidance either way. See
+`documents/meal-plan-prd.md` for the full design.
 
 ## Output
 

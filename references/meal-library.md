@@ -223,15 +223,29 @@ independently hit a large share of the day's carb target themselves.
   lentils, a shake) and reserve any multi-step cooking (baked potato,
   from-scratch pasta sauce) for weekend days, regardless of day type.
 
-## Logged-feedback rules (phase 1 — narrative)
+## Logged-feedback rules
 
-Phase 1 has no structured per-meal log (that's issue #45's scope) — each
-week's narrative feedback question (`SKILL.md`'s weekly-availability intake,
-when `mealPlanEnabled` is true) is read the same way `fuelingNotes` is read:
-a hypothesis from the athlete's own account, not a lab result. State the
-category inferred from what the athlete said explicitly in the plan before
-applying the row below — never silently reclassify a vague comment into one
-of these categories without saying so.
+Two feedback routes both land here, since issue #45 shipped structured
+per-item feedback alongside the original narrative question:
+
+- **Narrative (phase 1, still live):** each week's narrative feedback
+  question (`SKILL.md`'s weekly-availability intake, when `mealPlanEnabled`
+  is true) is read the same way `fuelingNotes` is read: a hypothesis from
+  the athlete's own account, not a lab result.
+- **Structured (phase 2, issue #45):** a `meal_feedback` row against a
+  specific `meal_recommendations` item — either the web UI's rating (1-5) +
+  keep/change toggle + optional comment (`source: 'web-ui'`), or a
+  `/nutrition-feedback` chat entry with a narrative comment and no numeric
+  rating (`source: 'chat'`). `SKILL.md` Step 1 reads both back, latest row
+  per item, no `source` filter — a `chat` row's comment is read exactly
+  like the narrative question's answer; a `web-ui` row with `wants_changed:
+  true` and no comment defaults to the `disliked` category below, stated
+  plainly that no reason was given.
+
+Either way, state the category inferred from what the athlete said
+explicitly in the plan before applying the row below — never silently
+reclassify a vague comment (or a bare `wants_changed` toggle) into one of
+these categories without saying so.
 
 | Inferred category | Adjustment at that item's next scheduled occurrence |
 |---|---|
