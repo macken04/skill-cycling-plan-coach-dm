@@ -106,6 +106,8 @@ export default function PlanPage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [session, setSession] = useState<Session | null>(null);
   const [plan, setPlan] = useState<Plan | null>(null);
+  const [nextPlan, setNextPlan] = useState<Plan | null>(null);
+  const [viewingNextWeek, setViewingNextWeek] = useState(false);
   const [event, setEvent] = useState<Event | null>(null);
   const [workouts, setWorkouts] = useState<Workout[]>([]);
   const [latestLogByWorkout, setLatestLogByWorkout] = useState<
@@ -114,41 +116,14 @@ export default function PlanPage() {
   const [savingWorkoutId, setSavingWorkoutId] = useState<string | null>(null);
   const [coachNotes, setCoachNotes] = useState<CoachNote[]>([]);
 
-  const loadPlan = useCallback(async (athleteId: string) => {
-    const today = new Date().toISOString().slice(0, 10);
-
-    const { data: plans, error: planError } = await supabase
-      .from("plans")
-      .select("*")
-      .eq("athlete_id", athleteId)
-      .lte("week_start_date", today)
-      .order("week_start_date", { ascending: false })
-      .limit(1);
-
-    if (planError) {
-      setErrorMessage(planError.message);
-      setLoadState("error");
-      return;
-    }
-
-    const currentPlan = plans?.[0] ?? null;
-    if (!currentPlan) {
-      setLoadState("no-plan");
-      return;
-    }
-    setPlan(currentPlan);
-
-    const { data: eventRows } = await supabase
-      .from("events")
-      .select("*")
-      .eq("athlete_id", athleteId)
-      .limit(1);
-    setEvent(eventRows?.[0] ?? null);
-
+  // Loads the workouts/logs/coach-notes for whichever plan is on screen --
+  // shared by the initial current-week load and the this-week/next-week
+  // toggle, so switching weeks never re-fetches plans/events.
+  const loadWeek = useCallback(async (selectedPlan: Plan) => {
     const { data: workoutRows, error: workoutError } = await supabase
       .from("workouts")
       .select("*")
-      .eq("plan_id", currentPlan.id);
+      .eq("plan_id", selectedPlan.id);
 
     if (workoutError) {
       setErrorMessage(workoutError.message);
@@ -160,6 +135,7 @@ export default function PlanPage() {
       (a, b) => DAY_ORDER.indexOf(a.day) - DAY_ORDER.indexOf(b.day)
     );
     setWorkouts(sorted);
+    setLatestLogByWorkout({});
 
     if (sorted.length > 0) {
       const { data: logRows, error: logError } = await supabase
@@ -176,6 +152,52 @@ export default function PlanPage() {
         setLatestLogByWorkout(latest);
       }
     }
+  }, []);
+
+  const loadPlan = useCallback(async (athleteId: string) => {
+    const today = new Date().toISOString().slice(0, 10);
+
+    const [{ data: currentRows, error: currentError }, { data: nextRows }] =
+      await Promise.all([
+        supabase
+          .from("plans")
+          .select("*")
+          .eq("athlete_id", athleteId)
+          .lte("week_start_date", today)
+          .order("week_start_date", { ascending: false })
+          .limit(1),
+        supabase
+          .from("plans")
+          .select("*")
+          .eq("athlete_id", athleteId)
+          .gt("week_start_date", today)
+          .order("week_start_date", { ascending: true })
+          .limit(1),
+      ]);
+
+    if (currentError) {
+      setErrorMessage(currentError.message);
+      setLoadState("error");
+      return;
+    }
+
+    const currentPlan = currentRows?.[0] ?? null;
+    if (!currentPlan) {
+      setLoadState("no-plan");
+      return;
+    }
+    setPlan(currentPlan);
+    setNextPlan(nextRows?.[0] ?? null);
+    setViewingNextWeek(false);
+
+    const { data: eventRows } = await supabase
+      .from("events")
+      .select("*")
+      .eq("athlete_id", athleteId)
+      .limit(1);
+    setEvent(eventRows?.[0] ?? null);
+
+    await loadWeek(currentPlan);
 
     const { data: noteRows } = await supabase
       .from("coach_notes")
@@ -186,7 +208,14 @@ export default function PlanPage() {
     setCoachNotes(noteRows ?? []);
 
     setLoadState("ready");
-  }, []);
+  }, [loadWeek]);
+
+  function switchWeek(showNextWeek: boolean) {
+    const target = showNextWeek ? nextPlan : plan;
+    if (!target) return;
+    setViewingNextWeek(showNextWeek);
+    loadWeek(target);
+  }
 
   // WC3: opening the web app is itself an athlete-triggered moment (per
   // whoop-integration-plan.md's non-goals), so a WHOOP sync fires here when
@@ -312,11 +341,15 @@ export default function PlanPage() {
     );
   }
 
+  const displayedPlan = viewingNextWeek ? nextPlan : plan;
+
   const athleteSub =
-    plan?.rider_type || plan?.ftp_used
+    displayedPlan?.rider_type || displayedPlan?.ftp_used
       ? [
-          plan.rider_type ? plan.rider_type[0].toUpperCase() + plan.rider_type.slice(1) : null,
-          plan.ftp_used ? `FTP ${plan.ftp_used}W` : null,
+          displayedPlan.rider_type
+            ? displayedPlan.rider_type[0].toUpperCase() + displayedPlan.rider_type.slice(1)
+            : null,
+          displayedPlan.ftp_used ? `FTP ${displayedPlan.ftp_used}W` : null,
         ]
           .filter(Boolean)
           .join(" · ")
@@ -332,19 +365,37 @@ export default function PlanPage() {
     >
       <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <div className="eyebrow">Week of {plan?.week_start_date}</div>
-          <h1 className="page-title">This week&apos;s plan</h1>
-          {plan?.focus && <p className="page-sub">{plan.focus}</p>}
+          <div className="eyebrow">Week of {displayedPlan?.week_start_date}</div>
+          <h1 className="page-title">
+            {viewingNextWeek ? "Next week's plan" : "This week's plan"}
+          </h1>
+          {displayedPlan?.focus && <p className="page-sub">{displayedPlan.focus}</p>}
         </div>
+        {nextPlan && (
+          <div className="flex gap-1.5">
+            <button
+              className={`btn btn-sm ${!viewingNextWeek ? "btn-primary" : "btn-ghost"}`}
+              onClick={() => switchWeek(false)}
+            >
+              This week
+            </button>
+            <button
+              className={`btn btn-sm ${viewingNextWeek ? "btn-primary" : "btn-ghost"}`}
+              onClick={() => switchWeek(true)}
+            >
+              Next week
+            </button>
+          </div>
+        )}
       </div>
 
-      {event && <TaperBanner event={event} />}
-      {event && <EventCountdownCard event={event} plan={plan} />}
+      {!viewingNextWeek && event && <TaperBanner event={event} />}
+      {!viewingNextWeek && event && <EventCountdownCard event={event} plan={displayedPlan} />}
 
-      {!event && plan && (
+      {!event && displayedPlan && (
         <p className="page-sub mb-5">
-          {!plan.phase ? "" : `${plan.phase} phase`}
-          {plan.deload ? " (deload)" : ""}
+          {!displayedPlan.phase ? "" : `${displayedPlan.phase} phase`}
+          {displayedPlan.deload ? " (deload)" : ""}
         </p>
       )}
 
@@ -353,14 +404,17 @@ export default function PlanPage() {
           <WorkoutRow
             key={workout.id}
             workout={workout}
-            weekStartDate={plan?.week_start_date ?? ""}
+            weekStartDate={displayedPlan?.week_start_date ?? ""}
+            allowTodayBadge={!viewingNextWeek}
             latestLog={latestLogByWorkout[workout.id]}
             saving={savingWorkoutId === workout.id}
             onLog={(status) => logWorkout(workout.id, status)}
           />
         ))}
         {workouts.length === 0 && (
-          <p className="page-sub">No workouts scheduled this week.</p>
+          <p className="page-sub">
+            No workouts scheduled {viewingNextWeek ? "next week" : "this week"}.
+          </p>
         )}
       </div>
 
@@ -462,12 +516,14 @@ function StrengthExerciseTable({ target }: { target: StrengthWorkoutTarget }) {
 function WorkoutRow({
   workout,
   weekStartDate,
+  allowTodayBadge,
   latestLog,
   saving,
   onLog,
 }: {
   workout: Workout;
   weekStartDate: string;
+  allowTodayBadge: boolean;
   latestLog: WorkoutLog | undefined;
   saving: boolean;
   onLog: (status: SessionStatus) => void;
@@ -475,7 +531,7 @@ function WorkoutRow({
   const [selected, setSelected] = useState<SessionStatus>(
     latestLog?.status ?? "completed_as_planned"
   );
-  const today = isToday(workout.day);
+  const today = allowTodayBadge && isToday(workout.day);
   const strengthTarget = isStrengthTarget(workout.target) ? workout.target : null;
 
   return (
