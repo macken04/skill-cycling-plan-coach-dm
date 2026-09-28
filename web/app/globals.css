@@ -460,6 +460,33 @@ textarea {
   gap: 10px;
   align-items: center;
 }
+/* Below ~640px the 5-column layout squeezes the sets/reps/load inputs to
+   the point their placeholders truncate to a single letter -- stack the
+   exercise name on its own row and give sets/reps/load a full column each. */
+@media (max-width: 639px) {
+  .exercise-row {
+    grid-template-columns: 1fr 1fr 1fr 32px;
+    grid-template-areas:
+      "name name name del"
+      "sets reps load del";
+  }
+  .exercise-row > :nth-child(1) {
+    grid-area: name;
+  }
+  .exercise-row > :nth-child(2) {
+    grid-area: sets;
+  }
+  .exercise-row > :nth-child(3) {
+    grid-area: reps;
+  }
+  .exercise-row > :nth-child(4) {
+    grid-area: load;
+  }
+  .exercise-row > :nth-child(5) {
+    grid-area: del;
+    align-self: center;
+  }
+}
 .tag {
   background: var(--paper);
   border: 1px solid var(--line-soft);
@@ -528,6 +555,26 @@ textarea {
 .phase-seg:last-child {
   border-right: none;
   border-radius: 0 9px 9px 0;
+}
+/* Segment width is proportional to real phase duration, so a short deload
+   week can be far narrower than its own label -- contain that text to the
+   segment instead of letting it bleed into neighboring segments. Kept on a
+   separate inner wrapper (not .phase-seg itself) so the absolutely
+   positioned "you are here" marker above the bar is never clipped. */
+.phase-seg-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 100%;
+  overflow: hidden;
+  padding: 0 4px;
+}
+.phase-seg .label,
+.phase-seg .sub {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .phase-seg .sub {
   font-weight: 500;

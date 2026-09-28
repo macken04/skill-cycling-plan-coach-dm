@@ -479,7 +479,7 @@ function WorkoutRow({
   const strengthTarget = isStrengthTarget(workout.target) ? workout.target : null;
 
   return (
-    <div className={`workout-row flex items-start gap-3.5${today ? " today" : ""}`}>
+    <div className={`workout-row flex flex-wrap items-start gap-3.5${today ? " today" : ""}`}>
       <div className={`day-chip${today ? " today" : ""}`}>
         <span className="d">{workout.day}</span>
         <span className="n">{dateForDay(weekStartDate, workout.day).getDate()}</span>
@@ -500,9 +500,9 @@ function WorkoutRow({
           </div>
         )}
       </div>
-      <div className="flex shrink-0 items-center gap-2">
+      <div className="flex w-full items-center gap-2 nav:w-auto nav:shrink-0">
         <select
-          className="select"
+          className="select flex-1 nav:flex-none"
           value={selected}
           onChange={(event) => setSelected(event.target.value as SessionStatus)}
         >
@@ -515,7 +515,7 @@ function WorkoutRow({
         <button
           disabled={saving}
           onClick={() => onLog(selected)}
-          className="btn btn-primary btn-sm"
+          className="btn btn-primary btn-sm shrink-0"
         >
           {saving ? "Saving…" : latestLog ? "Update" : "Log"}
         </button>

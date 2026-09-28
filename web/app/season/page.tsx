@@ -306,10 +306,12 @@ function PhaseSegment({
           ▼ you are here
         </div>
       )}
-      {phase.label}
-      <span className="sub">
-        {formatDate(phase.start_date)}–{formatDate(phase.end_date)}
-      </span>
+      <div className="phase-seg-inner">
+        <span className="label">{phase.label}</span>
+        <span className="sub">
+          {formatDate(phase.start_date)}–{formatDate(phase.end_date)}
+        </span>
+      </div>
     </div>
   );
 }
