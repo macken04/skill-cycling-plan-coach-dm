@@ -85,13 +85,44 @@ export interface Event {
   notes: string;
 }
 
+// A structured bike session's `target` is freeform JSON (the skill decides
+// its keys per archetype, no fixed schema -- see SKILL.md Step 7 item 5), so
+// it's read generically as key/value pairs. A strength/core session's
+// `target` DOES follow a fixed shape (below) -- that contract is new here,
+// on both the write side (SKILL.md) and this read side.
+export interface PrescribedExercise {
+  exercise: string;
+  sets_reps: string; // e.g. "4 x 5" or "3 x 8 / leg", not split into numeric fields -- this is the plan, not a log
+  load_cue: string;
+  rest: string;
+}
+
+export interface StrengthWorkoutTarget {
+  type: "strength";
+  exercises: PrescribedExercise[];
+  session_file?: string | null;
+}
+
+export type WorkoutTarget = StrengthWorkoutTarget | Record<string, unknown>;
+
+export function isStrengthTarget(
+  target: WorkoutTarget | null | undefined
+): target is StrengthWorkoutTarget {
+  return (
+    !!target &&
+    typeof target === "object" &&
+    (target as StrengthWorkoutTarget).type === "strength" &&
+    Array.isArray((target as StrengthWorkoutTarget).exercises)
+  );
+}
+
 export interface Workout {
   id: string;
   plan_id: string;
   athlete_id: string;
   day: Day;
   archetype: string;
-  target: Record<string, unknown>;
+  target: WorkoutTarget;
   zwo_content: string | null;
   status: "planned" | "completed" | "skipped";
 }
