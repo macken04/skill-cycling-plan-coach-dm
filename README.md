@@ -13,7 +13,40 @@ It works for any cyclist. Nothing about the athlete is hardcoded in the skill; i
 
 ## Install
 
-Download the `cycling-plan-coach.skill` file and drop it into your Claude skills directory.
+### 1. Get the skill
+
+Either:
+
+- Download the latest `cycling-plan-coach.skill` from this repo's [Releases](../../releases) (built automatically by `.github/workflows/release.yml` whenever a `vX.Y.Z` tag is pushed), or
+- Build it yourself from a checkout: `npm run build` (Node 20+, no `npm install` needed at the repo root) runs `scripts/build-skills.sh`, which bundles `SKILL.md`, `references/`, `LICENSE`, and this `README.md` into `cycling-plan-coach.skill` at the repo root, stamping in the version from `package.json`.
+
+Then drop the resulting `cycling-plan-coach.skill` file into your Claude skills directory (or upload it wherever your Claude client loads skills from). See [First run](#first-run) below for what happens next — onboarding writes `athlete.json` next to the skill automatically.
+
+### 2. Optional data connections
+
+None of these are required — with nothing connected, the skill falls back to `fallbackFtp` and the rest of `athlete.json`. Add any combination of:
+
+- **Strava** — connect Strava as a native connector in your Claude client. No setup in this repo; see `references/strava-pull.md` for what's pulled.
+- **Garmin** — no persistent connector. Export a Garmin Coach JSON via the [Garmin Workout Importer](https://chromewebstore.google.com/detail/garmin-workout-importer/faebbfokokipdpkbolpbpfadmgdbanpo) Chrome extension and paste it in when the skill asks, each session. See `references/garmin-data.md`.
+- **WHOOP** — connect from the web dashboard's `/connections` page (no manual export). Requires the web dashboard (below) to be deployed and your `athlete.json` linked to it. See `references/whoop-data.md` and `documents/whoop-integration-plan.md`.
+- **FatSecret** — a per-athlete local MCP connector, set up once outside this repo (register a FatSecret Platform API app and run this project's fork of `fcoury/fatsecret-mcp`'s OAuth onboarding tooling locally). No credentials of any kind live in this repo, Supabase, or Vercel. See `references/fatsecret-data.md`.
+
+### 3. Optional: web dashboard
+
+The skill works entirely standalone (local plan/workout files) without this. The dashboard (`web/`, Next.js + Supabase) adds a place to view the current week/season plan online and log workouts, nutrition, and strength sessions, which the skill then reads back into future plans (`SKILL.md`'s "Step 7 - sync to Supabase").
+
+- **Run it locally:**
+  ```
+  cd web
+  cp .env.example .env.local
+  npm install
+  npm run dev
+  ```
+  `.env.example` ships with the publishable `NEXT_PUBLIC_SUPABASE_URL`/`NEXT_PUBLIC_SUPABASE_ANON_KEY` for the project's Supabase backend (safe to expose client-side). WHOOP support additionally needs the server-only `SUPABASE_SERVICE_ROLE_KEY`, `WHOOP_CLIENT_ID`, `WHOOP_CLIENT_SECRET`, `WHOOP_REDIRECT_URI`, and `WHOOP_INTERNAL_SYNC_SECRET` — see `docs/infra.md`.
+- **Deployment:** the dashboard is deployed via the `cycling-plan-coach` Vercel project (root directory `web`), currently a single-athlete v1 at `https://cycling-plan-coach.vercel.app`. Deploying your own instance means creating your own Supabase project (apply the migrations in `supabase/migrations/` in order) and Vercel project pointed at `web/`.
+- **Link your `athlete.json` to it (one-time):** sign in once at the deployed dashboard with a magic link (creates your Supabase `auth.users` row), then set the resulting user id as `supabaseAthleteId` in `athlete.json`. The skill offers to complete this step for you the next time it runs if you tell it you've already signed in and the session has Supabase access. Until `supabaseAthleteId` is set, the skill produces local files only and nothing about this section applies.
+
+See `web/README.md` and `docs/infra.md` for full details.
 
 ## Usage
 
