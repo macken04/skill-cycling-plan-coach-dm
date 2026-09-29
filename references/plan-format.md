@@ -50,7 +50,7 @@ One short paragraph per group-ride day when relevant (e.g. "Ride at the group's 
 
 ### 5. Strength / core
 
-When strength is scheduled include the full exercise list with sets, reps, load and rest cues in the athlete's language. For a full gym session also save a separate `YYYY-Wnn-strength.md`; reference it here.
+When strength is scheduled include the full exercise list with sets, reps, load and rest cues in the athlete's language. For a full gym session also save a separate `YYYY-Wnn-strength.md`; reference it here. Every row states a load and an RIR target, and folds the one-line reason for the exercise into `Load / cue`; the `workouts.target` JSON shape stays `{"exercise","sets_reps","load_cue","rest"}` (reason travels inside `load_cue`). The full file layout (warm-up, cool-down, "Why this session") is in `references/strength-session.md`.
 
 ```markdown
 ## Strength & core (Friday)
@@ -58,9 +58,9 @@ Full session details: `2026-W26-strength.md`
 
 | Exercise | Sets × Reps | Load / cue | Rest |
 |----------|-------------|------------|------|
-| Squat | 4 × 5 | heavy, full control | 2–3 min |
-| Romanian deadlift | 3 × 8 | hinge from the hips | 90 s |
-| Plank | 3 × 45 s | brace hard | 45 s |
+| Trap-bar deadlift | 3 × 6–8 | 50 kg, RIR 2–3; upright torso, easier on a tight lower back | 2–3 min |
+| Step-up | 3 × 8 / leg | bodyweight, RIR 3; controlled, builds single-leg force | 90 s |
+| Plank | 3 × 45 s | bodyweight, RIR 3; brace hard, holds the riding position | 45 s |
 ```
 
 ### 6. Fueling (optional)
@@ -166,10 +166,10 @@ Full session details: `2026-W26-strength.md`
 
 | Exercise | Sets × Reps | Load / cue | Rest |
 |----------|-------------|------------|------|
-| Squat | 4 × 5 | heavy, full control | 2–3 min |
-| Romanian deadlift | 3 × 8 | hinge from the hips | 90 s |
-| Plank | 3 × 45 s | brace hard | 45 s |
-| Pallof press | 3 × 10/side | resist the cable | 45 s |
+| Trap-bar deadlift | 3 × 6–8 | 50 kg, RIR 2–3; upright torso, easier on a tight lower back | 2–3 min |
+| Step-up | 3 × 8 / leg | bodyweight, RIR 3; controlled, builds single-leg force | 90 s |
+| Plank | 3 × 45 s | bodyweight, RIR 3; brace hard, holds the riding position | 45 s |
+| Pallof press | 3 × 10/side | light band, RIR 3; resist the rotation | 45 s |
 ```
 
 ## Example with an active event (header + fueling snippet)

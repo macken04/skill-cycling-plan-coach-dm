@@ -91,19 +91,20 @@ Store questions 14-15 as `bodyCompositionGoal` (`significantLoss`, `modestAdjust
     - Some experience, but out of practice
     - Yes, I train regularly already
 
-    Store as `strengthExperience`: `new`, `returning`, or `experienced`. This gates how `strength-library.md` prescribes load: a first-time lifter starts conservative (lighter load, more form-focused reps) before working up to the standard prescriptions; an experienced lifter can start there directly.
+    Store as `strengthExperience`: `new`, `returning`, or `experienced`. This gates how `strength-prescription.md` prescribes load: a first-time lifter starts conservative (lighter load, more form-focused reps) before working up to the standard prescriptions; an experienced lifter can start there directly.
 
 18. **[value]** (skip if "yes, I train regularly already" above) Roughly how many years of structured strength training do you have, on and off? A rough total is fine. Store as `strengthYearsExperience` (number or `null`).
 19. **[choice]** How often have you strength-trained in the last 2-3 months? Options: not at all, about once a week, about twice a week, three or more times a week. Store as `strengthRecentFrequency`. This is a recency check on top of question 17's lifetime experience — someone "experienced" but at "not at all" recently should still get a short re-ramp, not the full working load on day one.
-20. **[value]** If you currently strength train, roughly what are your current working weights on the key lifts — squat, deadlift, or similar? Whatever you know off the top of your head is fine, exact numbers aren't required; skip if you don't lift right now. Store verbatim as `strengthCurrentLifts` (empty string if skipped). When this is given, `strength-library.md` should anchor the first block's loads to it directly rather than the generic conservative default.
+20. **[value]** If you currently strength train, roughly what are your current working weights on the key lifts — squat, deadlift, or similar? Whatever you know off the top of your head is fine, exact numbers aren't required; skip if you don't lift right now. Store verbatim as `strengthCurrentLifts` (empty string if skipped). When this is given, `strength-prescription.md` should anchor the first block's loads to it directly rather than the generic conservative default.
 21. **[value]** (skip if "yes, I train regularly already" was picked at question 17) Any past injuries, surgeries, or joint issues that matter for lifting — knees, back, shoulders, or anything else? Optional, free text, leave blank if nothing comes to mind. Store as `strengthInjuryNotes` (empty string if skipped). This is separate from `physicalNotes` above: it's specifically about what to avoid or adapt when selecting strength exercises, not about what limits the athlete on the bike.
+22. **[choice]** What strength equipment do you have access to? Options: a full gym (barbells, racks, machines, cables), home dumbbells/bands, or bodyweight only. Store as `equipment`: `fullGym`, `homeDumbbells`, or `bodyweight`. This gates which exercises `strength-patterns.md` can offer (a `bodyweight` athlete gets regressions only). Kept in `athlete.json` only, not synced to Supabase.
 
 ## 7. Resting heart rate and metabolic baseline
 
 Garmin (`garmin-data.md`) supplies `vo2max`, `lthr`, and readiness/HRV automatically when connected. These questions are the fallback baseline for everyone else, so onboarding isn't blind to fitness context just because a wearable isn't hooked up yet.
 
-22. **[value]** Do you know your resting heart rate? (beats per minute; optional, skip if you don't track it — most wearables show this even without a full Garmin export)
-23. **[choice]** Have you had any lab or field testing done — a VO2max test, lactate threshold test, or metabolic/fat-max test? Options: yes, no.
+23. **[value]** Do you know your resting heart rate? (beats per minute; optional, skip if you don't track it — most wearables show this even without a full Garmin export)
+24. **[choice]** Have you had any lab or field testing done — a VO2max test, lactate threshold test, or metabolic/fat-max test? Options: yes, no.
 
     **23a.** (only if yes) **[value]** What did it show, and roughly when? Numbers and an approximate date, whatever you remember — this doesn't need to be precise.
 
@@ -111,38 +112,38 @@ Store as `restingHr` (number or `null`) and `labTestingNotes` (string, verbatim,
 
 ## 8. Training logistics
 
-24. **[choice]** Which days are your group or social rides? Options: Mon/Tue/Wed/Thu/Fri/Sat/Sun (multi-select); default Saturday and Sunday if skipped.
-25. **[choice]** Which days can you usually train? Options: Mon/Tue/Wed/Thu/Fri/Sat/Sun (multi-select); default all if skipped.
-26. **[value]** Typical session duration? (minutes per workout, e.g. 60 or 90; the weekly intake can vary this per day)
-27. **[choice]** How many structured key sessions per week? Options: 1, 2, 3. Default 2.
-28. **[choice]** Strength by default? Options: strength + core, core only, none.
-29. **[narrative]** Any writing preferences? (tone, things to avoid; optional — free text, no wrong answer)
+25. **[choice]** Which days are your group or social rides? Options: Mon/Tue/Wed/Thu/Fri/Sat/Sun (multi-select); default Saturday and Sunday if skipped.
+26. **[choice]** Which days can you usually train? Options: Mon/Tue/Wed/Thu/Fri/Sat/Sun (multi-select); default all if skipped.
+27. **[value]** Typical session duration? (minutes per workout, e.g. 60 or 90; the weekly intake can vary this per day)
+28. **[choice]** How many structured key sessions per week? Options: 1, 2, 3. Default 2.
+29. **[choice]** Strength by default? Options: strength + core, core only, none.
+30. **[narrative]** Any writing preferences? (tone, things to avoid; optional — free text, no wrong answer)
 
 ## 9. Nutrition and current eating pattern
 
-30. **[choice]** Any dietary restrictions or allergies I should plan fueling around? Options (multi-select): none, vegetarian, vegan, gluten-free, dairy-free, other (name it). Store as `dietaryRestrictions` (string array; empty array for "none").
-31. **[narrative]** Anything you've noticed about fueling on the bike — foods or products that upset your stomach during hard or long rides, or ones you know you tolerate well? A few sentences is useful: brand names, food types, whatever you've noticed, even if it's never been formally diagnosed. Store as `fuelingNotes` verbatim (empty string if nothing to add).
-32. **[choice]** For on-bike fueling, do you lean toward gels/drink mix, real food, or a mix of both? Options: mostly gels/drink mix, mostly real food, a mix of both, no preference yet. Store as `fuelingPreference`.
-33. **[narrative]** Roughly, what does a typical day of eating look like for you right now? A few sentences is plenty — meals, snacks, whether you track anything. This is just a baseline for context, not a food diary. Store as `currentEatingPatternNotes` verbatim (empty string if skipped).
-34. **[choice]** Right now, are you actively trying to lose weight, gain weight/mass, or maintain? Options: losing weight, gaining weight/mass, maintaining, not a current focus. Store as `currentWeightGoalDirection`.
+31. **[choice]** Any dietary restrictions or allergies I should plan fueling around? Options (multi-select): none, vegetarian, vegan, gluten-free, dairy-free, other (name it). Store as `dietaryRestrictions` (string array; empty array for "none").
+32. **[narrative]** Anything you've noticed about fueling on the bike — foods or products that upset your stomach during hard or long rides, or ones you know you tolerate well? A few sentences is useful: brand names, food types, whatever you've noticed, even if it's never been formally diagnosed. Store as `fuelingNotes` verbatim (empty string if nothing to add).
+33. **[choice]** For on-bike fueling, do you lean toward gels/drink mix, real food, or a mix of both? Options: mostly gels/drink mix, mostly real food, a mix of both, no preference yet. Store as `fuelingPreference`.
+34. **[narrative]** Roughly, what does a typical day of eating look like for you right now? A few sentences is plenty — meals, snacks, whether you track anything. This is just a baseline for context, not a food diary. Store as `currentEatingPatternNotes` verbatim (empty string if skipped).
+35. **[choice]** Right now, are you actively trying to lose weight, gain weight/mass, or maintain? Options: losing weight, gaining weight/mass, maintaining, not a current focus. Store as `currentWeightGoalDirection`.
 
 > **FatSecret note:** mention once, briefly, that connecting a FatSecret account (`references/fatsecret-data.md`) is optional and lets the plan compare actual logged carbs against this week's fueling targets — same tier as the Strava/Garmin/WHOOP connectors, nothing to set up here in the config itself, and skipping it changes nothing about the plan.
 
 ## 10. Meal planning (optional)
 
-35. **[choice]** Would you like a full weekly meal plan — an actual day-by-day breakfast/lunch/dinner/snack list — or just the fueling targets and on-bike guidance you already get either way? Options: yes, build a full meal plan; no, targets and guidance only. Store as `mealPlanEnabled` (bool).
+36. **[choice]** Would you like a full weekly meal plan — an actual day-by-day breakfast/lunch/dinner/snack list — or just the fueling targets and on-bike guidance you already get either way? Options: yes, build a full meal plan; no, targets and guidance only. Store as `mealPlanEnabled` (bool).
 
     *(questions 36-38 only if opted in above; skip straight to "Write the config" otherwise)*
 
-36. **[choice]** What's your usual meals/snacks pattern? Options: 3 meals + 2 snacks, 3 meals with no snacks, grazing / no fixed pattern. Store as `mealPattern` (`threeMealsPlusTwoSnacks`, `threeMealsNoSnacks`, or `grazing`).
-37. **[choice]** How would you describe your cooking time or setup? Options: I cook fresh most days, I batch-cook on set days and eat leftovers, weekdays need to be minimal-time (weekends can be more involved). Store as `cookingConstraints` (`cooksFreshMostDays`, `batchPrep`, or `minimalTimeWeekdays`).
-38. **[narrative]** Any cuisines or foods you genuinely enjoy, and anything beyond your dietary restrictions above that you actively dislike? A few examples are plenty. Store as `foodPreferences` verbatim (empty string if skipped) — this is about preference, not restriction; `dietaryRestrictions` already covers what to avoid outright.
+37. **[choice]** What's your usual meals/snacks pattern? Options: 3 meals + 2 snacks, 3 meals with no snacks, grazing / no fixed pattern. Store as `mealPattern` (`threeMealsPlusTwoSnacks`, `threeMealsNoSnacks`, or `grazing`).
+38. **[choice]** How would you describe your cooking time or setup? Options: I cook fresh most days, I batch-cook on set days and eat leftovers, weekdays need to be minimal-time (weekends can be more involved). Store as `cookingConstraints` (`cooksFreshMostDays`, `batchPrep`, or `minimalTimeWeekdays`).
+39. **[narrative]** Any cuisines or foods you genuinely enjoy, and anything beyond your dietary restrictions above that you actively dislike? A few examples are plenty. Store as `foodPreferences` verbatim (empty string if skipped) — this is about preference, not restriction; `dietaryRestrictions` already covers what to avoid outright.
 
 None of questions 35-38 are write-once, same principle as every other self-reported field here — update on the spot when the athlete mentions a change (a new dislike, a schedule change that shifts cooking constraints, wanting to turn the meal plan on or off).
 
 ## Write the config
 
-Map the answers onto the fields in `athlete-config.md` and write `athlete.json`, including `targetEvent`, `eventDate`, and `physicalNotes` (plus `physicalNotesFrequency` / `physicalNotesAssessed` when question 16a was asked) from the goal branch and narrative questions above, `cyclingYearsExperience`, `longestEffortCompleted`, `ultraDistanceExperience`, `currentTrainingStatus`, `trainingBreakDuration`, `bodyCompositionGoal`, `bodyFatPercent`, `strengthExperience`, `strengthYearsExperience`, `strengthRecentFrequency`, `strengthCurrentLifts`, `strengthInjuryNotes`, `restingHr`, `labTestingNotes`, `dietaryRestrictions`, `fuelingNotes`, `fuelingPreference`, `currentEatingPatternNotes`, `currentWeightGoalDirection`, `mealPlanEnabled`, `mealPattern`, `cookingConstraints`, and `foodPreferences` from the sections above. Set `riderTypeOverride` to null so the skill derives the rider type from data. Confirm in one line — goal, event if any, and that a physical note was captured if given — and continue to the weekly plan.
+Map the answers onto the fields in `athlete-config.md` and write `athlete.json`, including `targetEvent`, `eventDate`, and `physicalNotes` (plus `physicalNotesFrequency` / `physicalNotesAssessed` when question 16a was asked) from the goal branch and narrative questions above, `cyclingYearsExperience`, `longestEffortCompleted`, `ultraDistanceExperience`, `currentTrainingStatus`, `trainingBreakDuration`, `bodyCompositionGoal`, `bodyFatPercent`, `strengthExperience`, `strengthYearsExperience`, `strengthRecentFrequency`, `strengthCurrentLifts`, `strengthInjuryNotes`, `equipment`, `restingHr`, `labTestingNotes`, `dietaryRestrictions`, `fuelingNotes`, `fuelingPreference`, `currentEatingPatternNotes`, `currentWeightGoalDirection`, `mealPlanEnabled`, `mealPattern`, `cookingConstraints`, and `foodPreferences` from the sections above. Set `riderTypeOverride` to null so the skill derives the rider type from data. Confirm in one line — goal, event if any, and that a physical note was captured if given — and continue to the weekly plan.
 
 None of the self-reported fields above are fixed forever: if the athlete brings up a change later (an injury clearing up, more lifting experience, a return to consistent training, a new fueling sensitivity), update the relevant field(s) in `athlete.json` on the spot rather than treating onboarding as the only time these are ever asked.
 

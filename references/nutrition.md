@@ -21,7 +21,7 @@ the athlete without changing the underlying g/kg math:
   don't suggest a whey-based recovery shake for a `dairyFree` athlete;
   suggest plant-based multi-source carb options for `vegan`).
 - **`fuelingNotes`:** treat this the same way `physicalNotes` is treated in
-  `strength-library.md` — a hypothesis from the athlete's own account, not a
+  `strength-patterns.md` — a hypothesis from the athlete's own account, not a
   lab result. If it names a food/product that causes GI distress, steer
   on-bike suggestions away from it even before a logged in-ride signal
   confirms it (see "Interpreting a logged fueling signal" below for the
