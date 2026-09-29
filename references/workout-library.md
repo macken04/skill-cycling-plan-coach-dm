@@ -216,7 +216,7 @@ If Saturday is hard, keep Tue **or** Thu hard, not both - never three hard days.
 
 ## Strength - cycling-specific (gym, deliver as markdown)
 
-Goal is durable power and injury resilience, not bulk. 2x/week off-season, 1x/week in-season as maintenance. `.zwo` cannot represent this. For exercise selection, sets, reps, and cues see `references/strength-library.md`.
+Goal is durable power and injury resilience, not bulk. 2x/week off-season, 1x/week in-season as maintenance. `.zwo` cannot represent this. For exercise selection see `references/strength-patterns.md`; for sets, reps, RIR and load see `references/strength-prescription.md`; for warm-up, cool-down and the output layout see `references/strength-session.md`.
 
 Keep heavy lower-body work away from hard bike days (ideally same day as a hard ride or on a rest day, never the day before VO2/intervals).
 

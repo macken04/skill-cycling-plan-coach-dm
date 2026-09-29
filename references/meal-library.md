@@ -4,7 +4,7 @@ Turns `references/nutrition.md`'s daily carb/protein/fat targets into an
 actual day-by-day list of meals and snacks, built from a small set of common
 foods rather than a real food database — the same "library the skill
 assembles from" pattern `references/workout-library.md` uses for sessions
-and `references/strength-library.md` uses for exercises. Only produced when
+and `references/strength-patterns.md` uses for exercises. Only produced when
 `mealPlanEnabled` is `true` (`references/athlete-config.md`); an athlete with
 it unset or `false` sees no meals output, only the existing fueling targets
 in `plan-format.md` §6.

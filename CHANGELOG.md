@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.6.0] - 2026-09-29
+
+### Added
+
+- **Evidence-based, athlete-specific strength prescription** (spec: `docs/superpowers/specs/2026-09-29-strength-prescription-design.md`, evidence: `documents/strength-research-brief.md`). `references/strength-library.md` is split into `references/strength-patterns.md` (six pattern categories with regressions, injury flags keyed to `strengthInjuryNotes`, and equipment gating), `references/strength-prescription.md` (phase x experience table, RIR as the controller, starting-load and double-progression rules, taper rule, on-bike torque/sprint pairing, the logged-outcome table retargeted to RIR, confidence tags `[evidence]`/`[consensus]`/`[convention]`, and stated limits) and `references/strength-session.md` (RAMP warm-up, ramp-up sets, cool-down/mobility, and the strength-file layout).
+- Every strength exercise now states why it was chosen for this athlete, an RIR target and a load; strength files gain Warm-up, Cool-down and "Why this session" blocks. Three new quality checks in `SKILL.md`.
+- New `athlete.json` field `equipment` (`fullGym` | `homeDumbbells` | `bodyweight`), asked in onboarding section 6 and asked once for existing athletes missing it. Local-only: no Supabase column or migration.
+
+### Changed
+
+- Base strength is no longer 3-4 x 10-12 throughout: a short anatomical-adaptation block (2 x 8-12, RIR 3-4) ramps to 3 x 4-6 by the end of Base. Onboarding questions after 21 are renumbered (+1).
+- Strength taper: no strength in the last 5-7 days before the target event, at most one light primer about 10-14 days out.
+- The `workouts.target` strength JSON shape is unchanged (`{"exercise","sets_reps","load_cue","rest"}`); the reason is folded into `load_cue`.
+- **Minor version bump** (`3.5.0` -> `3.6.0`).
+
+### Removed
+
+- `references/strength-library.md` (replaced by the three files above).
+
 ## [3.5.0] - 2026-09-28
 
 ### Added
