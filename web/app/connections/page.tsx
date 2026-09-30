@@ -93,14 +93,32 @@ export default function ConnectionsPage() {
     setActionState("connecting");
     setErrorMessage("");
 
-    const response = await fetch("/api/whoop/authorize", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${session.access_token}` },
-    });
+    let response: Response;
+    try {
+      response = await fetch("/api/whoop/authorize", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+    } catch {
+      setActionState("idle");
+      setErrorMessage("Couldn't reach the server. Check your connection and try again.");
+      return;
+    }
 
     if (!response.ok) {
+      const body = await response.json().catch(() => ({}));
       setActionState("idle");
-      setErrorMessage("Couldn't start the WHOOP connection. Try again.");
+      if (response.status === 401 || body.code === "not_signed_in") {
+        setErrorMessage("Your session expired. Sign in again and retry.");
+      } else if (body.code === "server_misconfigured") {
+        setErrorMessage(
+          "WHOOP isn't configured on the server yet. Contact the admin."
+        );
+      } else {
+        setErrorMessage(
+          `Couldn't start the WHOOP connection (error ${response.status}). Try again.`
+        );
+      }
       return;
     }
 
